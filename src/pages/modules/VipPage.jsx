@@ -65,7 +65,7 @@ export default function VipPage() {
             </button>
           </div>
 
-          <div className="overflow-x-auto p-5 md:p-10">
+          <div className="hidden overflow-x-auto p-5 md:block md:p-10">
             <ul className="min-w-[980px] overflow-hidden rounded-2xl border border-white/10">
               <li className="grid grid-cols-[170px_1fr_190px_220px_120px] bg-white/5 px-6 py-4 text-sm font-semibold text-white/80">
                 <span>VIP 等级</span>
@@ -93,6 +93,35 @@ export default function VipPage() {
               ))}
             </ul>
           </div>
+
+          <ul className="space-y-2 p-4 md:hidden">
+            {leadershipLevels.map((row) => (
+              <li key={`mobile-${row.level}`} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="inline-flex min-w-[56px] items-center justify-center rounded-full border border-[#caff00]/45 bg-[#caff00]/10 px-3 py-1 text-xs font-semibold text-[#caff00]">
+                    {row.level}
+                  </span>
+                  <button className="inline-flex min-h-8 min-w-[74px] items-center justify-center rounded-full bg-[#caff00] px-3 text-xs font-semibold text-black" type="button">
+                    查看
+                  </button>
+                </div>
+                <div className="mt-3 space-y-1.5 text-[11px] text-white/75">
+                  <p>
+                    <span className="text-white/55">小区业绩：</span>
+                    {row.requirement}
+                  </p>
+                  <p>
+                    <span className="text-white/55">分红比例：</span>
+                    <span className="font-semibold text-[#00ffc2]">{row.bonusRatio}</span>
+                  </p>
+                  <p>
+                    <span className="text-white/55">固定奖励：</span>
+                    {row.fixedReward.toLocaleString()} NETE
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

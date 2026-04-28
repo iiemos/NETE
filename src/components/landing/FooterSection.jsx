@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react";
 import { NavLink } from "react-router-dom";
+import logoIcon from "../../assets/images/logo-icon.svg";
 
 export default function FooterSection() {
   return (
@@ -9,7 +10,7 @@ export default function FooterSection() {
           <div className="footer__brand">
             <NavLink className="nav__logo" to="/" aria-label="NETE — Home">
               <span className="nav__logo-mark" aria-hidden="true">
-                <Icon icon="mdi:hexagon" />
+                <img src={logoIcon} alt="" />
               </span>
               NETE
             </NavLink>
@@ -95,24 +96,6 @@ export default function FooterSection() {
           </nav>
         </div>
 
-        <div className="footer__subscribe">
-          <a
-            className="footer__portfolio-link"
-            href="https://codepen.io/Margarita-the-solid"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Margarita's CodePen portfolio, opens in new tab"
-          >
-            <span className="footer__portfolio-link-inner">
-              <Icon className="footer__codepen-icon" icon="mdi:code-braces" aria-hidden="true" />
-              <span>
-                <span className="footer__portfolio-sub">Designed &amp; built by</span>
-                <span className="footer__portfolio-name">Margarita on CodePen</span>
-              </span>
-            </span>
-            <Icon className="footer__external-icon" icon="mdi:arrow-top-right" aria-hidden="true" />
-          </a>
-        </div>
 
         <div className="footer__bottom">
           <span>© 2024 NETE. All rights reserved.</span>

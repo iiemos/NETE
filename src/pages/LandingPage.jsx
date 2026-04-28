@@ -187,7 +187,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="features-grid">
+            <div className="grid gap-6 md:grid-cols-2">
               <article className="feature-card feature-card--highlight" tabIndex={0}>
                 <div className="feature-card__icon feature-card__icon--acid" role="img" aria-label="model mechanism">
                   <Icon className="feature-card__icon-svg" icon="mdi:cog-outline" />

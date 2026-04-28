@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import logoIcon from "../../assets/images/logo-icon.svg";
 
 const navItems = [
   { label: { zh: "首页", en: "Home" }, to: "/" },
@@ -89,10 +90,7 @@ export default function GlobalHeader() {
           <div className="nav__inner">
             <NavLink className="nav__logo" to="/" aria-label="NETE — Home">
               <span className="nav__logo-mark" aria-hidden="true">
-                <svg viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9 2L16 6V12L9 16L2 12V6L9 2Z" fill="#0A0A0F" stroke="#0A0A0F" strokeWidth="1" />
-                  <path d="M9 5L13 7.5V12.5L9 15L5 12.5V7.5L9 5Z" fill="#CAFF00" />
-                </svg>
+                <img src={logoIcon} alt="" />
               </span>
               NETE
             </NavLink>

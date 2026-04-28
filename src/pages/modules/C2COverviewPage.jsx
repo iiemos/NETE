@@ -2,21 +2,20 @@ import { Icon } from "@iconify/react";
 import { Link } from "react-router-dom";
 import C2CPageFrame from "../../components/c2c/C2CPageFrame";
 import { hotCoins, quickGuideSteps } from "../../data/c2cUiData";
+import c2cGuideIcon1 from "../../assets/images/c2c-1.svg";
+import c2cGuideIcon2 from "../../assets/images/c2c-2.svg";
+import c2cGuideIcon3 from "../../assets/images/c2c-3.svg";
 import "../styles/c2c.css";
 
 function CoinMark({ type }) {
   return <span className="c2c-token-mark">{type}</span>;
 }
 
-function GuideIcon({ kind }) {
-  if (kind === "hourglass") {
-    return <Icon icon="mdi:timer-sand" />;
-  }
-  if (kind === "wallet") {
-    return <Icon icon="mdi:wallet-outline" />;
-  }
-  return <Icon icon="mdi:file-document-outline" />;
-}
+const guideIconMap = {
+  money: c2cGuideIcon1,
+  hourglass: c2cGuideIcon2,
+  wallet: c2cGuideIcon3,
+};
 
 function QuickFormCard() {
   return (
@@ -67,7 +66,7 @@ export default function C2COverviewPage() {
     <C2CPageFrame zone="quick">
       <section className="c2c-quick-hero-wrap">
         <div className="c2c-quick-hero-text">
-          <h1>C2C 快捷交易<br />使用 CNY 购买 USDT</h1>
+          <h1><span className="text-[#caff00]">C2C</span> 快捷交易<br />使用 <span className="text-[#caff00]">CNY</span> 购买 <span className="text-[#caff00]">USDT</span></h1>
           <p>快捷交易为您自动匹配当前 C2C 市场购买 USDT 的最优价格之选。</p>
 
           <article className="c2c-hot-coins">
@@ -96,7 +95,9 @@ export default function C2COverviewPage() {
         <div className="c2c-guide-grid">
           {quickGuideSteps.map((item) => (
             <article key={item.title} className="c2c-guide-card">
-              <span className="c2c-guide-icon"><GuideIcon kind={item.icon} /></span>
+              <span className="c2c-guide-icon">
+                <img src={guideIconMap[item.icon] ?? c2cGuideIcon1} alt="" aria-hidden="true" />
+              </span>
               <h3>{item.title}</h3>
               <p>{item.desc}</p>
             </article>

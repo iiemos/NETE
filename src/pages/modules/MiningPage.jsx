@@ -89,11 +89,11 @@ export default function MiningPage() {
       </header>
 
       <article className="rounded-2xl bg-transparent p-5 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">矿机型号</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-white/10">
+          <h2 className="font-display text-base font-bold tracking-wide  text-white md:text-xl">矿机型号</h2>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto md:block">
           <ul className="min-w-[680px] text-left text-xs md:text-sm">
             <li className="grid grid-cols-[1.3fr_0.6fr_0.7fr_0.8fr] px-4 py-3 font-semibold text-white/65">
               <span>型号</span>
@@ -114,11 +114,29 @@ export default function MiningPage() {
             ))}
           </ul>
         </div>
+
+        <ul className="space-y-2 md:hidden">
+          {machineModels.map((model) => (
+            <li key={`mobile-${model.model}`} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-white">{model.model}</p>
+                  <p className="mt-1 text-[11px] text-white/60">{model.price} NETE</p>
+                </div>
+                <p className="text-sm font-semibold text-[#caff00]">{model.returnRate}</p>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-white/70">
+                <p>数量 {model.unitCount}</p>
+                <p>周期 {model.periodDays} 天</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </article>
 
       <article className="bg-transparent p-5">
-        <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">已购买矿机列表</h2>
-        <div className="mt-4 overflow-x-auto border-b-2 border-white/10">
+        <h2 className="font-display text-base font-bold tracking-wide pb-2 border-b border-white/10 text-white md:text-xl">已购买矿机列表</h2>
+        <div className="mt-4 hidden overflow-x-auto border-b-1 border-white/10 md:block">
           <ul className="min-w-[860px] text-left text-xs md:text-sm">
             <li className="grid grid-cols-[1.2fr_0.8fr_1fr_1fr_0.8fr] px-4 py-3 font-semibold text-white/65">
               <span>矿机型号</span>
@@ -128,7 +146,7 @@ export default function MiningPage() {
               <span>剩余周期</span>
             </li>
             {purchasedMachines.map((machine) => (
-              <li key={`${machine.model}-${machine.quantity}`} className="grid grid-cols-[1.2fr_0.8fr_1fr_1fr_0.8fr] border-t border-white/10 px-4 py-3 text-white/85">
+              <li key={`${machine.model}-${machine.quantity}`} className="grid grid-cols-[1.2fr_0.8fr_1fr_1fr_0.8fr]  px-4 py-3 text-white/85">
                 <span>{machine.model}</span>
                 <span>{machine.quantity}</span>
                 <span className="font-semibold text-[#caff00]">{machine.cycleProgress}</span>
@@ -138,6 +156,22 @@ export default function MiningPage() {
             ))}
           </ul>
         </div>
+
+        <ul className="mt-4 space-y-2 border-b border-white/10 pb-3 md:hidden">
+          {purchasedMachines.map((machine) => (
+            <li key={`mobile-purchased-${machine.model}-${machine.quantity}`} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-sm font-semibold text-white">{machine.model}</p>
+                <p className="text-sm font-semibold text-[#caff00]">{machine.output}</p>
+              </div>
+              <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-white/70">
+                <p>数量 {machine.quantity}</p>
+                <p>进度 {machine.cycleProgress}</p>
+                <p className="col-span-2">剩余周期 {machine.remainingDays} 天</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </article>
 
       {selectedModel ? (

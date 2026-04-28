@@ -272,8 +272,8 @@ button {
 .nav__logo-mark {
   width: 32px;
   height: 32px;
-  background: var(--color-acid);
-  border-radius: var(--radius-sm);
+  background: transparent;
+  border-radius: 0;
   display: grid;
   place-items: center;
 }
@@ -282,6 +282,13 @@ button {
   width: 18px;
   height: 18px;
 }
+
+.nav__logo-mark img {
+  width: 24px;
+  height: 27px;
+  display: block;
+}
+
 .nav__logo-mark .iconify {
   width: 18px;
   height: 18px;
@@ -342,21 +349,13 @@ button {
 }
 
 .nav__lang-trigger {
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  border: 1px solid var(--color-border);
   display: grid;
   place-items: center;
-  color: var(--color-muted);
-  background: rgba(255, 255, 255, 0.03);
-  transition: border-color var(--dur-fast) ease, color var(--dur-fast) ease, background var(--dur-fast) ease;
 }
 
-.nav__lang-trigger:hover {
-  border-color: rgba(255, 255, 255, 0.32);
-  color: var(--color-white);
-}
 
 .nav__lang-trigger.is-open {
   border-color: rgba(202, 255, 0, 0.52);
@@ -365,8 +364,8 @@ button {
 }
 
 .nav__lang-icon {
-  width: 17px;
-  height: 17px;
+  width: 26px;
+  height: 26px;
   flex-shrink: 0;
 }
 
@@ -808,11 +807,14 @@ button {
   border-radius: 3px;
   display: grid;
   place-items: center;
+  overflow: hidden;
 }
 
 .phone-screen__logo-icon {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
+  display: block;
+  object-fit: contain;
 }
 
 .phone-screen__logo-icon--acid {
@@ -824,34 +826,35 @@ button {
 }
 
 .phone-illus {
-  width: 80px;
-  height: 80px;
+  width: 100%;
+  height: auto;
   margin: 0 auto;
-  position: relative;
+  position: static;
 }
 
-.phone-illus__cube {
-  width: 60px;
-  height: 55px;
-  background: linear-gradient(135deg, #ff2d78, #caff00);
+.phone-illus--modules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.phone-illus__module {
+  border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 8px;
-  transform: rotate(-15deg);
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  translate: -50% 0;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px 3px;
+  font-size: 6px;
+  font-weight: 700;
+  color: #111;
 }
 
-.phone-illus__card {
-  width: 55px;
-  height: 38px;
-  background: var(--color-purple);
-  border-radius: 5px;
-  transform: rotate(10deg);
-  position: absolute;
-  top: 0;
-  right: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+.phone-illus__module-icon {
+  width: 9px;
+  height: 9px;
 }
 
 .phone-screen__title {
@@ -1803,6 +1806,21 @@ button {
 .discover__nft-thumb {
   border-radius: 8px;
   min-height: 40px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.discover__nft-meta {
+  font-size: 6px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.discover__nft-value {
+  font-size: 7px;
+  font-weight: 700;
+  color: #111;
 }
 
 .discover__nft-thumb--pink {

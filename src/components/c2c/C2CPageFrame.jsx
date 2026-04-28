@@ -21,7 +21,6 @@ export default function C2CPageFrame({ zone, children }) {
           <div className="c2c-zones" role="tablist" aria-label="C2C zones">
             <ZoneNavLink to="/c2c" label="快捷区" active={zone === "quick"} />
             <ZoneNavLink to="/c2c/market" label="自选区" active={zone === "self"} />
-            <span className="c2c-zone-link c2c-zone-link-muted">VIP 尊享区</span>
           </div>
 
           <div className="c2c-header-actions desktop-only">

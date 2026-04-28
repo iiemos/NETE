@@ -60,53 +60,7 @@ export default function BuySeedPage() {
         </article>
       </div>
 
-      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
-        <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">启动分配（三驾马车）</h2>
-        <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
-          <table className="min-w-full border-collapse text-left text-xs md:text-sm [&_th]:px-4 [&_th]:py-3 [&_th]:font-semibold [&_th]:text-white/65 [&_td]:border-t [&_td]:border-white/10 [&_td]:px-4 [&_td]:py-3 [&_td]:text-white/85">
-            <thead>
-              <tr>
-                <th>分配渠道</th>
-                <th>数量</th>
-                <th>占比</th>
-                <th>核心目的与规则</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bootstrapDistribution.map((row) => (
-                <tr key={row.channel}>
-                  <td>{row.channel}</td>
-                  <td>{row.amount}</td>
-                  <td>{row.ratio}</td>
-                  <td>{row.rule}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </article>
 
-      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
-        <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">种子矿机型号与数量</h2>
-        <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
-          <table className="min-w-full border-collapse text-left text-xs md:text-sm [&_th]:px-4 [&_th]:py-3 [&_th]:font-semibold [&_th]:text-white/65 [&_td]:border-t [&_td]:border-white/10 [&_td]:px-4 [&_td]:py-3 [&_td]:text-white/85">
-            <thead>
-              <tr>
-                <th>型号</th>
-                <th>数量（台）</th>
-              </tr>
-            </thead>
-            <tbody>
-              {seedModelPlan.map((row) => (
-                <tr key={row.model}>
-                  <td>{row.model}</td>
-                  <td>{row.quantity.toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </article>
 
       <article className="rounded-2xl border border-white/10 bg-transparent p-5">
         <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">购买记录</h2>

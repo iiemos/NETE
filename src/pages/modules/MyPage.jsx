@@ -40,13 +40,12 @@ export default function MyPage() {
           <div className="max-w-3xl">
             <h1 className="font-display text-2xl font-black tracking-tight text-white md:text-3xl">我的</h1>
             <p className="mt-3 max-w-2xl text-sm text-white/80">汇总你的链上资产、钱包流水与关键规则，帮助你更高效地管理 NETE 账户。</p>
-            <p className="mt-3 text-sm text-white/60">钱包状态：{globalOverview.wallet.connected ? "已连接" : "未连接"} · {globalOverview.wallet.address}</p>
           </div>
         </div>
       </header>
 
       <article className="rounded-2xl border border-white/10 bg-transparent p-5">
-        <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">全局资产概览</h2>
+        <h2 className="font-display mb-4 text-base font-bold tracking-wide text-white md:text-xl">全局资产概览</h2>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {summaryItems.map((item) => (
             <article key={item.label} className="rounded-xl border border-white/10 bg-transparent p-4">
@@ -57,10 +56,9 @@ export default function MyPage() {
         </div>
       </article>
 
-      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
+      <article className="rounded-2xl bg-transparent">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">流水模块</h2>
-          <span className="inline-flex items-center rounded-full border border-[#caff00]/30 bg-[#caff00]/10 px-3 py-1 text-xs font-semibold tracking-wide text-[#caff00]">仅在我的页面展示</span>
         </div>
 
         <div className="space-y-4">
@@ -114,71 +112,6 @@ export default function MyPage() {
           </Link>
         </div>
       </article>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <details className="group rounded-2xl border border-white/10 bg-transparent p-4 shadow-none md:p-5">
-          <summary className="summary-no-marker flex cursor-pointer list-none items-center justify-between gap-3 select-none">
-            <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">提币手续费分配</h2>
-            <span className="text-base leading-none text-white/55 transition-transform group-open:rotate-180" aria-hidden="true">
-              v
-            </span>
-          </summary>
-          <div className="mt-4">
-            <div className="overflow-x-auto rounded-xl border border-white/10">
-              <table className="min-w-full border-collapse text-left text-xs md:text-sm [&_th]:px-4 [&_th]:py-3 [&_th]:font-semibold [&_th]:text-white/65 [&_td]:border-t [&_td]:border-white/10 [&_td]:px-4 [&_td]:py-3 [&_td]:text-white/85">
-                <thead>
-                  <tr>
-                    <th>分配项</th>
-                    <th>占比</th>
-                    <th>用途</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {withdrawFeeDistributionRules.map((row) => (
-                    <tr key={row.item}>
-                      <td>{row.item}</td>
-                      <td>{row.ratio}</td>
-                      <td>{row.use}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </details>
-
-        <details className="group rounded-2xl border border-white/10 bg-transparent p-4 shadow-none md:p-5">
-          <summary className="summary-no-marker flex cursor-pointer list-none items-center justify-between gap-3 select-none">
-            <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">分享加速规则</h2>
-            <span className="text-base leading-none text-white/55 transition-transform group-open:rotate-180" aria-hidden="true">
-              v
-            </span>
-          </summary>
-          <div className="mt-4">
-            <div className="overflow-x-auto rounded-xl border border-white/10">
-              <table className="min-w-full border-collapse text-left text-xs md:text-sm [&_th]:px-4 [&_th]:py-3 [&_th]:font-semibold [&_th]:text-white/65 [&_td]:border-t [&_td]:border-white/10 [&_td]:px-4 [&_td]:py-3 [&_td]:text-white/85">
-                <thead>
-                  <tr>
-                    <th>直推人数</th>
-                    <th>享受层数</th>
-                    <th>加速收益</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {shareAccelerationRules.map((row) => (
-                    <tr key={row.directs}>
-                      <td>{row.directs}</td>
-                      <td>{row.layers}</td>
-                      <td>{row.income}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="mt-4 text-sm text-white/70">{shareAccelerationNote}</p>
-          </div>
-        </details>
-      </div>
     </section>
   );
 }

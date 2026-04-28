@@ -41,7 +41,6 @@
   height: 78px;
   padding: 0 2px;
   color: rgba(255, 255, 255, 0.6);
-  font-size: 28px;
   font-weight: 700;
   line-height: 1;
   border-bottom: 4px solid transparent;
@@ -135,11 +134,10 @@
 }
 
 .c2c-quick-hero-wrap {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(460px, 600px);
-  gap: 44px;
-  align-items: start;
-  margin-top: 74px;
+  display: flex;
+  margin-top: 74px;    
+  align-items: center;
+  justify-content: space-between;
 }
 
 .c2c-quick-hero-text,
@@ -171,7 +169,7 @@
   border-radius: 20px;
   background: rgba(17, 18, 27, 0.72);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
-  padding: 24px 28px 22px;
+  padding: 20px ;
 }
 
 .c2c-hot-coins h2 {
@@ -264,6 +262,7 @@
 }
 
 .c2c-quick-form {
+  width: 493px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 26px;
   background: rgba(17, 18, 27, 0.78);
@@ -284,11 +283,10 @@
   justify-content: center;
   width: 100%;
   position: relative;
-  height: 92px;
+  height: 72px;
   font-size: clamp(22px, 1.22vw, 30px);
   font-weight: 700;
   color: rgba(255, 255, 255, 0.55);
-  background: rgba(255, 255, 255, 0.04);
 }
 
 .c2c-form-tab.is-active {
@@ -311,7 +309,7 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.03);
-  padding: 15px 15px 14px;
+  padding: 10px 15px;
 }
 
 .c2c-field-title {
@@ -321,12 +319,10 @@
 }
 
 .c2c-field-input-row {
-  margin-top: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  min-height: 56px;
 }
 
 .c2c-field-input-row.right-fixed {
@@ -343,7 +339,7 @@
 .c2c-currency-pill {
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.08);
-  min-height: 74px;
+  min-height: 64px;
   padding: 0 18px;
   display: inline-flex;
   align-items: center;
@@ -478,6 +474,12 @@
 .c2c-guide-icon svg {
   width: 84px;
   height: 84px;
+}
+
+.c2c-guide-icon img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
 }
 
 .c2c-guide-card h3 {
@@ -623,10 +625,10 @@
   min-width: 120px;
   min-height: 46px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.9);
+  background: #caff00;
+  color: #0a0a0f;
   font-size: clamp(11px, 0.62vw, 14px);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .c2c-featured-cards {
@@ -723,18 +725,19 @@
   min-width: 96px;
   min-height: 44px;
   border-radius: 999px;
-  color: #fff;
+  color: #0a0a0f;
   font-size: clamp(12px, 0.68vw, 15px);
   font-weight: 700;
   padding: 0 20px;
 }
 
 .c2c-action-btn.buy {
-  background: #33b866;
+  background: #caff00;
 }
 
 .c2c-action-btn.sell {
   background: #e94a72;
+  color: #ffffff;
 }
 
 .c2c-table-wrap {
@@ -847,7 +850,6 @@
   }
 
   .c2c-zone-link {
-    font-size: 22px;
     height: 72px;
   }
 
@@ -866,6 +868,7 @@
   .c2c-quick-hero-wrap {
     margin-top: 20px;
     grid-template-columns: 1fr;
+    flex-direction: column;
     gap: 20px;
   }
 
@@ -899,7 +902,8 @@
   }
 
   .c2c-guide-icon,
-  .c2c-guide-icon svg {
+  .c2c-guide-icon svg,
+  .c2c-guide-icon img {
     width: 56px;
     height: 56px;
   }
@@ -1087,6 +1091,7 @@
   }
 
   .c2c-quick-form {
+    width: 100%;
     border-radius: 18px;
     padding-bottom: 14px;
   }
