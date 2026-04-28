@@ -1,0 +1,1270 @@
+.c2c-page {
+  min-height: 100vh;
+  padding-top: var(--nav-height);
+  background-color: #0a0a0f;
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(123, 77, 255, 0.22), transparent 38%),
+    radial-gradient(circle at 88% 18%, rgba(202, 255, 0, 0.1), transparent 32%),
+    radial-gradient(circle at 52% 86%, rgba(255, 45, 120, 0.08), transparent 34%);
+  color: #fff;
+  font-family: var(--font-body);
+}
+
+.c2c-topbar {
+  position: sticky;
+  top: var(--nav-height);
+  z-index: 35;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 10, 15, 0.88);
+  backdrop-filter: blur(6px);
+}
+
+.c2c-topbar-inner {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 1rem;
+  min-height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.c2c-zones {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.c2c-zone-link {
+  display: inline-flex;
+  align-items: center;
+  height: 78px;
+  padding: 0 2px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  border-bottom: 4px solid transparent;
+}
+
+.c2c-zone-link.is-active {
+  color: #ffffff;
+  border-bottom-color: #caff00;
+}
+
+.c2c-zone-link-muted {
+  cursor: default;
+}
+
+.c2c-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.c2c-header-action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.c2c-more-action {
+  gap: 4px;
+}
+
+.c2c-red-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ef4f67;
+}
+
+.c2c-search-icon {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.c2c-more-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.mobile-only {
+  display: none;
+}
+
+.c2c-main {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 34px 1rem 80px;
+}
+
+@media (min-width: 640px) {
+  .c2c-topbar-inner {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .c2c-main {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .c2c-topbar-inner {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .c2c-main {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.c2c-quick-hero-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(460px, 600px);
+  gap: 44px;
+  align-items: start;
+  margin-top: 74px;
+}
+
+.c2c-quick-hero-text,
+.c2c-quick-form {
+  min-width: 0;
+}
+
+.c2c-quick-hero-text h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(31px, 2.35vw, 52px);
+  font-weight: 700;
+  line-height: 1.16;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.c2c-quick-hero-text > p {
+  margin-top: 24px;
+  max-width: 720px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: clamp(15px, 0.84vw, 21px);
+  line-height: 1.42;
+}
+
+.c2c-hot-coins {
+  margin-top: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  background: rgba(17, 18, 27, 0.72);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
+  padding: 24px 28px 22px;
+}
+
+.c2c-hot-coins h2 {
+  margin: 0;
+  font-size: clamp(17px, 0.96vw, 22px);
+  font-weight: 700;
+}
+
+.c2c-hot-coins > p {
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: clamp(12px, 0.7vw, 15px);
+}
+
+.c2c-hot-list {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.c2c-hot-list::-webkit-scrollbar,
+.c2c-featured-cards::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.c2c-hot-list,
+.c2c-featured-cards {
+  scrollbar-width: none;
+}
+
+.c2c-hot-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.c2c-hot-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.c2c-hot-symbol {
+  font-size: clamp(15px, 0.86vw, 22px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.c2c-token-mark {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #d9be5f;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.c2c-hot-item:nth-child(2) .c2c-token-mark {
+  background: #242430;
+}
+
+.c2c-hot-item:nth-child(3) .c2c-token-mark {
+  background: #523686;
+}
+
+.c2c-hot-price {
+  margin-top: 18px;
+  font-size: clamp(15px, 0.84vw, 21px);
+  line-height: 1;
+}
+
+.c2c-hot-change {
+  margin-top: 8px;
+  font-size: clamp(10px, 0.62vw, 14px);
+}
+
+.c2c-hot-change.down {
+  color: #ef5068;
+}
+
+.c2c-hot-change.up {
+  color: #35b767;
+}
+
+.c2c-quick-form {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 26px;
+  background: rgba(17, 18, 27, 0.78);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.32);
+  overflow: hidden;
+  padding-bottom: 22px;
+}
+
+.c2c-form-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.c2c-form-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+  height: 92px;
+  font-size: clamp(22px, 1.22vw, 30px);
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.c2c-form-tab.is-active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.c2c-form-tab.is-active:first-child {
+  border-top-left-radius: 26px;
+  border-top-right-radius: 30px;
+}
+
+.c2c-form-tab.is-active:last-child {
+  border-top-right-radius: 26px;
+  border-top-left-radius: 30px;
+}
+
+.c2c-field-block {
+  margin: 24px 24px 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 15px 15px 14px;
+}
+
+.c2c-field-title {
+  color: #ffffff;
+  font-size: clamp(13px, 0.76vw, 18px);
+  font-weight: 700;
+}
+
+.c2c-field-input-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 56px;
+}
+
+.c2c-field-input-row.right-fixed {
+  justify-content: flex-end;
+}
+
+.c2c-field-placeholder {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: clamp(25px, 1.5vw, 40px);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.c2c-currency-pill {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  min-height: 74px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #fff;
+  font-size: clamp(15px, 0.86vw, 20px);
+  font-weight: 700;
+}
+
+.c2c-currency-pill.usdt-pill {
+  min-width: 188px;
+  justify-content: center;
+}
+
+.c2c-currency-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+}
+
+.c2c-currency-mark.cny {
+  background: #e74f46;
+}
+
+.c2c-currency-mark.usdt {
+  background: #0f9ea0;
+}
+
+.c2c-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  line-height: 1;
+  margin-top: 0;
+}
+
+.c2c-field-tip,
+.c2c-account-tip,
+.c2c-reference {
+  margin: 10px 24px 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: clamp(12px, 0.68vw, 15px);
+}
+
+.c2c-account-tip {
+  margin-top: 8px;
+}
+
+.c2c-switch-row {
+  margin: 20px 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: clamp(12px, 0.68vw, 15px);
+  font-weight: 600;
+}
+
+.c2c-switch {
+  width: 54px;
+  height: 30px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.24);
+  display: inline-block;
+  position: relative;
+}
+
+.c2c-switch::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.c2c-disabled-btn {
+  margin: 20px 24px 0;
+  width: calc(100% - 48px);
+  border-radius: 999px;
+  min-height: 64px;
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: clamp(16px, 0.92vw, 23px);
+  font-weight: 700;
+}
+
+.c2c-guide {
+  margin-top: 64px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  background: rgba(17, 18, 27, 0.7);
+  padding: 42px 40px 46px;
+}
+
+.c2c-guide h2 {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(26px, 1.58vw, 40px);
+  font-weight: 700;
+  line-height: 1.18;
+}
+
+.c2c-guide-grid {
+  margin-top: 46px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px;
+}
+
+.c2c-guide-card {
+  padding: 8px 10px;
+}
+
+.c2c-guide-icon {
+  width: 84px;
+  height: 84px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.c2c-guide-icon svg {
+  width: 84px;
+  height: 84px;
+}
+
+.c2c-guide-card h3 {
+  margin-top: 30px;
+  font-size: clamp(17px, 1vw, 23px);
+  line-height: 1.3;
+}
+
+.c2c-guide-card p {
+  margin-top: 16px;
+  font-size: clamp(12px, 0.68vw, 15px);
+  line-height: 1.52;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.c2c-self-panel {
+  margin-top: 56px;
+}
+
+.c2c-self-tabs {
+  display: flex;
+  align-items: center;
+  gap: 44px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.c2c-self-tab {
+  padding: 0 0 12px;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: clamp(18px, 1.08vw, 27px);
+  font-weight: 700;
+  border-bottom: 4px solid transparent;
+}
+
+.c2c-self-tab.is-active {
+  color: #ffffff;
+  border-bottom-color: #caff00;
+}
+
+.c2c-filter-row {
+  margin-top: 26px;
+  display: grid;
+  grid-template-columns: 240px 410px 1fr 78px;
+  gap: 14px;
+  align-items: center;
+}
+
+.c2c-select-field,
+.c2c-filter-trigger {
+  min-height: 64px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.c2c-select-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-start;
+  padding: 0 14px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(12px, 0.68vw, 15px);
+}
+
+.c2c-select-field.amount {
+  justify-content: flex-start;
+}
+
+.c2c-placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.c2c-cny-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.c2c-select-field.payment {
+  justify-content: space-between;
+}
+
+.c2c-clear-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.c2c-clear-dot svg {
+  width: 14px;
+  height: 14px;
+}
+
+.c2c-filter-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.c2c-filter-trigger svg {
+  width: 28px;
+  height: 28px;
+}
+
+.c2c-featured-panel {
+  margin-top: 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(17, 18, 27, 0.72);
+  padding: 16px;
+}
+
+.c2c-featured-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.c2c-featured-head h3 {
+  margin: 0;
+  font-size: clamp(17px, 0.9vw, 21px);
+  line-height: 1.2;
+}
+
+.c2c-featured-head p {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: clamp(12px, 0.68vw, 15px);
+}
+
+.c2c-more-btn {
+  min-width: 120px;
+  min-height: 46px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: clamp(11px, 0.62vw, 14px);
+  font-weight: 600;
+}
+
+.c2c-featured-cards {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.c2c-featured-card {
+  min-width: 256px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 14px 16px;
+}
+
+.c2c-featured-card h4 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: clamp(15px, 0.82vw, 20px);
+}
+
+.c2c-merchant-badge {
+  color: #34c7ce;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.c2c-merchant-tags {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+}
+
+.c2c-featured-price {
+  margin: 14px 0;
+  font-size: clamp(16px, 0.92vw, 21px);
+  font-weight: 700;
+}
+
+.c2c-featured-card p {
+  margin: 6px 0;
+  font-size: clamp(12px, 0.68vw, 15px);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.muted {
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.c2c-featured-foot {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.c2c-payment-tag {
+  position: relative;
+  padding-left: 10px;
+  color: rgba(255, 255, 255, 0.74);
+  font-size: clamp(12px, 0.68vw, 15px);
+}
+
+.c2c-payment-tag::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 14px;
+  margin-top: -7px;
+  border-radius: 2px;
+}
+
+.c2c-payment-tag.alipay::before {
+  background: #3567ec;
+}
+
+.c2c-payment-tag.wechat::before {
+  background: #2ca357;
+}
+
+.c2c-payment-tag.bank::before {
+  background: #ef8a3b;
+}
+
+.c2c-action-btn {
+  min-width: 96px;
+  min-height: 44px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: clamp(12px, 0.68vw, 15px);
+  font-weight: 700;
+  padding: 0 20px;
+}
+
+.c2c-action-btn.buy {
+  background: #33b866;
+}
+
+.c2c-action-btn.sell {
+  background: #e94a72;
+}
+
+.c2c-table-wrap {
+  margin-top: 26px;
+}
+
+.c2c-table-head {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: clamp(11px, 0.62vw, 14px);
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.c2c-grid-main {
+  display: grid;
+  grid-template-columns: minmax(280px, 1.4fr) minmax(130px, 0.6fr) minmax(360px, 1.5fr) minmax(160px, 0.8fr) minmax(130px, 0.6fr);
+  gap: 24px;
+  align-items: center;
+}
+
+.c2c-table-row {
+  padding: 24px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.c2c-col-merchant h4 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: clamp(16px, 0.86vw, 21px);
+}
+
+.c2c-col-merchant p,
+.c2c-col-amount p {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.52);
+  font-size: clamp(11px, 0.62vw, 13px);
+}
+
+.c2c-col-price {
+  color: #ffffff;
+  font-size: clamp(17px, 0.96vw, 23px);
+  font-weight: 700;
+}
+
+.c2c-col-amount > p:first-child {
+  margin-top: 0;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.c2c-col-payment,
+.c2c-col-action {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.c2c-mobile-list {
+  display: none;
+}
+
+.c2c-orderbook-wrap {
+  margin-top: 24px;
+}
+
+.c2c-grid-book {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.8fr) minmax(170px, 1fr) minmax(270px, 1.4fr) minmax(360px, 1.8fr) minmax(140px, 0.8fr) minmax(130px, 0.7fr);
+  gap: 20px;
+  align-items: center;
+}
+
+.c2c-orderbook-body {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.c2c-book-price {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #33b866;
+  font-size: clamp(16px, 0.92vw, 21px);
+  font-weight: 700;
+}
+
+.c2c-book-rank {
+  color: rgba(255, 255, 255, 0.56);
+  font-size: clamp(12px, 0.68vw, 15px);
+  font-weight: 500;
+}
+
+@media (max-width: 1100px) {
+  .desktop-only {
+    display: none;
+  }
+
+  .mobile-only {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .mobile-dot {
+    position: absolute;
+    left: 26px;
+    top: -1px;
+  }
+
+  .c2c-zone-link {
+    font-size: 22px;
+    height: 72px;
+  }
+
+  .c2c-search-icon {
+    font-size: 20px;
+    width: auto;
+    height: auto;
+  }
+
+  .c2c-more-icon {
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  .c2c-quick-hero-wrap {
+    margin-top: 20px;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .c2c-quick-hero-text {
+    text-align: center;
+  }
+
+  .c2c-quick-hero-text > p {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+  }
+
+  .c2c-hot-coins {
+    text-align: left;
+  }
+
+  .c2c-guide {
+    margin-top: 32px;
+    padding: 20px 18px 24px;
+  }
+
+  .c2c-guide-grid {
+    margin-top: 20px;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .c2c-guide-card {
+    padding: 6px 4px;
+  }
+
+  .c2c-guide-icon,
+  .c2c-guide-icon svg {
+    width: 56px;
+    height: 56px;
+  }
+
+  .c2c-self-panel {
+    margin-top: 8px;
+  }
+
+  .c2c-self-tabs {
+    gap: 26px;
+  }
+
+  .c2c-filter-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .c2c-select-field.payment {
+    grid-column: span 1;
+  }
+
+  .c2c-filter-trigger {
+    grid-column: span 1;
+  }
+
+  .c2c-featured-panel {
+    margin-top: 14px;
+    padding: 12px;
+  }
+
+  .c2c-featured-cards {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+
+  .c2c-featured-card {
+    min-width: min(68vw, 320px);
+  }
+
+  .desktop-only-table {
+    display: none;
+  }
+
+  .c2c-mobile-list {
+    display: block;
+    margin-top: 14px;
+  }
+
+  .c2c-mobile-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 16px 0 18px;
+  }
+
+  .c2c-mobile-item h4 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: clamp(16px, 3.8vw, 23px);
+  }
+
+  .c2c-mobile-meta {
+    margin: 8px 0 0;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: clamp(10px, 2.4vw, 14px);
+  }
+
+  .c2c-mobile-price {
+    margin: 18px 0 12px;
+    font-size: clamp(20px, 4.6vw, 27px);
+    font-weight: 700;
+  }
+
+  .c2c-mobile-item p {
+    margin: 6px 0 0;
+    font-size: clamp(11px, 3vw, 15px);
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .c2c-mobile-foot {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .c2c-action-btn {
+    min-width: 116px;
+    min-height: 50px;
+  }
+
+  .c2c-grid-book {
+    grid-template-columns: 140px 170px 260px 340px 140px 130px;
+    min-width: 1180px;
+  }
+
+  .c2c-orderbook-wrap {
+    overflow-x: auto;
+  }
+
+  .c2c-orderbook-body {
+    max-height: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .c2c-topbar-inner {
+    min-height: 58px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .c2c-main {
+    padding: 14px 16px 44px;
+  }
+
+  .c2c-zones {
+    gap: 16px;
+  }
+
+  .c2c-zone-link {
+    height: 58px;
+    font-size: 15px;
+    border-bottom-width: 3px;
+  }
+
+  .c2c-quick-hero-text h1 {
+    font-size: 20px;
+    line-height: 1.24;
+  }
+
+  .c2c-quick-hero-text > p {
+    font-size: 12px;
+    margin-top: 10px;
+  }
+
+  .c2c-hot-coins {
+    margin-top: 18px;
+    border-radius: 16px;
+    padding: 14px;
+  }
+
+  .c2c-hot-coins h2 {
+    font-size: 14px;
+  }
+
+  .c2c-hot-coins > p {
+    font-size: 11px;
+  }
+
+  .c2c-hot-list {
+    margin-top: 14px;
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .c2c-hot-item {
+    min-width: 116px;
+    padding: 10px;
+    border-radius: 10px;
+  }
+
+  .c2c-hot-symbol {
+    font-size: 13px;
+  }
+
+  .c2c-token-mark {
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
+  }
+
+  .c2c-hot-price {
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  .c2c-hot-change {
+    margin-top: 4px;
+    font-size: 9px;
+  }
+
+  .c2c-quick-form {
+    border-radius: 18px;
+    padding-bottom: 14px;
+  }
+
+  .c2c-form-tab {
+    height: 60px;
+    font-size: 16px;
+  }
+
+  .c2c-form-tab.is-active:first-child {
+    border-top-left-radius: 18px;
+    border-top-right-radius: 22px;
+  }
+
+  .c2c-form-tab.is-active:last-child {
+    border-top-right-radius: 18px;
+    border-top-left-radius: 22px;
+  }
+
+  .c2c-field-block {
+    margin: 12px 12px 0;
+    border-radius: 14px;
+    padding: 10px;
+    border-width: 1px;
+  }
+
+  .c2c-field-title {
+    font-size: 14px;
+  }
+
+  .c2c-field-input-row {
+    min-height: 42px;
+    margin-top: 6px;
+  }
+
+  .c2c-field-placeholder {
+    font-size: 24px;
+  }
+
+  .c2c-currency-pill {
+    min-height: 48px;
+    border-radius: 10px;
+    font-size: 15px;
+    padding: 0 14px;
+  }
+
+  .c2c-currency-mark {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+
+  .c2c-chevron {
+    font-size: 16px;
+    margin-top: 0;
+  }
+
+  .c2c-field-tip,
+  .c2c-account-tip,
+  .c2c-reference {
+    margin: 8px 12px 0;
+    font-size: 12px;
+  }
+
+  .c2c-switch-row {
+    margin: 12px 12px 0;
+    font-size: 12px;
+  }
+
+  .c2c-switch {
+    width: 40px;
+    height: 22px;
+  }
+
+  .c2c-switch::after {
+    width: 14px;
+    height: 14px;
+    top: 4px;
+    left: 4px;
+  }
+
+  .c2c-disabled-btn {
+    margin: 12px 12px 0;
+    width: calc(100% - 24px);
+    min-height: 50px;
+    font-size: 16px;
+  }
+
+  .c2c-guide {
+    margin-top: 26px;
+    padding: 16px 14px;
+    border-radius: 18px;
+  }
+
+  .c2c-guide h2 {
+    font-size: 18px;
+    text-align: left;
+  }
+
+  .c2c-guide-card h3 {
+    margin-top: 10px;
+    font-size: 16px;
+  }
+
+  .c2c-guide-card p {
+    margin-top: 6px;
+    font-size: 12px;
+  }
+
+  .c2c-self-tabs {
+    gap: 24px;
+    overflow-x: auto;
+  }
+
+  .c2c-self-tab {
+    font-size: 27px;
+  }
+
+  .c2c-self-tab:nth-child(3) {
+    display: none;
+  }
+
+  .c2c-filter-row {
+    margin-top: 14px;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .c2c-select-field,
+  .c2c-filter-trigger,
+  .c2c-more-btn {
+    min-height: 50px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+
+  .c2c-select-field.payment {
+    grid-column: 1 / span 1;
+  }
+
+  .c2c-filter-trigger {
+    grid-column: 2 / span 1;
+  }
+
+  .c2c-featured-head h3 {
+    font-size: 14px;
+  }
+
+  .c2c-featured-head p {
+    font-size: 11px;
+  }
+
+  .c2c-featured-card {
+    min-width: 70vw;
+    padding: 12px;
+  }
+
+  .c2c-featured-card h4,
+  .c2c-mobile-item h4 {
+    font-size: 14px;
+  }
+
+  .c2c-featured-price,
+  .c2c-mobile-price {
+    font-size: 16px;
+  }
+
+  .c2c-featured-card p,
+  .c2c-mobile-item p,
+  .c2c-mobile-meta,
+  .c2c-payment-tag {
+    font-size: 11px;
+  }
+
+  .c2c-action-btn {
+    min-width: 74px;
+    min-height: 34px;
+    font-size: 12px;
+    padding: 0 12px;
+  }
+}

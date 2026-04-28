@@ -30,8 +30,8 @@ export default function FooterSection() {
                 </NavLink>
               </li>
               <li>
-                <NavLink className="footer__link" to="/leadership">
-                  领导力等级
+                <NavLink className="footer__link" to="/vip">
+                  VIP
                 </NavLink>
               </li>
               <li>

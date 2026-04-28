@@ -1,53 +1,104 @@
-import { c2cFeeRules, circulationRules, globalOverview } from "../../data/mockData";
-import ModulePageHero from "../../components/common/ModulePageHero";
+import { Icon } from "@iconify/react";
+import { Link } from "react-router-dom";
+import C2CPageFrame from "../../components/c2c/C2CPageFrame";
+import { hotCoins, quickGuideSteps } from "../../data/c2cUiData";
+import "../styles/c2c.css";
+
+function CoinMark({ type }) {
+  return <span className="c2c-token-mark">{type}</span>;
+}
+
+function QuickSellFormCard() {
+  return (
+    <article className="c2c-quick-form">
+      <div className="c2c-form-tabs">
+        <Link className="c2c-form-tab" to="/c2c">购买</Link>
+        <Link className="c2c-form-tab is-active" to="/c2c/sell">出售</Link>
+      </div>
+
+      <div className="c2c-field-block">
+        <div className="c2c-field-title">我要出售</div>
+        <div className="c2c-field-input-row right-fixed">
+          <button type="button" className="c2c-currency-pill usdt-pill">
+            <span className="c2c-currency-mark usdt">₮</span>
+            USDT
+            <span className="c2c-chevron"><Icon icon="mdi:chevron-down" /></span>
+          </button>
+        </div>
+      </div>
+
+      <p className="c2c-account-tip">资金账户可出售 -- USDT</p>
+
+      <div className="c2c-field-block">
+        <div className="c2c-field-title">我将收到</div>
+        <div className="c2c-field-input-row">
+          <span className="c2c-field-placeholder">0</span>
+          <button type="button" className="c2c-currency-pill">
+            <span className="c2c-currency-mark cny">¥</span>
+            CNY
+            <span className="c2c-chevron"><Icon icon="mdi:chevron-down" /></span>
+          </button>
+        </div>
+      </div>
+
+      <p className="c2c-field-tip">10 - 40,000,000 CNY</p>
+      <p className="c2c-reference">参考价格 1 USDT = 6.84 CNY</p>
+      <button type="button" className="c2c-disabled-btn">选择收款方式</button>
+    </article>
+  );
+}
+
+function GuideIcon({ kind }) {
+  if (kind === "hourglass") {
+    return <Icon icon="mdi:timer-sand" />;
+  }
+  if (kind === "wallet") {
+    return <Icon icon="mdi:wallet-outline" />;
+  }
+  return <Icon icon="mdi:file-document-outline" />;
+}
 
 export default function C2CSellPage() {
   return (
-    <section className="space-y-6">
-      <ModulePageHero
-        compact
-        title="创建 C2C 卖单"
-        subtitle="仅支持挂卖单。订单创建后进入 10 分钟定向期，超时自动切换为全网可见订单。"
-      />
+    <C2CPageFrame zone="quick">
+      <section className="c2c-quick-hero-wrap">
+        <div className="c2c-quick-hero-text">
+          <h1>C2C 快捷交易<br />使用 CNY 出售 USDT</h1>
+          <p>快捷交易为您自动匹配当前 C2C 市场出售 USDT 的最优价格之选。</p>
 
-      <article className="module-panel">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="space-y-2 text-sm text-white/75">
-            卖出数量（NETE）
-            <input className="module-input" type="number" placeholder="例如 5000" />
-          </label>
-          <label className="space-y-2 text-sm text-white/75">
-            卖出价格（USDT）
-            <input className="module-input" type="number" placeholder="例如 0.92" />
-          </label>
+          <article className="c2c-hot-coins">
+            <h2>热门币种</h2>
+            <p>近期市场热议、交易最活跃的币种，尽在 C2C。</p>
+            <div className="c2c-hot-list">
+              {hotCoins.map((coin) => (
+                <div className="c2c-hot-item" key={coin.symbol}>
+                  <div className="c2c-hot-head">
+                    <span className="c2c-hot-symbol">{coin.symbol}</span>
+                    <CoinMark type={coin.tokenMark} />
+                  </div>
+                  <p className="c2c-hot-price">{coin.price}</p>
+                  <p className={coin.trend === "up" ? "c2c-hot-change up" : "c2c-hot-change down"}>{coin.change}</p>
+                </div>
+              ))}
+            </div>
+          </article>
         </div>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="module-kpi-card">
-            <div className="module-kpi-label">我的 USDT 余额</div>
-            <div className="module-kpi-value">{globalOverview.wallet.usdtBalance}</div>
-          </div>
-          <div className="module-kpi-card">
-            <div className="module-kpi-label">我的 NETE 余额</div>
-            <div className="module-kpi-value">{globalOverview.circulateWallet}</div>
-          </div>
-        </div>
+        <QuickSellFormCard />
+      </section>
 
-        <div className="mt-5 flex flex-wrap gap-3">
-          <button className="module-button-primary">创建卖单</button>
-          <button className="module-button-ghost">全部 NETE</button>
+      <section className="c2c-guide">
+        <h2>如何在 C2C 快捷交易使用 CNY 出售 USDT</h2>
+        <div className="c2c-guide-grid">
+          {quickGuideSteps.map((item) => (
+            <article key={item.title} className="c2c-guide-card">
+              <span className="c2c-guide-icon"><GuideIcon kind={item.icon} /></span>
+              <h3>{item.title.replace("购买", "出售")}</h3>
+              <p>{item.desc.replace("购买", "出售")}</p>
+            </article>
+          ))}
         </div>
-      </article>
-
-      <article className="module-warning">
-        <p>交易规则：</p>
-        {c2cFeeRules.map((row) => (
-          <p key={row.item}>- {row.item}：{row.rule}</p>
-        ))}
-        {circulationRules.map((row) => (
-          <p key={row.mode}>- {row.mode}：{row.rule}</p>
-        ))}
-      </article>
-    </section>
+      </section>
+    </C2CPageFrame>
   );
 }

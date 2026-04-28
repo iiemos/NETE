@@ -1,5 +1,4 @@
 import { shareAccelerationNote, shareAccelerationRules, teamMembers } from "../../data/mockData";
-import ModulePageHero from "../../components/common/ModulePageHero";
 
 const directCount = teamMembers.length;
 const totalPerformance = teamMembers
@@ -10,31 +9,34 @@ const currentLayers = directCount >= 8 ? "8-20 层" : `${directCount} 层`;
 export default function MyTeamPage() {
   return (
     <section className="space-y-6">
-      <ModulePageHero
-        compact
-        title="团队模块"
-        subtitle="展示团队结构、分享加速机制与直推成员数据，所有激励分配遵循链上规则执行。"
-      />
+      <header className="rounded-[28px] bg-transparent">
+        <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
+          <div className="max-w-3xl">
+            <h1 className="font-display text-2xl font-black tracking-tight text-white md:text-3xl">团队模块</h1>
+            <p className="mt-3 max-w-2xl text-sm text-white/80">展示团队结构、分享加速机制与直推成员数据，所有激励分配遵循链上规则执行。</p>
+          </div>
+        </div>
+      </header>
 
-      <div className="module-grid">
-        <article className="module-kpi-card">
-          <div className="module-kpi-label">当前直推成员数</div>
-          <div className="module-kpi-value">{directCount}</div>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <article className="rounded-xl border border-white/10 bg-transparent p-4">
+          <div className="text-xs uppercase tracking-[0.12em] text-white/55">当前直推成员数</div>
+          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{directCount}</div>
         </article>
-        <article className="module-kpi-card">
-          <div className="module-kpi-label">直推累计业绩（NETE）</div>
-          <div className="module-kpi-value">{totalPerformance}</div>
+        <article className="rounded-xl border border-white/10 bg-transparent p-4">
+          <div className="text-xs uppercase tracking-[0.12em] text-white/55">直推累计业绩（NETE）</div>
+          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{totalPerformance}</div>
         </article>
-        <article className="module-kpi-card">
-          <div className="module-kpi-label">当前享受层数</div>
-          <div className="module-kpi-value">{currentLayers}</div>
+        <article className="rounded-xl border border-white/10 bg-transparent p-4">
+          <div className="text-xs uppercase tracking-[0.12em] text-white/55">当前享受层数</div>
+          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{currentLayers}</div>
         </article>
       </div>
 
-      <article className="module-panel">
-        <h2 className="module-title text-xl">分享（推广）加速机制</h2>
-        <div className="module-table-wrap mt-4">
-          <table className="module-table">
+      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
+        <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">分享（推广）加速机制</h2>
+        <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
+          <table className="min-w-full border-collapse text-left text-xs md:text-sm [&_th]:px-4 [&_th]:py-3 [&_th]:font-semibold [&_th]:text-white/65 [&_td]:border-t [&_td]:border-white/10 [&_td]:px-4 [&_td]:py-3 [&_td]:text-white/85">
             <thead>
               <tr>
                 <th>直推人数</th>
@@ -57,10 +59,10 @@ export default function MyTeamPage() {
         </div>
       </article>
 
-      <article className="module-panel">
-        <h2 className="module-title text-xl">直推列表</h2>
-        <div className="module-table-wrap mt-4">
-          <table className="module-table">
+      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
+        <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">直推列表</h2>
+        <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
+          <table className="min-w-full border-collapse text-left text-xs md:text-sm [&_th]:px-4 [&_th]:py-3 [&_th]:font-semibold [&_th]:text-white/65 [&_td]:border-t [&_td]:border-white/10 [&_td]:px-4 [&_td]:py-3 [&_td]:text-white/85">
             <thead>
               <tr>
                 <th>地址</th>
@@ -80,7 +82,7 @@ export default function MyTeamPage() {
                   <td>{member.joinedAt}</td>
                   <td>{member.directs}</td>
                   <td>
-                    <button className="module-button-ghost">查看下级</button>
+                    <button className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 bg-transparent px-5 text-sm font-semibold tracking-wide text-white transition hover:border-white/40 hover:bg-white/5">查看下级</button>
                   </td>
                 </tr>
               ))}

@@ -123,6 +123,24 @@ body {
   scrollbar-gutter: stable;
 }
 
+@keyframes mobile-drawer-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0.92;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 767px) {
+  .mobile-drawer-enter {
+    animation: mobile-drawer-up 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+  }
+}
+
 ::selection {
   background: var(--color-purple);
   color: var(--color-white);

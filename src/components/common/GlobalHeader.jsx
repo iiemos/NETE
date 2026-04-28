@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 const navItems = [
   { label: { zh: "首页", en: "Home" }, to: "/" },
   { label: { zh: "矿机", en: "Mining" }, to: "/mining" },
-  { label: { zh: "领导力", en: "Leadership" }, to: "/leadership" },
+  { label: { zh: "VIP", en: "VIP" }, to: "/vip" },
   { label: { zh: "C2C", en: "C2C" }, to: "/c2c" },
   { label: { zh: "种子 NETE", en: "Seed NETE" }, to: "/finance/buy-seed" },
   { label: { zh: "团队", en: "Team" }, to: "/account/team" },
