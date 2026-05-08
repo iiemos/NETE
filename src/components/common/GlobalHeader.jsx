@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import logoIcon from "../../assets/images/logo-icon.svg";
+import { useWalletConnector } from "../../hooks/useWalletConnector";
 
 const navItems = [
   { label: { zh: "首页", en: "Home" }, to: "/" },
@@ -28,12 +29,21 @@ function normalizeLanguage(language) {
 export default function GlobalHeader() {
   const { i18n } = useTranslation();
   const location = useLocation();
+  const wallet = useWalletConnector();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const languageMenuRef = useRef(null);
   const currentLanguage = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
-  const walletLabel = currentLanguage === "zh" ? "链接钱包" : "Connect Wallet";
+  const connectLabel = currentLanguage === "zh" ? "连接钱包" : "Connect Wallet";
+  const disconnectLabel = currentLanguage === "zh" ? "断开连接" : "Disconnect";
+  const switchChainLabel = currentLanguage === "zh" ? "切换到目标链" : "Switch Chain";
+
+  const walletLabel = wallet.isConnecting || wallet.isSwitching
+    ? (currentLanguage === "zh" ? "处理中..." : "Processing...")
+    : wallet.isConnected
+      ? wallet.shortAddress
+      : connectLabel;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -83,6 +93,25 @@ export default function GlobalHeader() {
     setLanguageMenuOpen(false);
   };
 
+  const handleWalletAction = async () => {
+    try {
+      if (!wallet.isConnected) {
+        await wallet.connectWallet();
+        return;
+      }
+
+      if (wallet.isWrongChain) {
+        await wallet.ensureCorrectChain();
+        return;
+      }
+
+      wallet.disconnectWallet();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Wallet action failed";
+      window.alert(message);
+    }
+  };
+
   return (
     <>
       <nav className={scrolled ? "nav nav--scrolled" : "nav"} role="navigation" aria-label="Main navigation">
@@ -106,7 +135,13 @@ export default function GlobalHeader() {
             </ul>
 
             <div className="nav__cta">
-              <button className="btn btn--ghost btn--wallet btn--sm" id="connect-btn">
+              <button
+                className="btn btn--ghost btn--wallet btn--sm"
+                id="connect-btn"
+                type="button"
+                onClick={handleWalletAction}
+                title={wallet.isConnected ? (wallet.isWrongChain ? switchChainLabel : disconnectLabel) : connectLabel}
+              >
                 <svg className="btn__wallet-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
                     d="M3 8.5C3 6.567 4.567 5 6.5 5H17.5C19.433 5 21 6.567 21 8.5V15.5C21 17.433 19.433 19 17.5 19H6.5C4.567 19 3 17.433 3 15.5V8.5Z"
@@ -191,7 +226,12 @@ export default function GlobalHeader() {
           ))}
         </ul>
         <div className="nav__mobile-actions">
-          <button className="btn btn--ghost btn--wallet btn--lg">
+          <button
+            className="btn btn--ghost btn--wallet btn--lg"
+            type="button"
+            onClick={handleWalletAction}
+            title={wallet.isConnected ? (wallet.isWrongChain ? switchChainLabel : disconnectLabel) : connectLabel}
+          >
             <svg className="btn__wallet-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path
                 d="M3 8.5C3 6.567 4.567 5 6.5 5H17.5C19.433 5 21 6.567 21 8.5V15.5C21 17.433 19.433 19 17.5 19H6.5C4.567 19 3 17.433 3 15.5V8.5Z"

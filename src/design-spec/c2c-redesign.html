@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NETE C2C</title>
+  <style>
+    :root {
+      --bg: #070a09;
+      --panel: rgba(15, 19, 17, 0.92);
+      --panel-strong: rgba(18, 24, 21, 0.98);
+      --line: rgba(255, 255, 255, 0.08);
+      --text: #f5f7f6;
+      --muted: #99a39d;
+      --muted-strong: #c9d0cb;
+      --accent: #c2ff1a;
+      --accent-soft: rgba(194, 255, 26, 0.12);
+      --danger: #ff7d5e;
+      --radius: 8px;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+      --max-width: 1220px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(108, 77, 255, 0.16), transparent 28%),
+        radial-gradient(circle at top right, rgba(118, 245, 196, 0.1), transparent 24%),
+        linear-gradient(180deg, #090d0c 0%, #050706 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.52), transparent 75%);
+      opacity: 0.18;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      background: none;
+    }
+
+    .container {
+      width: min(var(--max-width), calc(100vw - 32px));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(8, 11, 10, 0.84);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      min-height: 82px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .nav-links a {
+      padding: 10px 14px;
+      border-radius: 999px;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .nav-links a.active,
+    .nav-links a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .wallet-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 18px;
+      border: 1px solid rgba(194, 255, 26, 0.38);
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(194, 255, 26, 0.12), rgba(194, 255, 26, 0.04));
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .icon-button {
+      width: 44px;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .page {
+      padding: 34px 0 56px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+      gap: 22px;
+      padding: 34px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, rgba(18, 15, 34, 0.92), rgba(12, 16, 14, 0.84) 62%, rgba(8, 10, 9, 0.96)),
+        radial-gradient(circle at 74% 18%, rgba(194, 255, 26, 0.12), transparent 18%);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -30px;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(108, 77, 255, 0.22), transparent 68%);
+      filter: blur(18px);
+      pointer-events: none;
+    }
+
+    .hero-copy,
+    .hero-side {
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 34px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    h1 {
+      margin: 16px 0 12px;
+      font-size: clamp(30px, 3vw, 44px);
+      line-height: 1.06;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 720px;
+      color: var(--muted-strong);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .hero-side {
+      display: grid;
+      gap: 12px;
+      align-content: end;
+    }
+
+    .mini-panel {
+      padding: 18px;
+      border: 1px solid rgba(194, 255, 26, 0.12);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .mini-panel strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 22px;
+    }
+
+    .mini-panel span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .market-shell {
+      margin-top: 26px;
+    }
+
+    .market-tabs {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .tab-button {
+      position: relative;
+      padding: 0 0 18px;
+      color: var(--muted-strong);
+      font-size: 18px;
+      font-weight: 700;
+      transition: color 0.2s ease;
+    }
+
+    .tab-button::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: transparent;
+      transition: background 0.2s ease;
+    }
+
+    .tab-button.active {
+      color: var(--text);
+    }
+
+    .tab-button.active::after {
+      background: var(--accent);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .surface {
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius);
+      background: rgba(9, 11, 10, 0.76);
+      box-shadow: var(--shadow);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 22px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      flex-wrap: wrap;
+    }
+
+    .search-field {
+      flex: 1 1 340px;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 62px;
+      padding: 0 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .search-field svg {
+      width: 18px;
+      height: 18px;
+      color: var(--muted);
+      flex: 0 0 auto;
+    }
+
+    .search-field input {
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .search-field input::placeholder {
+      color: var(--muted);
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 48px;
+      padding: 0 20px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: transform 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button-primary {
+      background: var(--accent);
+      color: #111409;
+    }
+
+    .button-secondary {
+      border: 1px solid rgba(194, 255, 26, 0.26);
+      background: rgba(194, 255, 26, 0.08);
+      color: var(--accent);
+    }
+
+    .button-ghost {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--muted-strong);
+    }
+
+    .button-danger {
+      border: 1px solid rgba(255, 125, 94, 0.24);
+      background: rgba(255, 125, 94, 0.08);
+      color: #ffc2b3;
+    }
+
+    .button:disabled {
+      cursor: not-allowed;
+      opacity: 0.52;
+      transform: none;
+    }
+
+    .table {
+      width: 100%;
+    }
+
+    .table-head,
+    .table-row {
+      display: grid;
+      grid-template-columns: minmax(220px, 1.65fr) minmax(140px, 0.75fr) minmax(140px, 0.8fr) minmax(140px, 0.8fr) minmax(120px, 0.6fr);
+      gap: 18px;
+      align-items: center;
+    }
+
+    .table-head {
+      padding: 0 22px;
+      min-height: 58px;
+      color: var(--muted);
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .table-row {
+      padding: 24px 22px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.015);
+    }
+
+    .table-row:first-child {
+      border-top: none;
+    }
+
+    .table-row:last-child {
+      border-bottom: none;
+    }
+
+    .order-cell {
+      min-width: 0;
+    }
+
+    .order-cell-action {
+      display: flex;
+      align-items: center;
+    }
+
+    .mobile-inline-action {
+      display: none;
+    }
+
+    .mobile-key {
+      display: none;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .order-id {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .order-id-block {
+      min-width: 0;
+    }
+
+    .sub-meta {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .price {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .accent-text {
+      color: var(--accent);
+    }
+
+    .mono {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: "tnum";
+    }
+
+    .mine-layout {
+      display: grid;
+      gap: 22px;
+    }
+
+    .card-section {
+      padding: 22px;
+    }
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .section-heading p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .list-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .order-card {
+      display: grid;
+      gap: 16px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .order-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .order-card-title {
+      font-size: 18px;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .order-card-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .metric span,
+    .history-meta span {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric strong,
+    .history-meta strong {
+      display: block;
+      font-size: 16px;
+      word-break: break-word;
+    }
+
+    .history-item {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .history-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .type-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 72px;
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .type-chip.buy {
+      background: rgba(194, 255, 26, 0.14);
+      color: var(--accent);
+    }
+
+    .type-chip.sell {
+      background: rgba(108, 77, 255, 0.18);
+      color: #cfc4ff;
+    }
+
+    .history-meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .empty-state {
+      padding: 40px 18px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius);
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .site-footer {
+      padding: 0 0 40px;
+    }
+
+    .footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      font-size: 13px;
+      flex-wrap: wrap;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 30px;
+      transform: translate(-50%, 18px);
+      min-width: 260px;
+      max-width: calc(100vw - 32px);
+      padding: 14px 18px;
+      border: 1px solid rgba(194, 255, 26, 0.18);
+      border-radius: var(--radius);
+      background: rgba(9, 12, 11, 0.96);
+      color: var(--text);
+      text-align: center;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.22s ease, transform 0.22s ease;
+      z-index: 70;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(2, 4, 3, 0.72);
+      backdrop-filter: blur(10px);
+      z-index: 60;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      width: min(460px, calc(100vw - 32px));
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      background: rgba(10, 13, 12, 0.98);
+      box-shadow: var(--shadow);
+    }
+
+    .modal h3 {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+
+    .modal p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      color: var(--muted-strong);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .field input {
+      width: 100%;
+      min-height: 50px;
+      padding: 0 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      outline: none;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+    }
+
+    .field input:focus {
+      border-color: rgba(194, 255, 26, 0.4);
+      box-shadow: 0 0 0 3px rgba(194, 255, 26, 0.08);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 1100px) {
+      .table-head {
+        display: none;
+      }
+
+      .table-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 18px;
+      }
+
+      .table-row .order-cell:first-child {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .order-card-grid,
+      .history-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .nav {
+        min-height: 74px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .page {
+        padding-top: 24px;
+      }
+
+      .hero,
+      .toolbar,
+      .card-section {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .market-tabs {
+        gap: 18px;
+      }
+
+      .tab-button {
+        font-size: 17px;
+      }
+
+      .toolbar {
+        align-items: stretch;
+      }
+
+      .toolbar .button {
+        width: 100%;
+      }
+
+      .table-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        padding: 18px;
+      }
+
+      .table-row .order-cell {
+        padding: 0;
+      }
+
+      .table-row .order-cell:first-child {
+        grid-column: 1 / -1;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .table-row .order-cell-action {
+        grid-column: auto;
+        align-items: flex-start;
+        margin-top: 0;
+      }
+
+      .desktop-action {
+        display: none;
+      }
+
+      .mobile-inline-action {
+        display: flex;
+      }
+
+      .table-row .order-cell-action .mobile-key {
+        display: none;
+      }
+
+      .table-row .order-cell-action .button {
+        width: auto;
+        min-width: 68px;
+        min-height: 30px;
+        padding: 0 14px;
+        font-size: 13px;
+      }
+
+      .table-row .order-cell:first-child .mobile-key,
+      .table-row .order-cell:first-child .order-id-block {
+        flex: 1 1 auto;
+      }
+
+      .mobile-key {
+        display: block;
+      }
+
+      .order-id,
+      .price {
+        font-size: 18px;
+      }
+
+      .order-card {
+        gap: 14px;
+      }
+
+      .order-card-top {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+
+      .order-card-top .button {
+        width: 100%;
+      }
+
+      .order-card-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .order-card-grid .metric span,
+      .order-card-grid .metric strong {
+        text-align: center;
+      }
+
+      .order-card-grid .metric span,
+      .history-meta span {
+        font-size: 11px;
+      }
+
+      .order-card-grid .metric strong,
+      .history-meta strong {
+        font-size: 14px;
+      }
+
+      .history-item {
+        gap: 12px;
+      }
+
+      .history-meta {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .modal-actions .button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M14 11.5L32.5 22.1V34.7L14 24.1V11.5Z" fill="#C2FF1A"/>
+          <path d="M32.5 22.1L50 11.5V24.1L32.5 34.7V22.1Z" fill="#9AD108"/>
+          <path d="M14 39.9L31.5 29.7V42.3L14 52.5V39.9Z" fill="#76F5C4"/>
+          <path d="M32.5 42.3L50 52.5V39.9L32.5 29.7V42.3Z" fill="#C2FF1A"/>
+        </svg>
+        <span>NETE</span>
+      </div>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="javascript:void(0)">首页</a>
+        <a href="javascript:void(0)">矿机</a>
+        <a href="javascript:void(0)">VIP</a>
+        <a class="active" href="javascript:void(0)">C2C</a>
+        <a href="javascript:void(0)">种子 NETE</a>
+        <a href="javascript:void(0)">团队</a>
+        <a href="javascript:void(0)">我的</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="wallet-button" type="button">链接钱包</button>
+        <button class="icon-button" type="button" aria-label="语言">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2Z" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M3 12H21" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M12 2C14.6 4.74 16 8.29 16 12C16 15.71 14.6 19.26 12 22" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M12 2C9.4 4.74 8 8.29 8 12C8 15.71 9.4 19.26 12 22" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="container">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">NETE C2C</div>
+          <h1>订单列表与我的订单已经拆开，挂单和成交记录都放到明面上。</h1>
+          <p class="lead">
+            这一版去掉了盘口模式，把筛选横条改成订单编号搜索。订单列表里直接看订单编号、单价、数量和总价；
+            我的订单里分成当前挂单和历史成交，购买和出售都会明确标识，并且带上成交时间。
+          </p>
+        </div>
+        <div class="hero-side">
+          <div class="mini-panel">
+            <span>订单单价范围</span>
+            <strong class="accent-text">0.60U - 0.65U</strong>
+          </div>
+          <div class="mini-panel">
+            <span>挂单动作</span>
+            <strong>出售数量 + 出售单价</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="market-shell">
+        <div class="market-tabs" role="tablist" aria-label="订单视图切换">
+          <button class="tab-button active" type="button" role="tab" aria-selected="true" data-tab="market">订单列表</button>
+          <button class="tab-button" type="button" role="tab" aria-selected="false" data-tab="mine">我的订单</button>
+        </div>
+
+        <section class="panel active" data-panel="market">
+          <div class="surface">
+            <div class="toolbar">
+              <label class="search-field" aria-label="搜索订单编号">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M11 19C15.42 19 19 15.42 19 11S15.42 3 11 3 3 6.58 3 11 6.58 19 11 19Z" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+                <input id="orderSearch" type="text" placeholder="搜索订单编号">
+              </label>
+              <button class="button button-primary" id="searchButton" type="button">搜索</button>
+              <button class="button button-secondary" id="openListingButton" type="button">我要挂单</button>
+            </div>
+
+            <div class="table">
+              <div class="table-head">
+                <div>订单编号</div>
+                <div>单价</div>
+                <div>数量</div>
+                <div>总价</div>
+                <div>购买</div>
+              </div>
+              <div id="orderList"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="mine">
+          <div class="mine-layout">
+            <div class="surface card-section">
+              <div class="section-heading">
+                <div>
+                  <h2>当前挂单</h2>
+                  <p>这里保留你当前有效的挂单，卡片后方可以直接取消订单。</p>
+                </div>
+              </div>
+              <div class="list-stack" id="currentOrders"></div>
+            </div>
+
+            <div class="surface card-section">
+              <div class="section-heading">
+                <div>
+                  <h2>历史成交</h2>
+                  <p>每一笔记录都明确展示购买还是出售，并补上成交时间。</p>
+                </div>
+              </div>
+              <div class="list-stack" id="historyOrders"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-row">
+      <span>© 2026 NETE. All rights reserved.</span>
+      <span>Built for a cleaner C2C order flow.</span>
+    </div>
+  </footer>
+
+  <div class="modal-backdrop" id="listingModal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="listingTitle">
+      <h3 id="listingTitle">我要挂单</h3>
+      <p>订单只接受 0.6U-0.65U 的单价。</p>
+      <form id="listingForm">
+        <div class="form-grid">
+          <div class="field">
+            <label for="sellQuantity">出售数量</label>
+            <input id="sellQuantity" name="sellQuantity" type="number" min="0.01" step="0.01" placeholder="请输入出售数量">
+          </div>
+          <div class="field">
+            <label for="sellPrice">出售单价</label>
+            <input id="sellPrice" name="sellPrice" type="number" min="0.6" max="0.65" step="0.01" placeholder="请输入出售单价">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="button button-ghost" id="cancelModalButton" type="button">取消</button>
+          <button class="button button-primary" type="submit">确定</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
+    const panels = Array.from(document.querySelectorAll("[data-panel]"));
+    const orderSearchInput = document.getElementById("orderSearch");
+    const searchButton = document.getElementById("searchButton");
+    const orderList = document.getElementById("orderList");
+    const currentOrders = document.getElementById("currentOrders");
+    const historyOrders = document.getElementById("historyOrders");
+    const toast = document.getElementById("toast");
+    const listingModal = document.getElementById("listingModal");
+    const listingForm = document.getElementById("listingForm");
+    const openListingButton = document.getElementById("openListingButton");
+    const cancelModalButton = document.getElementById("cancelModalButton");
+    const sellQuantityInput = document.getElementById("sellQuantity");
+    const sellPriceInput = document.getElementById("sellPrice");
+
+    let toastTimer = null;
+    let activeTab = "market";
+    let orderCounter = 1008;
+    let appliedSearchKeyword = "";
+
+    function createRandomPrice() {
+      const value = 0.6 + Math.random() * 0.05;
+      return Number(Math.min(0.65, value).toFixed(2));
+    }
+
+    function formatDate(date) {
+      const pad = (value) => String(value).padStart(2, "0");
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function formatUnitPrice(value) {
+      return `${value.toFixed(2).replace(/0$/, "").replace(/\.$/, "")}U`;
+    }
+
+    function formatQuantity(value) {
+      return Number(value).toLocaleString("zh-CN", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function formatTotal(value) {
+      return `${Number(value).toLocaleString("zh-CN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}U`;
+    }
+
+    function createOrderId() {
+      orderCounter += 1;
+      const stamp = formatDate(new Date()).slice(2, 16).replace(/[- :]/g, "");
+      return `NETE-C2C-${stamp}-${orderCounter}`;
+    }
+
+    function calculateTotal(quantity, price) {
+      return Number((quantity * price).toFixed(2));
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2200);
+    }
+
+    const marketOrdersData = [
+      { id: "NETE-C2C2505041001", price: createRandomPrice(), quantity: 3200, createdAt: "2026-05-04 09:18", owner: "market" },
+      { id: "NETE-C2C2505041002", price: createRandomPrice(), quantity: 5800.5, createdAt: "2026-05-04 09:31", owner: "market" },
+      { id: "NETE-C2C2505041003", price: createRandomPrice(), quantity: 1500, createdAt: "2026-05-04 10:04", owner: "market" },
+      { id: "NETE-C2C2505041004", price: createRandomPrice(), quantity: 8900.25, createdAt: "2026-05-04 10:26", owner: "market" },
+      { id: "NETE-C2C2505041005", price: createRandomPrice(), quantity: 2400.8, createdAt: "2026-05-04 11:08", owner: "market" }
+    ];
+
+    const myCurrentOrdersData = [
+      { id: "NETE-C2C2505041006", price: 0.62, quantity: 2600, createdAt: "2026-05-04 12:12", owner: "mine" },
+      { id: "NETE-C2C2505041007", price: 0.64, quantity: 1800.5, createdAt: "2026-05-04 13:40", owner: "mine" }
+    ];
+
+    const historyOrdersData = [
+      { id: "NETE-C2C2505030988", type: "购买", price: 0.61, quantity: 1200, total: 732, completedAt: "2026-05-03 18:12" },
+      { id: "NETE-C2C2505030981", type: "出售", price: 0.63, quantity: 900, total: 567, completedAt: "2026-05-03 14:27" },
+      { id: "NETE-C2C2505020942", type: "购买", price: 0.6, quantity: 3000, total: 1800, completedAt: "2026-05-02 20:08" }
+    ];
+
+    myCurrentOrdersData.forEach((item) => {
+      marketOrdersData.unshift({ ...item });
+    });
+
+    function setActiveTab(nextTab) {
+      activeTab = nextTab;
+      tabButtons.forEach((button) => {
+        const isActive = button.dataset.tab === nextTab;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-selected", isActive ? "true" : "false");
+      });
+      panels.forEach((panel) => {
+        panel.classList.toggle("active", panel.dataset.panel === nextTab);
+      });
+    }
+
+    function openListingModal() {
+      listingModal.classList.add("show");
+      listingModal.setAttribute("aria-hidden", "false");
+      window.setTimeout(() => sellQuantityInput.focus(), 30);
+    }
+
+    function closeListingModal() {
+      listingModal.classList.remove("show");
+      listingModal.setAttribute("aria-hidden", "true");
+      listingForm.reset();
+    }
+
+    function isValidPriceInput(rawValue, numericValue) {
+      if (!Number.isFinite(numericValue)) return false;
+      if (numericValue < 0.6 || numericValue > 0.65) return false;
+      const trimmed = rawValue.trim();
+      return !/\.\d{3,}$/.test(trimmed);
+    }
+
+    function renderMarketOrders() {
+      const filtered = marketOrdersData.filter((item) => item.id.toLowerCase().includes(appliedSearchKeyword));
+
+      if (!filtered.length) {
+        orderList.innerHTML = `
+          <div class="table-row">
+            <div class="empty-state" style="grid-column: 1 / -1;">没有找到对应的订单编号。</div>
+          </div>
+        `;
+        return;
+      }
+
+      orderList.innerHTML = filtered.map((item) => {
+        const total = calculateTotal(item.quantity, item.price);
+        return `
+          <div class="table-row">
+            <div class="order-cell">
+              <div class="order-id-block">
+                <span class="mobile-key">订单编号</span>
+                <div class="order-id mono">${item.id}</div>
+                <div class="sub-meta">挂单时间 ${item.createdAt}</div>
+              </div>
+              <div class="order-cell order-cell-action mobile-inline-action">
+                <button
+                  class="button button-primary"
+                  type="button"
+                  onclick="purchaseOrder('${item.id}')"
+                >购买</button>
+              </div>
+            </div>
+            <div class="order-cell">
+              <span class="mobile-key">单价</span>
+              <div class="price accent-text mono">${formatUnitPrice(item.price)}</div>
+            </div>
+            <div class="order-cell">
+              <span class="mobile-key">数量</span>
+              <div class="mono">${formatQuantity(item.quantity)}</div>
+            </div>
+            <div class="order-cell">
+              <span class="mobile-key">总价</span>
+              <div class="mono">${formatTotal(total)}</div>
+            </div>
+            <div class="order-cell order-cell-action desktop-action">
+              <button
+                class="button button-primary"
+                type="button"
+                onclick="purchaseOrder('${item.id}')"
+              >购买</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderCurrentOrders() {
+      if (!myCurrentOrdersData.length) {
+        currentOrders.innerHTML = `
+          <div class="empty-state">当前没有挂单，点击“我要挂单”就可以新增一笔出售订单。</div>
+        `;
+        return;
+      }
+
+      currentOrders.innerHTML = myCurrentOrdersData.map((item) => {
+        const total = calculateTotal(item.quantity, item.price);
+        return `
+          <article class="order-card">
+            <div class="order-card-top">
+              <div>
+                <div class="order-card-title mono">${item.id}</div>
+                <div class="sub-meta">创建时间 ${item.createdAt}</div>
+              </div>
+            </div>
+            <div class="order-card-grid">
+              <div class="metric">
+                <span>出售单价</span>
+                <strong class="accent-text mono">${formatUnitPrice(item.price)}</strong>
+              </div>
+              <div class="metric">
+                <span>出售数量</span>
+                <strong class="mono">${formatQuantity(item.quantity)}</strong>
+              </div>
+              <div class="metric">
+                <span>总价</span>
+                <strong class="mono">${formatTotal(total)}</strong>
+              </div>
+              <div class="metric">
+                <span>状态</span>
+                <strong>当前挂单</strong>
+              </div>
+            </div>
+ <button class="button button-danger" type="button" onclick="cancelOrder('${item.id}')">取消订单</button>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderHistoryOrders() {
+      if (!historyOrdersData.length) {
+        historyOrders.innerHTML = `
+          <div class="empty-state">历史成交还没有记录。</div>
+        `;
+        return;
+      }
+
+      historyOrders.innerHTML = historyOrdersData.map((item) => {
+        const chipClass = item.type === "购买" ? "buy" : "sell";
+        return `
+          <article class="history-item">
+            <div class="history-top">
+              <div class="order-card-title mono">${item.id}</div>
+              <span class="type-chip ${chipClass}">${item.type}</span>
+            </div>
+            <div class="history-meta">
+              <div>
+                <span>成交单价</span>
+                <strong class="mono">${formatUnitPrice(item.price)}</strong>
+              </div>
+              <div>
+                <span>成交量</span>
+                <strong class="mono">${formatQuantity(item.quantity)}</strong>
+              </div>
+              <div>
+                <span>成交总价</span>
+                <strong class="mono">${formatTotal(item.total)}</strong>
+              </div>
+              <div>
+                <span>成交时间</span>
+                <strong class="mono">${item.completedAt}</strong>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderAll() {
+      renderMarketOrders();
+      renderCurrentOrders();
+      renderHistoryOrders();
+    }
+
+    function applySearch() {
+      appliedSearchKeyword = orderSearchInput.value.trim().toLowerCase();
+      renderMarketOrders();
+    }
+
+    function purchaseOrder(id) {
+      const marketIndex = marketOrdersData.findIndex((item) => item.id === id);
+      if (marketIndex === -1) return;
+
+      const item = marketOrdersData[marketIndex];
+      if (item.owner === "mine") {
+        showToast("这是你自己的挂单，请到“我的订单”里管理。");
+        return;
+      }
+
+      marketOrdersData.splice(marketIndex, 1);
+      historyOrdersData.unshift({
+        id: item.id,
+        type: "购买",
+        price: item.price,
+        quantity: item.quantity,
+        total: calculateTotal(item.quantity, item.price),
+        completedAt: formatDate(new Date())
+      });
+      showToast(`已购买订单 ${item.id}`);
+      renderAll();
+      setActiveTab("mine");
+    }
+
+    function cancelOrder(id) {
+      const currentIndex = myCurrentOrdersData.findIndex((item) => item.id === id);
+      if (currentIndex === -1) return;
+
+      myCurrentOrdersData.splice(currentIndex, 1);
+      const marketIndex = marketOrdersData.findIndex((item) => item.id === id);
+      if (marketIndex !== -1) {
+        marketOrdersData.splice(marketIndex, 1);
+      }
+      showToast(`已取消订单 ${id}`);
+      renderAll();
+    }
+
+    function createListing(event) {
+      event.preventDefault();
+
+      const quantityRaw = sellQuantityInput.value;
+      const priceRaw = sellPriceInput.value;
+      const quantity = Number(quantityRaw);
+      const price = Number(priceRaw);
+
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        showToast("请输入正确的出售数量。");
+        sellQuantityInput.focus();
+        return;
+      }
+
+      if (!isValidPriceInput(priceRaw, price)) {
+        showToast("出售单价只接受 0.6U-0.65U，且最多两位小数。");
+        sellPriceInput.focus();
+        return;
+      }
+
+      const order = {
+        id: createOrderId(),
+        quantity: Number(quantity.toFixed(2)),
+        price: Number(price.toFixed(2)),
+        createdAt: formatDate(new Date()),
+        owner: "mine"
+      };
+
+      myCurrentOrdersData.unshift(order);
+      marketOrdersData.unshift({ ...order });
+      closeListingModal();
+      renderAll();
+      setActiveTab("mine");
+      showToast(`挂单成功，订单编号 ${order.id}`);
+    }
+
+    tabButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        setActiveTab(button.dataset.tab);
+      });
+    });
+
+    searchButton.addEventListener("click", applySearch);
+    openListingButton.addEventListener("click", openListingModal);
+    cancelModalButton.addEventListener("click", closeListingModal);
+    listingForm.addEventListener("submit", createListing);
+
+    listingModal.addEventListener("click", (event) => {
+      if (event.target === listingModal) {
+        closeListingModal();
+      }
+    });
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && listingModal.classList.contains("show")) {
+        closeListingModal();
+      }
+    });
+
+    window.purchaseOrder = purchaseOrder;
+    window.cancelOrder = cancelOrder;
+
+    setActiveTab(activeTab);
+    renderAll();
+  </script>
+</body>
+</html>

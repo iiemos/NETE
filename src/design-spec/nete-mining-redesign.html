@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NETE Mining | 矿机中心</title>
+  <style>
+    :root {
+      --bg: #070b09;
+      --panel: rgba(17, 22, 20, 0.92);
+      --panel-strong: rgba(21, 28, 25, 0.98);
+      --panel-soft: rgba(255, 255, 255, 0.04);
+      --line: rgba(255, 255, 255, 0.08);
+      --line-strong: rgba(194, 255, 26, 0.22);
+      --text: #f4f7f4;
+      --muted: #97a09a;
+      --muted-strong: #c8cfca;
+      --accent: #c2ff1a;
+      --accent-soft: #76f5c4;
+      --violet: rgba(108, 77, 255, 0.22);
+      --radius: 8px;
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+      --max-width: 1240px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(108, 77, 255, 0.18), transparent 28%),
+        radial-gradient(circle at top right, rgba(118, 245, 196, 0.12), transparent 24%),
+        linear-gradient(180deg, #09100d 0%, #060807 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.48), transparent 75%);
+      opacity: 0.18;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .container {
+      width: min(var(--max-width), calc(100vw - 32px));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(18px);
+      background: rgba(8, 12, 10, 0.84);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      min-height: 82px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .nav-links a {
+      padding: 10px 14px;
+      border-radius: 999px;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .nav-links a.active,
+    .nav-links a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .wallet-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      padding: 0 18px;
+      border: 1px solid rgba(194, 255, 26, 0.4);
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(194, 255, 26, 0.1), rgba(194, 255, 26, 0.04));
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .wallet-icon {
+      width: 18px;
+      height: 18px;
+    }
+
+    .view {
+      display: none;
+      padding: 26px 0 56px;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg, rgba(17, 16, 29, 0.9), rgba(10, 14, 11, 0.76) 62%, rgba(7, 9, 8, 0.96)),
+        radial-gradient(circle at 75% 25%, rgba(194, 255, 26, 0.1), transparent 18%);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -50px;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(108, 77, 255, 0.22), transparent 68%);
+      filter: blur(20px);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 26px;
+      align-items: center;
+      padding: 54px 40px;
+      min-height: 350px;
+    }
+
+    .hero-inner.my-miners {
+      grid-template-columns: minmax(0, 1.18fr) minmax(340px, 0.82fr);
+    }
+
+    .hero-inner.buy-miners {
+      grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+      min-height: 300px;
+      padding: 46px 36px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 36px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    h1 {
+      margin: 18px 0 14px;
+      font-size: clamp(38px, 5vw, 64px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .hero-inner.buy-miners h1 {
+      font-size: clamp(34px, 4vw, 52px);
+    }
+
+    .lead {
+      margin: 0;
+      max-width: 740px;
+      color: var(--muted-strong);
+      font-size: 18px;
+      line-height: 1.9;
+    }
+
+    .hero-inner.buy-miners .lead {
+      max-width: 680px;
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 20px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 700;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    .button:disabled {
+      opacity: 0.46;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .button-primary {
+      background: var(--accent);
+      color: #0b0f0a;
+      box-shadow: 0 14px 30px rgba(194, 255, 26, 0.14);
+    }
+
+    .button-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text);
+    }
+
+    .button-inline {
+      width: 100%;
+      min-height: 42px;
+      background: rgba(194, 255, 26, 0.08);
+      border: 1px solid rgba(194, 255, 26, 0.2);
+      color: var(--accent);
+    }
+
+    .hero-side-card,
+    .stat-card,
+    .summary-card,
+    .section-card,
+    .machine-item,
+    .info-tile,
+    .plan-item,
+    .rule-card {
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: var(--radius);
+      background: var(--panel);
+    }
+
+    .hero-side-card {
+      padding: 24px;
+      background:
+        linear-gradient(180deg, rgba(194, 255, 26, 0.05), transparent 42%),
+        rgba(16, 20, 18, 0.95);
+    }
+
+    .hero-side-title {
+      margin: 14px 0 18px;
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .hero-side-grid,
+    .stats-strip,
+    .summary-strip {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hero-side-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .stats-strip {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .summary-strip {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .hero-side-grid div,
+    .stat-card,
+    .summary-card {
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .mini-label,
+    .stat-card span,
+    .summary-card span,
+    .hero-side-grid span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero-side-grid strong,
+    .stat-card strong,
+    .summary-card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .section {
+      margin-top: 22px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(26px, 3vw, 38px);
+    }
+
+    .section-head p {
+      max-width: 640px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+      text-align: right;
+    }
+
+    .section-card {
+      padding: 20px;
+      background: var(--panel-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .machine-list,
+    .plan-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .machine-item {
+      padding: 18px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .machine-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .machine-title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-right: 88px;
+    }
+
+    .machine-name {
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .status-chip,
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-chip {
+      background: rgba(108, 77, 255, 0.16);
+      color: #c9bcff;
+    }
+
+    .tag-chip {
+      background: rgba(194, 255, 26, 0.12);
+      color: var(--accent);
+    }
+
+    .machine-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .machine-meta span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .machine-meta.compact {
+      display: none;
+      margin-top: 0;
+    }
+
+    .machine-meta.compact span {
+      min-height: auto;
+      padding: 0;
+      border-radius: 0;
+      background: transparent;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .progress-track {
+      overflow: hidden;
+      height: 10px;
+      margin-top: 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+      box-shadow: 0 0 16px rgba(194, 255, 26, 0.28);
+    }
+
+    .machine-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .info-tile {
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      min-height: 94px;
+    }
+
+    .action-row {
+      margin-top: 12px;
+    }
+
+    .info-tile strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .accent-text {
+      color: var(--accent);
+    }
+
+    .action-tile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100%;
+    }
+
+    .plan-item {
+      display: grid;
+      grid-template-columns: minmax(170px, 0.9fr) minmax(300px, 1.25fr) minmax(210px, 0.85fr);
+      gap: 14px;
+      align-items: center;
+      padding: 16px 18px;
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .plan-title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .plan-subtitle {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .plan-middle {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .plan-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .plan-actions .hint {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .rule-card {
+      padding: 18px;
+      background: var(--panel-strong);
+    }
+
+    .rule-index {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(194, 255, 26, 0.12);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .rule-card h3 {
+      margin: 14px 0 10px;
+      font-size: 20px;
+    }
+
+    .rule-card p {
+      margin: 0;
+      color: var(--muted-strong);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .empty-state {
+      display: grid;
+      place-items: center;
+      min-height: 220px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .site-footer {
+      padding: 18px 0 32px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-top: 18px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 60;
+      min-width: 240px;
+      max-width: min(360px, calc(100vw - 40px));
+      padding: 14px 16px;
+      border: 1px solid rgba(194, 255, 26, 0.18);
+      border-radius: var(--radius);
+      background: rgba(12, 16, 14, 0.94);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(8px);
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @media (max-width: 1120px) {
+      .hero-inner.my-miners,
+      .hero-inner.buy-miners,
+      .plan-item {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-strip,
+      .hero-side-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .summary-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .machine-grid,
+      .plan-middle,
+      .rules-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .plan-actions {
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .container {
+        width: min(var(--max-width), calc(100vw - 24px));
+      }
+
+      .nav {
+        min-height: 74px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero-inner,
+      .hero-inner.buy-miners {
+        padding: 34px 20px;
+        min-height: auto;
+      }
+
+      h1,
+      .hero-inner.buy-miners h1 {
+        font-size: 32px;
+      }
+
+      .lead,
+      .hero-inner.buy-miners .lead {
+        font-size: 15px;
+      }
+
+      .stats-strip,
+      .summary-strip,
+      .hero-side-grid,
+      .plan-middle,
+      .rules-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .machine-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .section-head {
+        flex-direction: column;
+        align-items: start;
+      }
+
+      .section-head p {
+        text-align: left;
+      }
+
+      .machine-top {
+        align-items: flex-start;
+      }
+
+      .machine-item {
+        position: relative;
+      }
+
+      .machine-title-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        flex-wrap: wrap;
+        padding-right: 82px;
+      }
+
+      .machine-name {
+        font-size: 20px;
+      }
+
+      .machine-meta.full {
+        display: none;
+      }
+
+      .machine-meta.compact {
+        display: inline-flex;
+        gap: 8px;
+      }
+
+      .machine-meta.compact span {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      .status-chip {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+      }
+
+      .machine-meta {
+        margin-top: 10px;
+      }
+
+      .plan-middle {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .plan-item .info-tile {
+        min-height: 0;
+        padding: 10px 8px;
+      }
+
+      .plan-item .info-tile strong {
+        font-size: 14px;
+      }
+
+      .plan-item .mini-label {
+        font-size: 10px;
+      }
+
+      .plan-actions {
+        width: 100%;
+      }
+
+      .button,
+      .button-primary,
+      .button-secondary,
+      .button-inline {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a class="brand" href="#my-miners" aria-label="NETE 首页">
+        <svg class="brand-mark" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12 16L28 10V22L18 26V38L12 40V16Z" fill="#C2FF1A"/>
+          <path d="M36 24L52 18V30L42 34V46L36 48V24Z" fill="#C2FF1A"/>
+          <path d="M20 30L36 24V36L26 40V52L20 54V30Z" fill="#76F5C4"/>
+        </svg>
+        <span>NETE</span>
+      </a>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="#my-miners" data-view-link="my-miners">我的矿机</a>
+        <a href="#buy-miners" data-view-link="buy-miners">购买矿机</a>
+        <a href="#rules" data-view-link="rules">规则说明</a>
+      </nav>
+      <a class="wallet-button" href="#buy-miners">
+        <svg class="wallet-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M3 7.5C3 6.12 4.12 5 5.5 5H18V7H5.5A.5.5 0 0 0 5 7.5V8H20.5A.5.5 0 0 1 21 8.5V18A1 1 0 0 1 20 19H5.5A2.5 2.5 0 0 1 3 16.5V7.5Z" stroke="currentColor" stroke-width="1.8"/>
+          <circle cx="16.5" cy="13.5" r="1.2" fill="currentColor"/>
+        </svg>
+        <span>链接钱包</span>
+      </a>
+    </div>
+  </header>
+
+  <main>
+    <section class="view" id="my-miners-view" data-view="my-miners">
+      <div class="container">
+        <div class="hero">
+          <div class="hero-inner my-miners">
+            <div>
+              <div class="eyebrow">MY MINERS</div>
+              <h1>我的矿机单独成页，先看持仓，再做操作。</h1>
+              <p class="lead">
+                这一页只处理已购买矿机。顶部先给横向概览信息，下面再展开每一台矿机的进度、购买时间、收益和领取操作。
+                同型号矿机按单次购买记录拆开显示，首屏高度也抬高了一些，视觉上更从容、更大气。
+              </p>
+              <div class="hero-actions">
+                <a class="button button-primary" href="#buy-miners">去购买矿机</a>
+                <a class="button button-secondary" href="#rules">查看规则说明</a>
+              </div>
+            </div>
+            <aside class="hero-side-card">
+              <div class="eyebrow">PORTFOLIO</div>
+              <div class="hero-side-title">资产总览</div>
+              <div class="hero-side-grid">
+                <div>
+                  <span>记录模式</span>
+                  <strong>逐台展示</strong>
+                </div>
+                <div>
+                  <span>收益动作</span>
+                  <strong>单台领取</strong>
+                </div>
+                <div>
+                  <span>时间字段</span>
+                  <strong>购买时间</strong>
+                </div>
+                <div>
+                  <span>页面方向</span>
+                  <strong>资产优先</strong>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="section-head">
+            <h2>Portfolio Overview</h2>
+            <p>概览已经放到已购买矿机上方，并保持横向展示。桌面端一字排开，手机端自动收成单列，不会挤在一起。</p>
+          </div>
+          <div class="summary-strip" id="summaryStrip"></div>
+        </section>
+
+        <section class="section">
+          <div class="section-head">
+            <h2>已购买矿机</h2>
+            <p>每一条都是单独的持仓记录。累计已领取和领取收益按钮也并入同一行信息块，现在一共六个板块，更整齐。</p>
+          </div>
+          <div class="section-card">
+            <div class="machine-list" id="portfolioList"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view" id="buy-miners-view" data-view="buy-miners">
+      <div class="container">
+        <div class="hero">
+          <div class="hero-inner buy-miners">
+            <div>
+              <div class="eyebrow">BUY MINERS</div>
+              <h1>购买页单独展示，并把高度压得更紧凑。</h1>
+              <p class="lead">
+                这一页只保留购买决策需要的信息：额度、收益率、单人限购、剩余可购和周期。
+                首屏比之前更紧，但留白和标题气场重新拉开了，电脑端和手机端都继续保持列表式购买体验。
+              </p>
+            </div>
+            <div class="stats-strip">
+              <div class="stat-card">
+                <span>矿机型号</span>
+                <strong>9 款</strong>
+              </div>
+              <div class="stat-card">
+                <span>最高收益率</span>
+                <strong class="accent-text">140%</strong>
+              </div>
+              <div class="stat-card">
+                <span>周期范围</span>
+                <strong>35 - 50 天</strong>
+              </div>
+              <div class="stat-card">
+                <span>交互动作</span>
+                <strong>模拟购买</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="section-head">
+            <h2>购买矿机列表</h2>
+            <p>这里保留周期和剩余可购。电脑端是横向列表，手机端同样保持列表形式，只是改成纵向堆叠。</p>
+          </div>
+          <div class="section-card">
+            <div class="plan-list" id="planList"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="view" id="rules-view" data-view="rules">
+      <div class="container">
+        <div class="hero">
+          <div class="hero-inner buy-miners">
+            <div>
+              <div class="eyebrow">RULES</div>
+              <h1>矿机页现在按功能拆开，信息路径更干净。</h1>
+              <p class="lead">
+                我的矿机、购买矿机、规则说明分开展示，用户进入当前视图时只看到当前任务需要的信息，整页的阅读压力更低。
+              </p>
+            </div>
+            <div class="stats-strip">
+              <div class="stat-card">
+                <span>页面方式</span>
+                <strong>分视图</strong>
+              </div>
+              <div class="stat-card">
+                <span>持仓模式</span>
+                <strong>逐台记录</strong>
+              </div>
+              <div class="stat-card">
+                <span>购买列表</span>
+                <strong>列表展示</strong>
+              </div>
+              <div class="stat-card">
+                <span>周期字段</span>
+                <strong>已恢复</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <section class="section">
+          <div class="section-head">
+            <h2>规则说明</h2>
+            <p>这一页保留给产品机制和页面说明。后续如果你要接真实接口或补充说明文案，这里也比较好继续扩展。</p>
+          </div>
+          <div class="rules-grid">
+            <article class="rule-card">
+              <div class="rule-index">01</div>
+              <h3>分页面展示</h3>
+              <p>我的矿机和购买矿机已经拆成两个独立视图，导航切换后不会互相打断。</p>
+            </article>
+            <article class="rule-card">
+              <div class="rule-index">02</div>
+              <h3>同型号不合并</h3>
+              <p>每次购买都会生成独立矿机记录，并保留购买时间、周期进度与收益状态。</p>
+            </article>
+            <article class="rule-card">
+              <div class="rule-index">03</div>
+              <h3>手机端继续列表</h3>
+              <p>购买矿机在手机端也以列表展示，只是从横向条目自然收成纵向列表，不会变成卡片矩阵。</p>
+            </article>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-row">
+      <span>© 2026 NETE Mining. All rights reserved.</span>
+      <span>Built for a cleaner, clearer mining experience.</span>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const planData = [
+      { model: "100 型", token: 100, userLimit: 3, cycle: 35, yieldRate: 120, badge: "入门配置" },
+      { model: "300 型", token: 300, userLimit: 3, cycle: 35, yieldRate: 120, badge: "稳健选择" },
+      { model: "500 型", token: 500, userLimit: 2, cycle: 35, yieldRate: 125, badge: "热门方案" },
+      { model: "1000 型", token: 1000, userLimit: 3, cycle: 40, yieldRate: 130, badge: "进阶配置" },
+      { model: "3000 型", token: 3000, userLimit: 1, cycle: 40, yieldRate: 135, badge: "中高配" },
+      { model: "5000 型", token: 5000, userLimit: 1, cycle: 40, yieldRate: 135, badge: "精选推荐" },
+      { model: "10000 型", token: 10000, userLimit: 1, cycle: 50, yieldRate: 140, badge: "高阶收益" },
+      { model: "30000 型", token: 30000, userLimit: 1, cycle: 50, yieldRate: 140, badge: "旗舰档位" },
+      { model: "50000 型", token: 50000, userLimit: 1, cycle: 50, yieldRate: 140, badge: "尊享席位" }
+    ];
+
+    const portfolioData = [
+      { id: "NETE-1000-240412-01", model: "1000 型", progress: 24, cycle: 40, claimable: 66.3, claimed: 0, state: "运行中", purchaseTime: "2026-04-12 09:18" },
+      { id: "NETE-1000-240429-02", model: "1000 型", progress: 8, cycle: 40, claimable: 62.2, claimed: 0, state: "运行中", purchaseTime: "2026-04-29 20:46" },
+      { id: "NETE-5000-240501-01", model: "5000 型", progress: 11, cycle: 40, claimable: 352.2, claimed: 0, state: "运行中", purchaseTime: "2026-05-01 14:05" }
+    ];
+
+    const viewLinks = Array.from(document.querySelectorAll("[data-view-link]"));
+    const views = Array.from(document.querySelectorAll("[data-view]"));
+    const summaryStrip = document.getElementById("summaryStrip");
+    const portfolioList = document.getElementById("portfolioList");
+    const planList = document.getElementById("planList");
+    const toast = document.getElementById("toast");
+    let toastTimer = null;
+
+    function formatNete(value) {
+      return `${value.toFixed(2)} NETE`;
+    }
+
+    function formatDate(date) {
+      const pad = (value) => String(value).padStart(2, "0");
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2200);
+    }
+
+    function resolveView() {
+      const hash = (location.hash || "#my-miners").replace("#", "");
+      if (["my-miners", "buy-miners", "rules"].includes(hash)) return hash;
+      return "my-miners";
+    }
+
+    function setActiveView() {
+      const active = resolveView();
+      views.forEach((view) => {
+        view.classList.toggle("active", view.dataset.view === active);
+      });
+      viewLinks.forEach((link) => {
+        link.classList.toggle("active", link.dataset.viewLink === active);
+      });
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
+
+    function findPlan(model) {
+      return planData.find((plan) => plan.model === model);
+    }
+
+    function createMachineId(model) {
+      const total = portfolioData.filter((item) => item.model === model).length + 1;
+      const digits = model.replace(/\D/g, "") || "000";
+      return `NETE-${digits}-${String(total).padStart(3, "0")}`;
+    }
+
+    function currentOwnedAmount(model) {
+      return portfolioData.filter((item) => item.model === model).length;
+    }
+
+    function purchasePlan(model) {
+      const plan = findPlan(model);
+      if (!plan) return;
+
+      const owned = currentOwnedAmount(model);
+      if (owned >= plan.userLimit) {
+        showToast(`${model} 已达到单人限购 ${plan.userLimit} 台`);
+        return;
+      }
+
+      portfolioData.unshift({
+        id: createMachineId(plan.model),
+        model: plan.model,
+        progress: 0,
+        cycle: plan.cycle,
+        claimable: Number((plan.token * 0.018).toFixed(2)),
+        claimed: 0,
+        state: "新购入",
+        purchaseTime: formatDate(new Date())
+      });
+
+      showToast(`已模拟购买 ${model}，当前持有 ${currentOwnedAmount(model)} 台`);
+      render();
+      location.hash = "#my-miners";
+    }
+
+    function claimReward(id) {
+      const entry = portfolioData.find((item) => item.id === id);
+      if (!entry) return;
+
+      if (entry.claimable <= 0) {
+        showToast(`${entry.model} 当前没有可领取收益`);
+        return;
+      }
+
+      const claimedNow = entry.claimable;
+      entry.claimed += claimedNow;
+      entry.claimable = 0;
+      showToast(`已领取 ${entry.model} 收益 ${formatNete(claimedNow)}`);
+      render();
+    }
+
+    function renderSummary() {
+      const holdings = portfolioData.length;
+      const running = portfolioData.filter((item) => item.state === "运行中").length;
+      const totalClaimable = portfolioData.reduce((sum, item) => sum + item.claimable, 0);
+      const totalClaimed = portfolioData.reduce((sum, item) => sum + item.claimed, 0);
+      const averageProgress = portfolioData.length
+        ? Math.round(portfolioData.reduce((sum, item) => sum + (item.progress / item.cycle) * 100, 0) / portfolioData.length)
+        : 0;
+      const latestPurchase = portfolioData[0] ? portfolioData[0].purchaseTime : "--";
+
+      summaryStrip.innerHTML = `
+        <div class="summary-card">
+          <span>持仓矿机</span>
+          <strong>${holdings} 台</strong>
+        </div>
+        <div class="summary-card">
+          <span>运行中</span>
+          <strong>${running} 台</strong>
+        </div>
+        <div class="summary-card">
+          <span>待领取收益</span>
+          <strong class="accent-text">${formatNete(totalClaimable)}</strong>
+        </div>
+        <div class="summary-card">
+          <span>累计已领取</span>
+          <strong>${formatNete(totalClaimed)}</strong>
+        </div>
+        <div class="summary-card">
+          <span>平均进度</span>
+          <strong>${averageProgress}%</strong>
+        </div>
+        <div class="summary-card">
+          <span>最近购买时间</span>
+          <strong>${latestPurchase}</strong>
+        </div>
+      `;
+    }
+
+    function renderPortfolio() {
+      if (!portfolioData.length) {
+        portfolioList.innerHTML = `
+          <div class="empty-state">
+            当前还没有矿机持仓。<br>
+            你可以先去购买矿机页点击“模拟购买”，再回来查看独立持仓记录。
+          </div>
+        `;
+        return;
+      }
+
+      portfolioList.innerHTML = portfolioData.map((item) => {
+        const remainingDays = Math.max(item.cycle - item.progress, 0);
+        return `
+          <article class="machine-item">
+            <div class="machine-top">
+              <div>
+                <div class="machine-title-row">
+                  <div class="machine-name">${item.model}</div>
+                  <div class="machine-meta compact">
+                    <span>矿机编号 ${item.id}</span>
+                    <span>购买时间 ${item.purchaseTime}</span>
+                  </div>
+                </div>
+                <div class="machine-meta full">
+                  <span>矿机编号 ${item.id}</span>
+                  <span>购买时间 ${item.purchaseTime}</span>
+                </div>
+              </div>
+              <span class="status-chip">${item.state}</span>
+            </div>
+            <div class="progress-track" aria-label="${item.model} 周期进度">
+              <div class="progress-fill" style="width: ${item.cycle ? Math.round((item.progress / item.cycle) * 100) : 0}%;"></div>
+            </div>
+            <div class="machine-grid">
+              <div class="info-tile">
+                <span class="mini-label">周期进度</span>
+                <strong>${item.progress} / ${item.cycle} 天</strong>
+              </div>
+              <div class="info-tile">
+                <span class="mini-label">剩余周期</span>
+                <strong>${remainingDays} 天</strong>
+              </div>
+            </div>
+            <div class="machine-grid">
+              <div class="info-tile">
+                <span class="mini-label">可领取收益</span>
+                <strong class="accent-text">${formatNete(item.claimable)}</strong>
+              </div>
+              <div class="info-tile">
+                <span class="mini-label">累计已领取</span>
+                <strong>${formatNete(item.claimed)}</strong>
+              </div>
+            </div>
+            <div class="action-row">
+              <div class="info-tile action-tile">
+                <button class="button button-inline" type="button" ${item.claimable <= 0 ? "disabled" : ""} onclick="claimReward('${item.id}')">领取收益</button>
+              </div>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderPlans() {
+      planList.innerHTML = planData.map((plan) => {
+        const owned = currentOwnedAmount(plan.model);
+        const remaining = Math.max(plan.userLimit - owned, 0);
+        return `
+          <article class="plan-item">
+            <div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                <div>
+                  <h3 class="plan-title">${plan.model}</h3>
+                  <div class="plan-subtitle">${plan.token} NETE</div>
+                </div>
+                <span class="tag-chip">${plan.badge}</span>
+              </div>
+            </div>
+            <div class="plan-middle">
+              <div class="info-tile">
+                <span class="mini-label">总收益率</span>
+                <strong class="accent-text">${plan.yieldRate}%</strong>
+              </div>
+              <div class="info-tile">
+                <span class="mini-label">单人限购</span>
+                <strong>${plan.userLimit} 台</strong>
+              </div>
+              <div class="info-tile">
+                <span class="mini-label">周期</span>
+                <strong>${plan.cycle} 天</strong>
+              </div>
+              <div class="info-tile">
+                <span class="mini-label">剩余可购</span>
+                <strong>${remaining} 台</strong>
+              </div>
+            </div>
+            <div class="plan-actions">
+              <button class="button button-primary" type="button" ${remaining === 0 ? "disabled" : ""} onclick="purchasePlan('${plan.model}')">
+                ${remaining === 0 ? "已达上限" : "模拟购买"}
+              </button>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function render() {
+      renderSummary();
+      renderPortfolio();
+      renderPlans();
+      setActiveView();
+    }
+
+    window.purchasePlan = purchasePlan;
+    window.claimReward = claimReward;
+    window.addEventListener("hashchange", setActiveView);
+
+    render();
+  </script>
+</body>
+</html>

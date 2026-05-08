@@ -1,6 +1,11 @@
 import { Icon } from "@iconify/react";
-import { globalOverview, leadershipLevels, leadershipRuleNotes } from "../../data/mockData";
+import { useQuery } from "@tanstack/react-query";
+import { leadershipLevels, leadershipRuleNotes } from "../../data/mockData";
 import vipImage from "../../assets/images/vip.png";
+import { useWalletConnector } from "../../hooks/useWalletConnector";
+import { getIncomeOverview, getReferralInfo } from "../../services/neteApi";
+import { readNetworkUserData } from "../../services/neteContracts";
+import { formatTokenAmount } from "../../utils/formatters";
 
 const vipGlossary = [
   "小区业绩：用于判定 VIP 等级的核心业绩口径，链上实时可核验。",
@@ -18,6 +23,35 @@ const vipBenefits = [
 ];
 
 export default function VipPage() {
+  const wallet = useWalletConnector();
+
+  const incomeOverviewQuery = useQuery({
+    queryKey: ["nete", "income-overview", wallet.currentAddress],
+    queryFn: () => getIncomeOverview(wallet.currentAddress),
+    enabled: Boolean(wallet.currentAddress),
+    staleTime: 15_000,
+    retry: 1,
+  });
+
+  const referralInfoQuery = useQuery({
+    queryKey: ["nete", "referral-info", wallet.currentAddress],
+    queryFn: () => getReferralInfo(wallet.currentAddress),
+    enabled: Boolean(wallet.currentAddress),
+    staleTime: 15_000,
+    retry: 1,
+  });
+
+  const networkDataQuery = useQuery({
+    queryKey: ["nete", "network-data", wallet.currentAddress],
+    queryFn: () => readNetworkUserData(wallet.currentAddress),
+    enabled: Boolean(wallet.currentAddress),
+    staleTime: 15_000,
+    retry: 1,
+  });
+
+  const currentLevel = incomeOverviewQuery.data?.user_level ?? networkDataQuery.data?.userLevel ?? 0;
+  const zonePerformance = formatTokenAmount(referralInfoQuery.data?.small_leg_perf ?? 0n, 18, 2);
+
   return (
     <section className="space-y-10">
       <header className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,520px)] lg:items-center">
@@ -25,24 +59,32 @@ export default function VipPage() {
           <p className="font-display text-base font-bold uppercase tracking-[0.12em] text-[#caff00] md:text-lg">NETE VIP</p>
           <h1 className="mt-3 font-display text-xl font-black tracking-tight text-white md:text-2xl">解锁专属权益</h1>
 
+          {!wallet.isConnected ? <p className="mt-4 text-xs text-white/65">当前未连接钱包，连接后可查看你的实时 VIP 数据。</p> : null}
+
           <div className="mt-8 grid gap-6 sm:grid-cols-2">
             <div>
               <span className="text-sm text-white/60">当前等级</span>
-              <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">{globalOverview.memberLevel}</strong>
+              <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">V{currentLevel}</strong>
             </div>
             <div>
               <span className="text-sm text-white/60">当前小区业绩</span>
-              <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">{globalOverview.zonePerformance} NETE</strong>
+              <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">{zonePerformance} NETE</strong>
             </div>
           </div>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
-            <button className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#caff00] px-5 text-sm font-semibold tracking-wide text-black transition hover:shadow-[0_0_30px_rgba(202,255,0,0.45)]" type="button">
-              成为 VIP
-            </button>
-            <button className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 bg-transparent px-5 text-sm font-semibold tracking-wide text-white transition hover:border-white/40 hover:bg-white/5" type="button">
-              申请 VIP 体验
-            </button>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-xl border border-white/10 bg-transparent p-3">
+              <span className="text-xs text-white/55">待领分红</span>
+              <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.pending_dividend ?? 0n, 18, 4)} NETE</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-transparent p-3">
+              <span className="text-xs text-white/55">累计分红</span>
+              <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.dividend_income_total ?? 0n, 18, 4)} NETE</p>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-transparent p-3">
+              <span className="text-xs text-white/55">累计 V9</span>
+              <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.v9_income_total ?? 0n, 18, 4)} NETE</p>
+            </div>
           </div>
         </div>
 
@@ -151,17 +193,17 @@ export default function VipPage() {
         <article>
           <h3 className="mb-8 font-display text-xl font-bold text-white md:text-2xl">VIP 其它福利</h3>
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {vipBenefits.map((item) => (
-            <article
-              key={item.title}
-              className="flex min-h-[70px] items-center gap-4 rounded-[22px] bg-[#14141b] px-5 py-3 text-sm text-white md:min-h-[70px] md:gap-4 md:px-6 md:py-3 md:text-sm"
-            >
-              <span className="shrink-0 text-[1.4rem] text-white/95 md:text-[1.4rem]" aria-hidden="true">
-                <Icon icon={item.icon} width="1em" height="1em" />
-              </span>
-              <p className="font-medium tracking-wide text-white/92">{item.title}</p>
-            </article>
-          ))}
+            {vipBenefits.map((item) => (
+              <article
+                key={item.title}
+                className="flex min-h-[70px] items-center gap-4 rounded-[22px] bg-[#14141b] px-5 py-3 text-sm text-white md:min-h-[70px] md:gap-4 md:px-6 md:py-3 md:text-sm"
+              >
+                <span className="shrink-0 text-[1.4rem] text-white/95 md:text-[1.4rem]" aria-hidden="true">
+                  <Icon icon={item.icon} width="1em" height="1em" />
+                </span>
+                <p className="font-medium tracking-wide text-white/92">{item.title}</p>
+              </article>
+            ))}
           </div>
         </article>
       </section>
