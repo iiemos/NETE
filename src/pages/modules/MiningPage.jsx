@@ -67,9 +67,13 @@ export default function MiningPage() {
   });
 
   const machineModels = useMemo(
-    () =>
-      (tiersQuery.data || []).map((tier) => ({
+    () => {
+      const badges = t("modules.mining.buy.badges", { returnObjects: true });
+      const badgeList = Array.isArray(badges) ? badges : [];
+
+      return (tiersQuery.data || []).map((tier, index) => ({
         model: t("modules.mining.modelName", { amount: formatTokenAmount(tier.principal, 18, 0) }),
+        badge: badgeList[index % badgeList.length] || "",
         price: Number(tier.principalText),
         principalWei: tier.principal,
         unitCount: tier.maxSlots,
@@ -80,7 +84,8 @@ export default function MiningPage() {
         withdrawFee: Number((tier.feeBps / 100).toFixed(2)),
         remaining: tier.maxSlots,
         tierIndex: tier.tierIndex,
-      })),
+      }));
+    },
     [t, tiersQuery.data],
   );
 
@@ -315,7 +320,7 @@ export default function MiningPage() {
       </header>
 
       {txMessage ? <p className="mt-3 text-xs text-white/75 break-all">{txMessage}</p> : null}
-      {wallet.isConnected ? null : <p className="mt-2 text-xs text-white/65">{t("modules.mining.messages.connectFirst")}</p>}
+      {wallet.isConnected ? null : <p className="mining-connect-hint mt-2 text-xs text-white/65">{t("modules.mining.messages.connectFirst")}</p>}
 
       {activeView === "my-miners" ? (
         <div className="mining-view-panel">
@@ -489,12 +494,13 @@ export default function MiningPage() {
                         <h4>{model.model}</h4>
                         <p>{model.price} NETE</p>
                       </div>
+                      {model.badge ? <span className="mining-plan-badge">{model.badge}</span> : null}
 
                       <div className="mining-plan-grid">
                         <div className="mining-info-tile"><span>{t("modules.mining.buy.totalRate")}</span><strong className="is-accent">{model.returnRate}</strong></div>
                         <div className="mining-info-tile"><span>{t("modules.mining.buy.unitLimit")}</span><strong>{t("modules.mining.units.machines", { count: model.unitCount })}</strong></div>
                         <div className="mining-info-tile"><span>{t("modules.mining.buy.cycle")}</span><strong>{t("modules.mining.units.days", { count: model.periodDays })}</strong></div>
-                        <div className="mining-info-tile"><span>{t("modules.mining.buy.withdrawFee")}</span><strong>{model.withdrawFee}%</strong></div>
+                        <div className="mining-info-tile"><span>{t("modules.mining.buy.remaining")}</span><strong>{t("modules.mining.units.machines", { count: model.remaining })}</strong></div>
                       </div>
 
                       <div className="mining-plan-action">

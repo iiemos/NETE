@@ -359,7 +359,7 @@ export default function C2CMarketPage() {
           ))}
         </div>
 
-        {wallet.isConnected ? null : <p className="mb-3 text-xs text-white/70">{t("modules.c2cMarket.connectHint")}</p>}
+        {wallet.isConnected ? null : <p className="c2c-connect-hint mb-3 text-xs text-white/70">{t("modules.c2cMarket.connectHint")}</p>}
 
         {activeView === "market" ? (
           <section className="c2c-surface c2c-market-panel">
@@ -378,7 +378,7 @@ export default function C2CMarketPage() {
               </button>
             </div>
 
-            <div className="px-4 py-3 text-xs text-white/65">
+            <div className="c2c-guide-range px-4 py-3 text-xs text-white/65">
               {t("modules.c2cMarket.guideRange")}
               {guideMinPrice > 0n ? `${formatTokenAmount(guideMinPrice, 18, 6)} U` : "--"}
               {" - "}
@@ -398,9 +398,7 @@ export default function C2CMarketPage() {
                 {publicOrdersQuery.isLoading ? (
                   <div className="c2c-empty-state">{t("modules.c2cMarket.loadingOrders")}</div>
                 ) : publicOrdersQuery.isError ? (
-                  <div className="c2c-empty-state">
-                    {publicOrdersQuery.error instanceof Error ? publicOrdersQuery.error.message : t("modules.c2cMarket.loadOrdersFailed")}
-                  </div>
+                  <div className="c2c-empty-state">{t("modules.c2cMarket.loadOrdersFailed")}</div>
                 ) : filteredMarketOrders.length === 0 ? (
                   <div className="c2c-empty-state">{t("modules.c2cMarket.noOrders")}</div>
                 ) : (

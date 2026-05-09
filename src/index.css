@@ -456,7 +456,7 @@ button {
 .nav__mobile-menu {
   position: fixed;
   inset: var(--nav-height) 0 0 0;
-  z-index: var(--z-overlay);
+  z-index: 390;
   background: rgba(10, 10, 15, 0.97);
   backdrop-filter: blur(20px);
   display: flex;
@@ -464,10 +464,18 @@ button {
   padding: var(--space-8) var(--container-pad);
   gap: var(--space-4);
   transform: translateX(100%);
-  transition: transform var(--dur-slow) var(--ease-out-expo);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  overflow-y: auto;
+  transition: transform var(--dur-slow) var(--ease-out-expo), opacity var(--dur-mid) ease, visibility 0s linear var(--dur-slow);
 }
 .nav__mobile-menu.is-open {
   transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform var(--dur-slow) var(--ease-out-expo), opacity var(--dur-mid) ease;
 }
 .nav__mobile-link {
   font-family: var(--font-display);
@@ -1582,6 +1590,35 @@ button {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+}
+
+@media (max-width: 560px) {
+  .nav__inner {
+    gap: var(--space-3);
+  }
+
+  .nav__logo {
+    gap: var(--space-2);
+    font-size: 1.05rem;
+  }
+
+  .nav__cta {
+    gap: var(--space-2);
+  }
+
+  .nav__cta > .btn--wallet {
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 0.75rem;
+  }
+
+  .nav__cta > .btn--wallet .btn__wallet-icon {
+    display: none;
+  }
+
+  .nav__mobile-menu {
+    padding: 22px 18px calc(28px + env(safe-area-inset-bottom));
+  }
 }
 
 /* -------------------------------------------------------------------------
