@@ -1,4 +1,4 @@
-import { readContract, writeContract, waitForTransactionReceipt } from "@wagmi/core";
+import { readContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
 import { formatUnits } from "viem";
 import mockUsdtAbi from "../abis/MockUSDT.json";
 import neteCoreAbi from "../abis/NeteCore.json";
