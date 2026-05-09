@@ -27,6 +27,17 @@ function ratioToPercentText(bps) {
   return `${(Number(bps || 0n) / 100).toFixed(2)}%`;
 }
 
+function pickTierField(raw, key, tupleIndex) {
+  if (!raw || typeof raw !== "object") return undefined;
+  if (Object.prototype.hasOwnProperty.call(raw, key)) {
+    return raw[key];
+  }
+  if (Array.isArray(raw) && tupleIndex < raw.length) {
+    return raw[tupleIndex];
+  }
+  return undefined;
+}
+
 function isTierConfigScanBoundaryError(error) {
   const message = error instanceof Error ? error.message.toLowerCase() : String(error || "").toLowerCase();
   if (!message.includes("revert")) return false;
@@ -137,20 +148,28 @@ export async function readTierConfigs(maxScan = 20) {
       throw error;
     }
 
-    if (!raw || toBigInt(raw.principal) === 0n) continue;
+    const principal = toBigInt(pickTierField(raw, "principal", 0));
+    if (principal === 0n) continue;
+
+    const maxSlots = Number(pickTierField(raw, "maxSlots", 1) ?? 0);
+    const cycleDays = Number(pickTierField(raw, "cycleDays", 2) ?? 0);
+    const returnBps = Number(pickTierField(raw, "returnBps", 3) ?? 0);
+    const extendDays = Number(pickTierField(raw, "extendDays", 4) ?? 0);
+    const maxDays = Number(pickTierField(raw, "maxDays", 5) ?? 0);
+    const feeBps = Number(pickTierField(raw, "feeBps", 6) ?? 0);
 
     tiers.push({
       tierIndex: index,
-      principal: raw.principal,
-      maxSlots: Number(raw.maxSlots),
-      cycleDays: Number(raw.cycleDays),
-      returnBps: Number(raw.returnBps),
-      extendDays: Number(raw.extendDays),
-      maxDays: Number(raw.maxDays),
-      feeBps: Number(raw.feeBps),
-      principalText: formatUnits(raw.principal, 18),
-      returnRateText: ratioToPercentText(raw.returnBps),
-      feeText: ratioToPercentText(raw.feeBps),
+      principal,
+      maxSlots,
+      cycleDays,
+      returnBps,
+      extendDays,
+      maxDays,
+      feeBps,
+      principalText: formatUnits(principal, 18),
+      returnRateText: ratioToPercentText(returnBps),
+      feeText: ratioToPercentText(feeBps),
     });
   }
 
