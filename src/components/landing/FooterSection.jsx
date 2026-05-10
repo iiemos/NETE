@@ -3,8 +3,56 @@ import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import logoIcon from "../../assets/images/logo-icon.svg";
 
+function FooterLink({ item, className = "footer__link" }) {
+  if (item.href) {
+    return (
+      <a className={className} href={item.href} target="_blank" rel="noopener noreferrer">
+        {item.label}
+      </a>
+    );
+  }
+
+  return (
+    <NavLink className={className} to={item.to}>
+      {item.label}
+    </NavLink>
+  );
+}
+
 export default function FooterSection() {
   const { t } = useTranslation();
+  const footerGroups = [
+    {
+      title: t("footer.product"),
+      ariaLabel: "Product links",
+      links: [
+        { to: "/mining", label: t("footer.mining") },
+        { to: "/c2c/market", label: t("footer.c2cMarket") },
+        { to: "/vip", label: "VIP" },
+        { to: "/", label: t("footer.project") },
+      ],
+    },
+    {
+      title: t("footer.developers"),
+      ariaLabel: "Developer links",
+      links: [
+        { to: "/my", label: t("footer.myPanel") },
+        { to: "/account/team", label: t("footer.teamCenter") },
+        { href: "https://github.com", label: "GitHub" },
+        { to: "/", label: "Changelog" },
+      ],
+    },
+    {
+      title: t("footer.company"),
+      ariaLabel: "Company links",
+      links: [
+        { to: "/", label: t("footer.home") },
+        { to: "/mining", label: t("footer.mining") },
+        { to: "/c2c", label: "C2C" },
+        { to: "/account/team", label: t("footer.team") },
+      ],
+    },
+  ];
 
   return (
     <footer className="footer" role="contentinfo" aria-label="Site footer">
@@ -20,83 +68,38 @@ export default function FooterSection() {
             <p>{t("footer.tagline")}</p>
           </div>
 
-          <nav aria-label="Product links">
-            <div className="footer__links-title">{t("footer.product")}</div>
-            <ul className="footer__links-list" role="list">
-              <li>
-                <NavLink className="footer__link" to="/mining">
-                  {t("footer.mining")}
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="footer__link" to="/c2c/market">
-                  {t("footer.c2cMarket")}
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="footer__link" to="/vip">
-                  VIP
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="footer__link" to="/">
-                  {t("footer.project")}
-                </NavLink>
-              </li>
-            </ul>
-          </nav>
+          <div className="footer__desktop-links">
+            {footerGroups.map((group) => (
+              <nav key={group.title} aria-label={group.ariaLabel}>
+                <div className="footer__links-title">{group.title}</div>
+                <ul className="footer__links-list" role="list">
+                  {group.links.map((item) => (
+                    <li key={`${group.title}-${item.label}`}>
+                      <FooterLink item={item} />
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            ))}
+          </div>
 
-          <nav aria-label="Developer links">
-            <div className="footer__links-title">{t("footer.developers")}</div>
-            <ul className="footer__links-list" role="list">
-              <li>
-                <NavLink className="footer__link" to="/my">
-                  {t("footer.myPanel")}
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="footer__link" to="/account/team">
-                  {t("footer.teamCenter")}
-                </NavLink>
-              </li>
-              <li>
-                <a className="footer__link" href="https://github.com" target="_blank" rel="noopener noreferrer">
-                  GitHub
-                </a>
-              </li>
-              <li>
-                <NavLink className="footer__link" to="/">
-                  Changelog
-                </NavLink>
-              </li>
-            </ul>
-          </nav>
-
-          <nav aria-label="Company links">
-            <div className="footer__links-title">{t("footer.company")}</div>
-            <ul className="footer__links-list" role="list">
-              <li>
-                <NavLink className="footer__link" to="/">
-                  {t("footer.home")}
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="footer__link" to="/mining">
-                  {t("footer.mining")}
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="footer__link" to="/c2c">
-                  C2C
-                </NavLink>
-              </li>
-              <li>
-                <NavLink className="footer__link" to="/account/team">
-                  {t("footer.team")}
-                </NavLink>
-              </li>
-            </ul>
-          </nav>
+          <div className="footer__mobile-accordion">
+            {footerGroups.map((group) => (
+              <details key={`mobile-${group.title}`} className="footer__accordion">
+                <summary className="footer__accordion-summary">
+                  <span>{group.title}</span>
+                  <Icon icon="mdi:chevron-down" aria-hidden="true" />
+                </summary>
+                <ul className="footer__accordion-list" role="list">
+                  {group.links.map((item) => (
+                    <li key={`mobile-${group.title}-${item.label}`}>
+                      <FooterLink item={item} />
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            ))}
+          </div>
         </div>
 
 

@@ -17,9 +17,9 @@
   font-family: var(--font-body);
   color: var(--c2c-text);
   background:
-    radial-gradient(circle at top left, rgba(108, 77, 255, 0.16), transparent 28%),
-    radial-gradient(circle at top right, rgba(118, 245, 196, 0.1), transparent 24%),
-    linear-gradient(180deg, #090d0c 0%, #050706 100%);
+    radial-gradient(circle at top left, rgba(108, 77, 255, 0.18), transparent 28%),
+    radial-gradient(circle at top right, rgba(118, 245, 196, 0.12), transparent 24%),
+    linear-gradient(180deg, #09100d 0%, #060807 100%);
 }
 
 .c2c-page * {

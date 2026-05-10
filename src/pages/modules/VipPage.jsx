@@ -2,7 +2,6 @@ import { Icon } from "@iconify/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { leadershipLevels } from "../../data/mockData";
-import vipImage from "../../assets/images/vip.png";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { getIncomeOverview, getReferralInfo } from "../../services/neteApi";
 import { readNetworkUserData } from "../../services/neteContracts";
@@ -54,49 +53,43 @@ export default function VipPage() {
   const zonePerformance = formatTokenAmount(referralInfoQuery.data?.small_leg_perf ?? 0n, 18, 2);
 
   return (
-    <section className="space-y-10">
-      <header className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(280px,520px)] lg:items-center">
-        <div className="max-w-3xl">
-          <p className="font-display text-base font-bold uppercase tracking-[0.12em] text-[#caff00] md:text-lg">NETE VIP</p>
-          <h1 className="mt-3 font-display text-xl font-black tracking-tight text-white md:text-2xl">{t("modules.vip.title")}</h1>
+    <section className="module-page space-y-10">
+      <header className="module-hero">
+        <p className="module-eyebrow">NETE VIP</p>
+        <h1 className="mt-3 font-display text-xl font-black tracking-tight text-white md:text-2xl">{t("modules.vip.title")}</h1>
 
-          {!wallet.isConnected ? <p className="mt-4 text-xs text-white/65">{t("modules.vip.connectHint")}</p> : null}
+        {!wallet.isConnected ? <p className="mt-4 text-xs text-white/65">{t("modules.vip.connectHint")}</p> : null}
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-2">
-            <div>
-              <span className="text-sm text-white/60">{t("modules.vip.currentLevel")}</span>
-              <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">V{currentLevel}</strong>
-            </div>
-            <div>
-              <span className="text-sm text-white/60">{t("modules.vip.zonePerformance")}</span>
-              <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">{zonePerformance} NETE</strong>
-            </div>
+        <div className="mt-8 grid gap-6 sm:grid-cols-2">
+          <div>
+            <span className="text-sm text-white/60">{t("modules.vip.currentLevel")}</span>
+            <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">V{currentLevel}</strong>
           </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/10 bg-transparent p-3">
-              <span className="text-xs text-white/55">{t("modules.vip.pendingDividend")}</span>
-              <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.pending_dividend ?? 0n, 18, 4)} NETE</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-transparent p-3">
-              <span className="text-xs text-white/55">{t("modules.vip.totalDividend")}</span>
-              <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.dividend_income_total ?? 0n, 18, 4)} NETE</p>
-            </div>
-            <div className="rounded-xl border border-white/10 bg-transparent p-3">
-              <span className="text-xs text-white/55">{t("modules.vip.totalV9")}</span>
-              <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.v9_income_total ?? 0n, 18, 4)} NETE</p>
-            </div>
+          <div>
+            <span className="text-sm text-white/60">{t("modules.vip.zonePerformance")}</span>
+            <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">{zonePerformance} NETE</strong>
           </div>
         </div>
 
-        <div className="mx-auto w-full max-w-[520px] lg:mx-0" aria-hidden="true">
-          <img className="max-h-[220px] w-full object-contain" src={vipImage} alt="" />
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <div className="module-stat-card p-3">
+            <span className="text-xs text-white/55">{t("modules.vip.pendingDividend")}</span>
+            <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.pending_dividend ?? 0n, 18, 4)} NETE</p>
+          </div>
+          <div className="module-stat-card p-3">
+            <span className="text-xs text-white/55">{t("modules.vip.totalDividend")}</span>
+            <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.dividend_income_total ?? 0n, 18, 4)} NETE</p>
+          </div>
+          <div className="module-stat-card p-3">
+            <span className="text-xs text-white/55">{t("modules.vip.totalV9")}</span>
+            <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.v9_income_total ?? 0n, 18, 4)} NETE</p>
+          </div>
         </div>
       </header>
 
       <section>
         <h2 className="mb-6 mt-20 text-center font-display text-xl font-black tracking-tight text-[#caff00] md:text-2xl">{t("modules.vip.levelIntro")}</h2>
-        <div className="rounded-2xl border border-white/10 bg-transparent">
+        <div className="module-card">
           <div className="flex flex-wrap gap-6 border-b border-white/10 px-5 py-5 text-white/55 md:px-10" role="tablist" aria-label={t("modules.vip.levelIntro")}>
             <button
               className="relative pb-2 text-sm font-semibold text-white transition after:absolute after:-bottom-[21px] after:left-0 after:right-0 after:h-[3px] after:rounded-full after:bg-white after:content-[''] md:text-sm"
@@ -139,7 +132,7 @@ export default function VipPage() {
 
           <ul className="space-y-2 p-4 md:hidden">
             {leadershipLevels.map((row, index) => (
-              <li key={`mobile-${row.level}`} className="rounded-xl border border-white/10 bg-white/[0.02] p-3">
+              <li key={`mobile-${row.level}`} className="module-stat-card p-3">
                 <div className="flex items-start justify-between gap-3">
                   <span className="inline-flex min-w-[56px] items-center justify-center rounded-full border border-[#caff00]/45 bg-[#caff00]/10 px-3 py-1 text-xs font-semibold text-[#caff00]">
                     {row.level}
@@ -196,7 +189,7 @@ export default function VipPage() {
             {vipBenefits.map((item, index) => (
               <article
                 key={item.icon}
-                className="flex min-h-[70px] items-center gap-4 rounded-[22px] bg-[#14141b] px-5 py-3 text-sm text-white md:min-h-[70px] md:gap-4 md:px-6 md:py-3 md:text-sm"
+                className="module-stat-card flex min-h-[70px] items-center gap-4 px-5 py-3 text-sm text-white md:min-h-[70px] md:gap-4 md:px-6 md:py-3 md:text-sm"
               >
                 <span className="shrink-0 text-[1.4rem] text-white/95 md:text-[1.4rem]" aria-hidden="true">
                   <Icon icon={item.icon} width="1em" height="1em" />

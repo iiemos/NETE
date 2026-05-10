@@ -5,10 +5,10 @@ import FooterSection from "../landing/FooterSection";
 export default function AppShell() {
   return (
     <div
-      className="min-h-screen bg-[#0a0a0f] text-white"
+      className="min-h-screen bg-[#070a09] text-white"
       style={{
         backgroundImage:
-          "radial-gradient(circle at 15% 10%, rgba(123, 77, 255, 0.22), transparent 38%), radial-gradient(circle at 88% 18%, rgba(202, 255, 0, 0.1), transparent 32%), radial-gradient(circle at 52% 86%, rgba(255, 45, 120, 0.08), transparent 34%)",
+          "radial-gradient(circle at top left, rgba(108, 77, 255, 0.18), transparent 28%), radial-gradient(circle at top right, rgba(118, 245, 196, 0.12), transparent 24%), linear-gradient(180deg, #09100d 0%, #060807 100%)",
       }}
     >
       <GlobalHeader />

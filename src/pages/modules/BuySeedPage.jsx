@@ -84,10 +84,11 @@ export default function BuySeedPage() {
   };
 
   return (
-    <section className="space-y-6">
-      <header className="rounded-[28px] bg-transparent">
+    <section className="module-page space-y-6">
+      <header className="module-hero">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
           <div className="max-w-3xl">
+            <p className="module-eyebrow">NETE SEED</p>
             <h1 className="font-display text-2xl font-black tracking-tight text-white md:text-3xl">{t("modules.seed.title")}</h1>
             <p className="mt-3 max-w-2xl text-sm text-white/80">{t("modules.seed.desc")}</p>
           </div>
@@ -95,13 +96,13 @@ export default function BuySeedPage() {
       </header>
 
       <div className="grid gap-6 xl:grid-cols-3">
-        <article className="rounded-2xl border border-white/10 bg-transparent p-5 xl:col-span-2">
+        <article className="module-card p-5 xl:col-span-2">
           <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.seed.formTitle")}</h2>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <label className="space-y-2 text-sm text-white/75">
               {t("modules.seed.price")}
               <input
-                className="h-11 w-full rounded-xl border border-white/15 bg-black/30 px-3 text-sm text-white outline-none"
+                className="module-input"
                 value={seedPrice > 0n ? formatTokenAmount(seedPrice, 18, 8) : "--"}
                 disabled
               />
@@ -109,7 +110,7 @@ export default function BuySeedPage() {
             <label className="space-y-2 text-sm text-white/75">
               {t("modules.seed.quantity")}
               <input
-                className="h-11 w-full rounded-xl border border-white/15 bg-black/30 px-3 text-sm text-white outline-none transition placeholder:text-white/40 focus:border-[#caff00]/60"
+                className="module-input"
                 type="number"
                 min="0"
                 step="0.0001"
@@ -123,7 +124,7 @@ export default function BuySeedPage() {
             <label className="space-y-2 text-sm text-white/75">
               {t("modules.seed.usdtBalance")}
               <input
-                className="h-11 w-full rounded-xl border border-white/15 bg-black/30 px-3 text-sm text-white outline-none"
+                className="module-input"
                 value={wallet.isConnected ? formatTokenAmount(usdtBalance, 18, 6) : t("modules.seed.connectWallet")}
                 disabled
               />
@@ -131,7 +132,7 @@ export default function BuySeedPage() {
             <label className="space-y-2 text-sm text-white/75">
               {t("modules.seed.estimatedUsdt")}
               <input
-                className="h-11 w-full rounded-xl border border-white/15 bg-black/30 px-3 text-sm text-white outline-none"
+                className="module-input"
                 value={estimatedUsdt > 0n ? formatTokenAmount(estimatedUsdt, 18, 6) : "--"}
                 disabled
               />
@@ -157,27 +158,27 @@ export default function BuySeedPage() {
           {txMessage ? <p className="mt-3 text-xs text-white/75 break-all">{txMessage}</p> : null}
         </article>
 
-        <article className="rounded-2xl border border-white/10 bg-transparent p-5 space-y-4">
+        <article className="module-card space-y-4 p-5">
           <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.seed.statusTitle")}</h2>
-          <div className="rounded-xl border border-white/10 bg-transparent p-4">
+          <div className="module-stat-card p-4">
             <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.seed.seedRemaining")}</div>
             <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{formatTokenAmount(seedRemaining, 18, 2)} NETE</div>
           </div>
-          <div className="rounded-xl border border-white/10 bg-transparent p-4">
+          <div className="module-stat-card p-4">
             <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.seed.posRemaining")}</div>
             <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{formatTokenAmount(posRemaining, 18, 2)} NETE</div>
           </div>
-          <div className="rounded-xl border border-white/10 bg-transparent p-4">
+          <div className="module-stat-card p-4">
             <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.seed.presaleActive")}</div>
             <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{seedInfoQuery.data?.presaleActive ? t("modules.seed.active") : t("modules.seed.inactive")}</div>
           </div>
         </article>
       </div>
 
-      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
+      <article className="module-card p-5">
         <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.seed.recordsTitle")}</h2>
-        <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
-          <table className="min-w-full border-collapse text-left text-xs md:text-sm [&_th]:px-4 [&_th]:py-3 [&_th]:font-semibold [&_th]:text-white/65 [&_td]:border-t [&_td]:border-white/10 [&_td]:px-4 [&_td]:py-3 [&_td]:text-white/85">
+        <div className="module-table-wrap mt-4">
+          <table className="module-table md:text-sm">
             <thead>
               <tr>
                 <th>{t("modules.seed.time")}</th>

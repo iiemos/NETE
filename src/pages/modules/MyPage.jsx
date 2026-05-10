@@ -167,10 +167,11 @@ export default function MyPage() {
   };
 
   return (
-    <section className="space-y-6">
-      <header className="rounded-[28px] bg-transparent">
+    <section className="module-page space-y-6">
+      <header className="module-hero">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
           <div className="max-w-3xl">
+            <p className="module-eyebrow">NETE ACCOUNT</p>
             <h1 className="font-display text-2xl font-black tracking-tight text-white md:text-3xl">{t("modules.my.title")}</h1>
             <p className="mt-3 max-w-2xl text-sm text-white/80">{t("modules.my.desc")}</p>
           </div>
@@ -179,14 +180,14 @@ export default function MyPage() {
 
       {!wallet.isConnected ? <p className="text-xs text-white/70">{t("modules.my.connectHint")}</p> : null}
 
-      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
+      <article className="module-card p-5">
         <h2 className="mb-4 font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.my.overview")}</h2>
         {loading ? (
           <div className="rounded-xl border border-white/10 px-4 py-8 text-center text-sm text-white/65">{t("modules.my.loading")}</div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {summaryItems.map((item) => (
-              <article key={item.label} className="rounded-xl border border-white/10 bg-transparent p-4">
+              <article key={item.label} className="module-stat-card p-4">
                 <div className="text-xs uppercase tracking-[0.12em] text-white/55">{item.label}</div>
                 <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{item.value}</div>
               </article>
@@ -195,7 +196,7 @@ export default function MyPage() {
         )}
       </article>
 
-      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
+      <article className="module-card p-5">
         <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.my.claimTitle")}</h2>
         <p className="mt-2 text-xs text-white/65">{t("modules.my.claimDesc")}</p>
         <div className="mt-4 flex flex-wrap gap-3">
@@ -219,14 +220,14 @@ export default function MyPage() {
         {notice ? <p className="mt-3 break-all text-xs text-white/75">{notice}</p> : null}
       </article>
 
-      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
+      <article className="module-card p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.my.ledgerTitle")}</h2>
           <span className="text-xs text-white/50">{t("modules.my.recentCount", { count: ledgerRows.length })}</span>
         </div>
 
-        <div className="overflow-x-auto rounded-xl border border-white/10">
-          <table className="min-w-full border-collapse text-left text-xs md:text-sm [&_th]:px-4 [&_th]:py-3 [&_th]:font-semibold [&_th]:text-white/65 [&_td]:border-t [&_td]:border-white/10 [&_td]:px-4 [&_td]:py-3 [&_td]:text-white/85">
+        <div className="module-table-wrap">
+          <table className="module-table md:text-sm">
             <thead>
               <tr>
                 <th>{t("modules.my.time")}</th>
@@ -261,7 +262,7 @@ export default function MyPage() {
         </div>
       </article>
 
-      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
+      <article className="module-card p-5">
         <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.my.quickTitle")}</h2>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link to="/account/team" className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#caff00] px-5 text-sm font-semibold tracking-wide text-black transition hover:shadow-[0_0_30px_rgba(202,255,0,0.45)]">

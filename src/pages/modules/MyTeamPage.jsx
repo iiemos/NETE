@@ -84,10 +84,11 @@ export default function MyTeamPage() {
   };
 
   return (
-    <section className="space-y-6">
-      <header className="rounded-[28px] bg-transparent">
+    <section className="module-page space-y-6">
+      <header className="module-hero">
         <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
           <div className="max-w-3xl">
+            <p className="module-eyebrow">NETE NETWORK</p>
             <h1 className="font-display text-2xl font-black tracking-tight text-white md:text-3xl">{t("modules.team.title")}</h1>
             <p className="mt-3 max-w-2xl text-sm text-white/80">{t("modules.team.desc")}</p>
           </div>
@@ -97,38 +98,38 @@ export default function MyTeamPage() {
       {!wallet.isConnected ? <p className="text-xs text-white/70">{t("modules.team.connectHint")}</p> : null}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <article className="rounded-xl border border-white/10 bg-transparent p-4">
+        <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.directs")}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{directCount}</div>
         </article>
-        <article className="rounded-xl border border-white/10 bg-transparent p-4">
+        <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.performance")}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{totalPerformance}</div>
         </article>
-        <article className="rounded-xl border border-white/10 bg-transparent p-4">
+        <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.layers")}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{currentLayers}</div>
         </article>
-        <article className="rounded-xl border border-white/10 bg-transparent p-4">
+        <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.level")}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">V{networkDataQuery.data?.userLevel ?? 0}</div>
         </article>
       </div>
 
-      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
+      <article className="module-card p-5">
         <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.team.referralTitle")}</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="rounded-xl border border-white/10 bg-transparent p-4 text-sm text-white/85">
+          <div className="module-stat-card p-4 text-sm text-white/85">
             <p>{t("modules.team.currentReferrer", { value: referralInfo.referrer ? shortAddress(referralInfo.referrer) : t("modules.team.unbound") })}</p>
             <p className="mt-2">{t("modules.team.ownPerformance", { value: ownPerformance })}</p>
             <p className="mt-2">{t("modules.team.smallLegPerformance", { value: smallLegPerformance })}</p>
           </div>
 
-          <div className="rounded-xl border border-white/10 bg-transparent p-4">
+          <div className="module-stat-card p-4">
             <p className="text-sm text-white/75">{t("modules.team.bindOnce")}</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <input
-                className="h-11 flex-1 rounded-xl border border-white/15 bg-black/30 px-3 text-sm text-white outline-none placeholder:text-white/40"
+                className="module-input flex-1"
                 placeholder={t("modules.team.inputPlaceholder")}
                 value={referrerInput}
                 onChange={(event) => setReferrerInput(event.target.value)}
@@ -148,10 +149,10 @@ export default function MyTeamPage() {
         </div>
       </article>
 
-      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
+      <article className="module-card p-5">
         <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.team.accelerationTitle")}</h2>
-        <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
-          <table className="min-w-full border-collapse text-left text-xs md:text-sm [&_th]:px-4 [&_th]:py-3 [&_th]:font-semibold [&_th]:text-white/65 [&_td]:border-t [&_td]:border-white/10 [&_td]:px-4 [&_td]:py-3 [&_td]:text-white/85">
+        <div className="module-table-wrap mt-4">
+          <table className="module-table md:text-sm">
             <thead>
               <tr>
                 <th>{t("modules.team.directCount")}</th>
@@ -174,10 +175,10 @@ export default function MyTeamPage() {
         </div>
       </article>
 
-      <article className="rounded-2xl border border-white/10 bg-transparent p-5">
+      <article className="module-card p-5">
         <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.team.memberTitle")}</h2>
-        <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
-          <table className="min-w-full border-collapse text-left text-xs md:text-sm [&_th]:px-4 [&_th]:py-3 [&_th]:font-semibold [&_th]:text-white/65 [&_td]:border-t [&_td]:border-white/10 [&_td]:px-4 [&_td]:py-3 [&_td]:text-white/85">
+        <div className="module-table-wrap mt-4">
+          <table className="module-table md:text-sm">
             <thead>
               <tr>
                 <th>{t("modules.team.address")}</th>
