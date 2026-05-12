@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import LoadingState from "../../components/common/LoadingState";
 import { shareAccelerationRules, teamMembers } from "../../data/mockData";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { getReferralInfo } from "../../services/neteApi";
@@ -46,6 +47,7 @@ export default function MyTeamPage() {
     return directCount >= 8 ? t("modules.team.layersRange") : t("modules.team.layers", { count: Math.min(directCount, maxDepth || directCount) });
   }, [directCount, maxDepth, t]);
 
+  const teamLoading = referralInfoQuery.isLoading || networkDataQuery.isLoading;
   const bindDisabled = !wallet.isConnected || binding || Boolean(referralInfo.referrer);
 
   const handleBindReferrer = async () => {
@@ -97,22 +99,30 @@ export default function MyTeamPage() {
 
       {!wallet.isConnected ? <p className="text-xs text-white/70">{t("modules.team.connectHint")}</p> : null}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3">
         <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.directs")}</div>
-          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{directCount}</div>
+          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
+            {teamLoading ? <LoadingState compact /> : directCount}
+          </div>
         </article>
         <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.performance")}</div>
-          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{totalPerformance}</div>
+          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
+            {teamLoading ? <LoadingState compact /> : totalPerformance}
+          </div>
         </article>
         <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.layers")}</div>
-          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{currentLayers}</div>
+          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
+            {teamLoading ? <LoadingState compact /> : currentLayers}
+          </div>
         </article>
         <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.level")}</div>
-          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">V{networkDataQuery.data?.userLevel ?? 0}</div>
+          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
+            {teamLoading ? <LoadingState compact /> : `V${networkDataQuery.data?.userLevel ?? 0}`}
+          </div>
         </article>
       </div>
 
@@ -120,9 +130,15 @@ export default function MyTeamPage() {
         <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.team.referralTitle")}</h2>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="module-stat-card p-4 text-sm text-white/85">
-            <p>{t("modules.team.currentReferrer", { value: referralInfo.referrer ? shortAddress(referralInfo.referrer) : t("modules.team.unbound") })}</p>
-            <p className="mt-2">{t("modules.team.ownPerformance", { value: ownPerformance })}</p>
-            <p className="mt-2">{t("modules.team.smallLegPerformance", { value: smallLegPerformance })}</p>
+            {teamLoading ? (
+              <LoadingState compact />
+            ) : (
+              <>
+                <p>{t("modules.team.currentReferrer", { value: referralInfo.referrer ? shortAddress(referralInfo.referrer) : t("modules.team.unbound") })}</p>
+                <p className="mt-2">{t("modules.team.ownPerformance", { value: ownPerformance })}</p>
+                <p className="mt-2">{t("modules.team.smallLegPerformance", { value: smallLegPerformance })}</p>
+              </>
+            )}
           </div>
 
           <div className="module-stat-card p-4">

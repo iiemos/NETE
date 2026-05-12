@@ -39,9 +39,9 @@ const resources = {
         teamCenter: "团队中心",
         home: "首页",
         team: "团队",
-        built: "Built with ♥ on Ethereum",
-        privacy: "Privacy",
-        terms: "Terms",
+        built: "",
+        privacy: "",
+        terms: "",
       },
       c2cFrame: {
         quick: "快捷区",

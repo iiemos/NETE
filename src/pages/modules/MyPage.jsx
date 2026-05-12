@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { getClaimMessage, getIncomeLedger, getIncomeOverview, getReferralInfo } from "../../services/neteApi";
 import { claimWithSignature, readNetworkUserData, readTokenMetrics, readUserBalances } from "../../services/neteContracts";
@@ -183,9 +183,9 @@ export default function MyPage() {
       <article className="module-card p-5">
         <h2 className="mb-4 font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.my.overview")}</h2>
         {loading ? (
-          <div className="rounded-xl border border-white/10 px-4 py-8 text-center text-sm text-white/65">{t("modules.my.loading")}</div>
+          <LoadingState className="module-loading-card" />
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3">
             {summaryItems.map((item) => (
               <article key={item.label} className="module-stat-card p-4">
                 <div className="text-xs uppercase tracking-[0.12em] text-white/55">{item.label}</div>
@@ -198,7 +198,6 @@ export default function MyPage() {
 
       <article className="module-card p-5">
         <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.my.claimTitle")}</h2>
-        <p className="mt-2 text-xs text-white/65">{t("modules.my.claimDesc")}</p>
         <div className="mt-4 flex flex-wrap gap-3">
           {claimActions.map((action) => (
             <button
@@ -239,8 +238,10 @@ export default function MyPage() {
             </thead>
             <tbody>
               {incomeLedgerQuery.isLoading ? (
-                <tr>
-                  <td colSpan={5} className="text-center text-white/65">{t("common.loading")}</td>
+                <tr className="module-loading-row">
+                  <td colSpan={5}>
+                    <LoadingState variant="list" rows={4} cells={5} />
+                  </td>
                 </tr>
               ) : ledgerRows.length === 0 ? (
                 <tr>
@@ -259,21 +260,6 @@ export default function MyPage() {
               )}
             </tbody>
           </table>
-        </div>
-      </article>
-
-      <article className="module-card p-5">
-        <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.my.quickTitle")}</h2>
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link to="/account/team" className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#caff00] px-5 text-sm font-semibold tracking-wide text-black transition hover:shadow-[0_0_30px_rgba(202,255,0,0.45)]">
-            {t("modules.my.teamEntry")}
-          </Link>
-          <Link to="/finance/buy-seed" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 bg-transparent px-5 text-sm font-semibold tracking-wide text-white transition hover:border-white/40 hover:bg-white/5">
-            {t("modules.my.seedEntry")}
-          </Link>
-          <Link to="/mining" className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 bg-transparent px-5 text-sm font-semibold tracking-wide text-white transition hover:border-white/40 hover:bg-white/5">
-            {t("modules.my.miningEntry")}
-          </Link>
         </div>
       </article>
     </section>

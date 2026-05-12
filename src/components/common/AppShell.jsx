@@ -13,7 +13,7 @@ export default function AppShell() {
     >
       <GlobalHeader />
 
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8" style={{ paddingTop: "calc(var(--nav-height) + 1.5rem)" }}>
+      <div className="mx-auto w-full max-w-[430px] px-3 py-4" style={{ paddingTop: "calc(var(--nav-height) + 0.75rem)" }}>
         <Outlet />
       </div>
 

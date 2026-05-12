@@ -1,6 +1,7 @@
 import { Icon } from "@iconify/react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import LoadingState from "../../components/common/LoadingState";
 import { leadershipLevels } from "../../data/mockData";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { getIncomeOverview, getReferralInfo } from "../../services/neteApi";
@@ -51,6 +52,7 @@ export default function VipPage() {
 
   const currentLevel = incomeOverviewQuery.data?.user_level ?? networkDataQuery.data?.userLevel ?? 0;
   const zonePerformance = formatTokenAmount(referralInfoQuery.data?.small_leg_perf ?? 0n, 18, 2);
+  const vipLoading = incomeOverviewQuery.isLoading || referralInfoQuery.isLoading || networkDataQuery.isLoading;
 
   return (
     <section className="module-page space-y-10">
@@ -63,101 +65,69 @@ export default function VipPage() {
         <div className="mt-8 grid gap-6 sm:grid-cols-2">
           <div>
             <span className="text-sm text-white/60">{t("modules.vip.currentLevel")}</span>
-            <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">V{currentLevel}</strong>
+            <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">
+              {vipLoading ? <LoadingState compact /> : `V${currentLevel}`}
+            </strong>
           </div>
           <div>
             <span className="text-sm text-white/60">{t("modules.vip.zonePerformance")}</span>
-            <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">{zonePerformance} NETE</strong>
+            <strong className="mt-2 block font-display text-xl font-bold text-white md:text-2xl">
+              {vipLoading ? <LoadingState compact /> : `${zonePerformance} NETE`}
+            </strong>
           </div>
         </div>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           <div className="module-stat-card p-3">
             <span className="text-xs text-white/55">{t("modules.vip.pendingDividend")}</span>
-            <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.pending_dividend ?? 0n, 18, 4)} NETE</p>
+            <p className="mt-1 text-sm font-semibold text-[#00ffc2]">
+              {vipLoading ? <LoadingState compact /> : `${formatTokenAmount(incomeOverviewQuery.data?.pending_dividend ?? 0n, 18, 4)} NETE`}
+            </p>
           </div>
           <div className="module-stat-card p-3">
             <span className="text-xs text-white/55">{t("modules.vip.totalDividend")}</span>
-            <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.dividend_income_total ?? 0n, 18, 4)} NETE</p>
+            <p className="mt-1 text-sm font-semibold text-[#00ffc2]">
+              {vipLoading ? <LoadingState compact /> : `${formatTokenAmount(incomeOverviewQuery.data?.dividend_income_total ?? 0n, 18, 4)} NETE`}
+            </p>
           </div>
           <div className="module-stat-card p-3">
             <span className="text-xs text-white/55">{t("modules.vip.totalV9")}</span>
-            <p className="mt-1 text-sm font-semibold text-[#00ffc2]">{formatTokenAmount(incomeOverviewQuery.data?.v9_income_total ?? 0n, 18, 4)} NETE</p>
+            <p className="mt-1 text-sm font-semibold text-[#00ffc2]">
+              {vipLoading ? <LoadingState compact /> : `${formatTokenAmount(incomeOverviewQuery.data?.v9_income_total ?? 0n, 18, 4)} NETE`}
+            </p>
           </div>
         </div>
       </header>
 
-      <section>
-        <h2 className="mb-6 mt-20 text-center font-display text-xl font-black tracking-tight text-[#caff00] md:text-2xl">{t("modules.vip.levelIntro")}</h2>
-        <div className="module-card">
-          <div className="flex flex-wrap gap-6 border-b border-white/10 px-5 py-5 text-white/55 md:px-10" role="tablist" aria-label={t("modules.vip.levelIntro")}>
-            <button
-              className="relative pb-2 text-sm font-semibold text-white transition after:absolute after:-bottom-[21px] after:left-0 after:right-0 after:h-[3px] after:rounded-full after:bg-white after:content-[''] md:text-sm"
-              role="tab"
-              type="button"
-              aria-selected="true"
-            >
-              {t("modules.vip.category")}
-            </button>
-          </div>
-
-          <div className="hidden overflow-x-auto p-5 md:block md:p-10">
-            <ul className="min-w-[980px] overflow-hidden rounded-2xl border border-white/10">
-              <li className="grid grid-cols-[170px_1fr_190px_220px_120px] bg-white/5 px-6 py-4 text-sm font-semibold text-white/80">
-                <span>{t("modules.vip.level")}</span>
-                <span>{t("modules.vip.requirement")}</span>
-                <span>{t("modules.vip.bonusRatio")}</span>
-                <span>{t("modules.vip.fixedReward")}</span>
-                <span>{t("modules.vip.action")}</span>
-              </li>
-              {leadershipLevels.map((row, index) => (
-                <li key={row.level} className="grid grid-cols-[170px_1fr_190px_220px_120px] border-t border-white/10 px-6 py-4 text-sm text-white/85">
-                  <span>
-                    <span className="inline-flex min-w-[62px] items-center justify-center rounded-full border border-[#caff00]/45 bg-[#caff00]/10 px-3 py-1 text-sm font-semibold text-[#caff00]">
-                      {row.level}
-                    </span>
-                  </span>
-                  <span>{levelRequirements[index] || row.requirement}</span>
-                  <span className="font-semibold text-[#00ffc2]">{levelBonusRatios[index] || row.bonusRatio}</span>
-                  <span>{row.fixedReward.toLocaleString()}</span>
-                  <span>
-                    <button className="inline-flex min-h-10 min-w-[92px] items-center justify-center rounded-full bg-[#caff00] px-4 text-sm font-semibold text-black transition hover:shadow-[0_0_25px_rgba(202,255,0,0.45)]" type="button">
-                      {t("modules.vip.view")}
-                    </button>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <ul className="space-y-2 p-4 md:hidden">
+      <section className="vip-level-section">
+        <h2 className="vip-level-title">{t("modules.vip.levelIntro")}</h2>
+        <div className="vip-level-panel">
+          <div className="vip-level-list">
             {leadershipLevels.map((row, index) => (
-              <li key={`mobile-${row.level}`} className="module-stat-card p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="inline-flex min-w-[56px] items-center justify-center rounded-full border border-[#caff00]/45 bg-[#caff00]/10 px-3 py-1 text-xs font-semibold text-[#caff00]">
-                    {row.level}
-                  </span>
-                  <button className="inline-flex min-h-8 min-w-[74px] items-center justify-center rounded-full bg-[#caff00] px-3 text-xs font-semibold text-black" type="button">
-                    {t("modules.vip.view")}
-                  </button>
+              <article className="vip-level-card" key={row.level}>
+                <div className="vip-level-card-main">
+                  <h3>{row.level}</h3>
+                  <p>{levelRequirements[index] || row.requirement}</p>
                 </div>
-                <div className="mt-3 space-y-1.5 text-[11px] text-white/75">
-                  <p>
-                    <span className="text-white/55">{t("modules.vip.requirement")}:</span>
-                    {levelRequirements[index] || row.requirement}
-                  </p>
-                  <p>
-                    <span className="text-white/55">{t("modules.vip.bonusRatio")}:</span>
-                    <span className="font-semibold text-[#00ffc2]">{levelBonusRatios[index] || row.bonusRatio}</span>
-                  </p>
-                  <p>
-                    <span className="text-white/55">{t("modules.vip.fixedReward")}:</span>
-                    {row.fixedReward.toLocaleString()} NETE
-                  </p>
+                <span className="vip-level-badge">{t("modules.vip.category")}</span>
+
+                <div className="vip-level-grid">
+                  <div className="vip-level-tile">
+                    <span>{t("modules.vip.requirement")}</span>
+                    <strong>{levelRequirements[index] || row.requirement}</strong>
+                  </div>
+                  <div className="vip-level-tile">
+                    <span>{t("modules.vip.bonusRatio")}</span>
+                    <strong className="is-accent">{levelBonusRatios[index] || row.bonusRatio}</strong>
+                  </div>
+                  <div className="vip-level-tile">
+                    <span>{t("modules.vip.fixedReward")}</span>
+                    <strong>{row.fixedReward.toLocaleString()}</strong>
+                  </div>
                 </div>
-              </li>
+              </article>
             ))}
-          </ul>
+          </div>
         </div>
       </section>
 

@@ -1,5 +1,5 @@
 import { readContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
-import { formatUnits } from "viem";
+import { decodeEventLog, formatUnits } from "viem";
 import mockUsdtAbi from "../abis/MockUSDT.json";
 import neteCoreAbi from "../abis/NeteCore.json";
 import neteMarketAbi from "../abis/NeteMarket.json";
@@ -9,6 +9,16 @@ import { NETE_CHAIN_ID, assertContractAddress } from "../config/neteRuntime";
 import { wagmiConfig } from "../web3/wagmiConfig";
 
 const ONE_18 = 10n ** 18n;
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const erc721BalanceAbi = [
+  {
+    type: "function",
+    name: "balanceOf",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+    stateMutability: "view",
+  },
+];
 
 function ensureAccount(account) {
   if (!account) {
@@ -63,6 +73,14 @@ async function read({ address, abi, functionName, args = [] }) {
   });
 }
 
+async function readOptional(request, fallback) {
+  try {
+    return await read(request);
+  } catch {
+    return fallback;
+  }
+}
+
 async function send({ account, address, abi, functionName, args = [] }) {
   const hash = await writeContract(wagmiConfig, {
     chainId: NETE_CHAIN_ID,
@@ -100,6 +118,30 @@ function toOrderView(raw) {
   };
 }
 
+function decodeOrderCreated(receipt, marketAddress) {
+  const targetAddress = String(marketAddress || "").toLowerCase();
+
+  for (const log of receipt?.logs || []) {
+    if (targetAddress && String(log.address || "").toLowerCase() !== targetAddress) continue;
+
+    try {
+      const event = decodeEventLog({
+        abi: neteMarketAbi,
+        data: log.data,
+        topics: log.topics,
+      });
+
+      if (event.eventName === "OrderCreated") {
+        return event.args;
+      }
+    } catch {
+      // Ignore logs from other contracts in the same transaction.
+    }
+  }
+
+  return null;
+}
+
 export async function readTokenMetrics() {
   const tokenAddress = assertContractAddress("neteToken");
   const [totalSupply, totalBurned, circulatingSupply, decimals] = await Promise.all([
@@ -119,11 +161,13 @@ export async function readTokenMetrics() {
 
 export async function readCoreSeedInfo() {
   const coreAddress = assertContractAddress("neteCore");
-  const [seedPrice, seedRemaining, posRemaining, presaleActive] = await Promise.all([
+  const [seedPrice, seedRemaining, posRemaining, presaleActive, seedPoolInit, seedSold] = await Promise.all([
     read({ address: coreAddress, abi: neteCoreAbi, functionName: "SEED_PRICE" }),
     read({ address: coreAddress, abi: neteCoreAbi, functionName: "seedRemaining" }),
     read({ address: coreAddress, abi: neteCoreAbi, functionName: "posRemaining" }),
     read({ address: coreAddress, abi: neteCoreAbi, functionName: "presaleActive" }),
+    read({ address: coreAddress, abi: neteCoreAbi, functionName: "SEED_POOL_INIT" }),
+    read({ address: coreAddress, abi: neteCoreAbi, functionName: "seedSold" }),
   ]);
 
   return {
@@ -131,6 +175,8 @@ export async function readCoreSeedInfo() {
     seedRemaining,
     posRemaining,
     presaleActive,
+    seedPoolInit,
+    seedSold,
     seedPriceText: formatUnits(seedPrice, 18),
   };
 }
@@ -195,8 +241,30 @@ export async function readUserMiningData(user) {
   const coreAddress = assertContractAddress("neteCore");
   const [positionIds, airdropInfo] = await Promise.all([
     read({ address: coreAddress, abi: neteCoreAbi, functionName: "getUserPositions", args: [user] }),
-    read({ address: coreAddress, abi: neteCoreAbi, functionName: "airdropInfos", args: [user] }),
+    readOptional(
+      { address: coreAddress, abi: neteCoreAbi, functionName: "airdropInfos", args: [user] },
+      { composed: false, positionId: 0n, composeAt: 0n, expireAt: 0n, promoted: false },
+    ),
   ]);
+  const [repurchaseBalance, fragmentBalance, airdropRemaining, requireSBT, sbtContract, nftFragmentClaimed] = await Promise.all([
+    readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "repurchaseBalance", args: [user] }, 0n),
+    readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "fragmentBalance", args: [user] }, 0n),
+    readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "airdropRemaining" }, 0n),
+    readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "requireSBT" }, false),
+    readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "sbtContract" }, ZERO_ADDRESS),
+    readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "nftFragmentClaimed", args: [user] }, false),
+  ]);
+  const requiresNft = Boolean(requireSBT);
+  const hasSbtContract = String(sbtContract || "").toLowerCase() !== ZERO_ADDRESS;
+  let sbtBalance = 0n;
+
+  if (requiresNft && hasSbtContract) {
+    try {
+      sbtBalance = await read({ address: sbtContract, abi: erc721BalanceAbi, functionName: "balanceOf", args: [user] });
+    } catch {
+      sbtBalance = 0n;
+    }
+  }
 
   const rows = await Promise.all(
     positionIds.map(async (positionId) => {
@@ -231,6 +299,16 @@ export async function readUserMiningData(user) {
 
   return {
     airdropInfo,
+    repurchaseBalance,
+    fragmentBalance,
+    airdropRemaining,
+    airdropEligibility: {
+      requireSBT: requiresNft,
+      sbtContract,
+      nftClaimed: Boolean(nftFragmentClaimed),
+      sbtBalance,
+      hasRequiredNft: !requiresNft || sbtBalance > 0n,
+    },
     positions: rows.sort((a, b) => Number(b.positionId) - Number(a.positionId)),
   };
 }
@@ -308,12 +386,49 @@ export async function activateMiner(account, tierIndex) {
   });
 }
 
+export async function claimAllRewards(account) {
+  return send({
+    account,
+    address: assertContractAddress("neteCore"),
+    abi: neteCoreAbi,
+    functionName: "claimAllRewards",
+  });
+}
+
+export async function repurchaseExpiredMiners(account) {
+  return send({
+    account,
+    address: assertContractAddress("neteCore"),
+    abi: neteCoreAbi,
+    functionName: "repurchaseExpiredMiners",
+  });
+}
+
+export async function claimAndActivateAirdropMiner(account) {
+  return send({
+    account,
+    address: assertContractAddress("neteCore"),
+    abi: neteCoreAbi,
+    functionName: "claimAndActivateAirdropMiner",
+  });
+}
+
 export async function claimReward(account, positionId) {
   return send({
     account,
     address: assertContractAddress("neteCore"),
     abi: neteCoreAbi,
     functionName: "claimReward",
+    args: [toBigInt(positionId)],
+  });
+}
+
+export async function claimAirdropReward(account, positionId) {
+  return send({
+    account,
+    address: assertContractAddress("neteCore"),
+    abi: neteCoreAbi,
+    functionName: "claimAirdropReward",
     args: [toBigInt(positionId)],
   });
 }
@@ -359,13 +474,25 @@ export async function approveNeteToMarket(account, amount) {
 }
 
 export async function createSellOrder(account, neteAmount, pricePerNete) {
-  return send({
+  const marketAddress = assertContractAddress("neteMarket");
+  const result = await send({
     account,
-    address: assertContractAddress("neteMarket"),
+    address: marketAddress,
     abi: neteMarketAbi,
     functionName: "createSellOrder",
     args: [toBigInt(neteAmount), toBigInt(pricePerNete)],
   });
+  const createdOrder = decodeOrderCreated(result.receipt, marketAddress);
+
+  return {
+    ...result,
+    orderId: createdOrder?.orderId?.toString?.() || "",
+    orderNo: createdOrder?.orderNo || "",
+    seller: createdOrder?.seller || account,
+    neteAmount: createdOrder?.neteAmount?.toString?.() || toBigInt(neteAmount).toString(),
+    pricePerNete: createdOrder?.pricePerNete?.toString?.() || toBigInt(pricePerNete).toString(),
+    totalUsdt: createdOrder?.totalUsdt?.toString?.() || ((toBigInt(neteAmount) * toBigInt(pricePerNete)) / ONE_18).toString(),
+  };
 }
 
 export async function approveUsdtToMarket(account, amount) {

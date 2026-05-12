@@ -105,16 +105,6 @@ export default function FooterSection() {
 
         <div className="footer__bottom">
           <span>© 2024 NETE. All rights reserved.</span>
-          <span>{t("footer.built")}</span>
-          <nav aria-label="Legal">
-            <NavLink className="footer__link footer__link--inline" to="/">
-              {t("footer.privacy")}
-            </NavLink>
-            &nbsp;·&nbsp;
-            <NavLink className="footer__link footer__link--inline" to="/">
-              {t("footer.terms")}
-            </NavLink>
-          </nav>
         </div>
       </div>
     </footer>

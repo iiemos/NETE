@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import C2CPageFrame from "../../components/c2c/C2CPageFrame";
+import LoadingState from "../../components/common/LoadingState";
 import { hotCoins } from "../../data/c2cUiData";
 import { getRuntimeConfig } from "../../services/neteApi";
 import { readMarketConfig } from "../../services/neteContracts";
@@ -34,7 +35,7 @@ function toPriceWei(value) {
   }
 }
 
-function QuickFormCard({ referenceText, t }) {
+function QuickFormCard({ referenceLoading, referenceText, t }) {
   return (
     <article className="c2c-quick-form c2c-surface">
       <div className="c2c-form-tabs">
@@ -72,7 +73,9 @@ function QuickFormCard({ referenceText, t }) {
         <span>{t("modules.c2cQuick.excludeVerified")}</span>
       </div>
 
-      <p className="c2c-reference">{referenceText}</p>
+      <div className={referenceLoading ? "c2c-reference c2c-reference--loading" : "c2c-reference"}>
+        {referenceLoading ? <LoadingState compact description={referenceText} /> : referenceText}
+      </div>
       <button type="button" className="c2c-disabled-btn">{t("modules.c2cQuick.choosePayment")}</button>
     </article>
   );
@@ -100,6 +103,7 @@ export default function C2COverviewPage() {
   const referenceText = guideMin > 0n && guideMax > 0n
     ? t("modules.c2cQuick.referenceRange", { min: formatTokenAmount(guideMin, 18, 6), max: formatTokenAmount(guideMax, 18, 6) })
     : t("modules.c2cQuick.referenceLoading");
+  const referenceLoading = (runtimeConfigQuery.isLoading || marketConfigQuery.isLoading) && (guideMin <= 0n || guideMax <= 0n);
   const guideSteps = t("modules.c2cQuick.buySteps", { returnObjects: true });
 
   return (
@@ -122,7 +126,7 @@ export default function C2COverviewPage() {
           </div>
         </div>
 
-        <QuickFormCard referenceText={referenceText} t={t} />
+        <QuickFormCard referenceLoading={referenceLoading} referenceText={referenceText} t={t} />
       </section>
 
       <article className="c2c-hot-coins c2c-surface">

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import LoadingState from "../../components/common/LoadingState";
 import { seedPurchaseRecords } from "../../data/mockData";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { approveUsdtToCore, buySeed, readCoreSeedInfo, readUserBalances } from "../../services/neteContracts";
@@ -42,12 +43,22 @@ export default function BuySeedPage() {
   const seedPrice = seedInfoQuery.data?.seedPrice ?? 0n;
   const seedRemaining = seedInfoQuery.data?.seedRemaining ?? 0n;
   const posRemaining = seedInfoQuery.data?.posRemaining ?? 0n;
+  const seedPoolInit = seedInfoQuery.data?.seedPoolInit ?? 0n;
+  const seedSold = seedInfoQuery.data?.seedSold ?? 0n;
   const usdtBalance = balanceQuery.data?.usdtBalance ?? 0n;
+  const seedTotal = seedPoolInit > 0n ? seedPoolInit : seedRemaining + seedSold;
+  const soldPercent = seedTotal > 0n ? Math.min(100, Number((seedSold * 10_000n) / seedTotal) / 100) : 0;
+  const soldPercentText = `${soldPercent.toFixed(2).replace(/\.00$/, "")}%`;
+  const seedPriceText = seedPrice > 0n ? formatTokenAmount(seedPrice, 18, 8) : "--";
+  const usdtBalanceText = wallet.isConnected ? `${formatTokenAmount(usdtBalance, 18, 6)} USDT` : t("modules.seed.connectWallet");
+  const seedInfoLoading = seedInfoQuery.isLoading;
+  const balanceLoading = balanceQuery.isLoading;
 
   const estimatedUsdt = useMemo(() => {
     if (parsedQuantity <= 0n || seedPrice <= 0n) return 0n;
     return (parsedQuantity * seedPrice) / ONE_18;
   }, [parsedQuantity, seedPrice]);
+  const estimatedUsdtText = estimatedUsdt > 0n ? `${formatTokenAmount(estimatedUsdt, 18, 6)} USDT` : "--";
 
   const canSubmit = wallet.isConnected && parsedQuantity > 0n && estimatedUsdt > 0n && !submitting;
 
@@ -84,122 +95,143 @@ export default function BuySeedPage() {
   };
 
   return (
-    <section className="module-page space-y-6">
-      <header className="module-hero">
-        <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
-          <div className="max-w-3xl">
-            <p className="module-eyebrow">NETE SEED</p>
-            <h1 className="font-display text-2xl font-black tracking-tight text-white md:text-3xl">{t("modules.seed.title")}</h1>
-            <p className="mt-3 max-w-2xl text-sm text-white/80">{t("modules.seed.desc")}</p>
-          </div>
-        </div>
-      </header>
+    <section className="seed-page">
+      <div className="seed-layout">
+        <section>
+          <header className="seed-hero">
+            <p className="seed-eyebrow">NETE SEED</p>
+            <h1>{t("modules.seed.title")}</h1>
+            <p>{t("modules.seed.desc")}</p>
+          </header>
 
-      <div className="grid gap-6 xl:grid-cols-3">
-        <article className="module-card p-5 xl:col-span-2">
-          <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.seed.formTitle")}</h2>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-sm text-white/75">
-              {t("modules.seed.price")}
+          <article className="seed-panel seed-progress-panel" aria-label={t("modules.seed.quotaTitle")}>
+            <div className="seed-panel-head">
+              <div>
+                <h2>{t("modules.seed.quotaTitle")}</h2>
+                <p>{t("modules.seed.quotaDesc")}</p>
+              </div>
+            </div>
+            {seedInfoLoading ? (
+              <LoadingState className="seed-loading-card" />
+            ) : (
+              <>
+                <div className="seed-progress-track" aria-hidden="true">
+                  <div className="seed-progress-fill" style={{ width: soldPercentText }} />
+                  <div className="seed-progress-label seed-mono">{soldPercentText}</div>
+                </div>
+                <div className="seed-price-display">
+                  <span>{t("modules.seed.price")}</span>
+                  <strong className="seed-mono">{seedPriceText}</strong>
+                  <small>{t("modules.seed.priceNote", { price: seedPriceText })}</small>
+                </div>
+                <div className="seed-progress-meta">
+                  <div className="seed-metric">
+                    <span>{t("modules.seed.totalAmount")}</span>
+                    <strong className="seed-mono">{formatTokenAmount(seedTotal, 18, 2)}</strong>
+                  </div>
+                  <div className="seed-metric">
+                    <span>{t("modules.seed.remainingQuota")}</span>
+                    <strong className="seed-mono">{formatTokenAmount(seedRemaining, 18, 2)}</strong>
+                  </div>
+                </div>
+              </>
+            )}
+          </article>
+        </section>
+
+        <section className="seed-panel seed-buy-panel" aria-label={t("modules.seed.buyTitle")}>
+          <div className="seed-panel-head">
+            <div>
+              <h2>{t("modules.seed.buyTitle")}</h2>
+              <p>{t("modules.seed.buyDesc")}</p>
+            </div>
+          </div>
+
+          <div className="seed-balance-row">
+            <div className="seed-balance-card">
+              <span>{t("modules.seed.usdtBalance")}</span>
+              {balanceLoading ? (
+                <LoadingState compact />
+              ) : (
+                <strong className="seed-mono">{usdtBalanceText}</strong>
+              )}
+            </div>
+            <div className="seed-balance-card">
+              <span>{t("modules.seed.principalPoolBalance")}</span>
+              {seedInfoLoading ? (
+                <LoadingState compact />
+              ) : (
+                <strong className="seed-mono">{formatTokenAmount(posRemaining, 18, 2)} NETE</strong>
+              )}
+            </div>
+          </div>
+
+          <div className="seed-form-grid">
+            <label className="seed-field">
+              <span>{t("modules.seed.quantity")}</span>
               <input
-                className="module-input"
-                value={seedPrice > 0n ? formatTokenAmount(seedPrice, 18, 8) : "--"}
-                disabled
-              />
-            </label>
-            <label className="space-y-2 text-sm text-white/75">
-              {t("modules.seed.quantity")}
-              <input
-                className="module-input"
+                className="seed-input seed-mono"
                 type="number"
-                min="0"
-                step="0.0001"
+                min="100"
+                step="1"
                 placeholder={t("modules.seed.quantityPlaceholder")}
                 value={quantityInput}
                 onChange={(event) => setQuantityInput(event.target.value)}
               />
             </label>
+            <div className="seed-field">
+              <span>{t("modules.seed.estimatedUsdt")}</span>
+              <div className="seed-readonly-value seed-mono">{estimatedUsdtText}</div>
+            </div>
           </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <label className="space-y-2 text-sm text-white/75">
-              {t("modules.seed.usdtBalance")}
-              <input
-                className="module-input"
-                value={wallet.isConnected ? formatTokenAmount(usdtBalance, 18, 6) : t("modules.seed.connectWallet")}
-                disabled
-              />
-            </label>
-            <label className="space-y-2 text-sm text-white/75">
-              {t("modules.seed.estimatedUsdt")}
-              <input
-                className="module-input"
-                value={estimatedUsdt > 0n ? formatTokenAmount(estimatedUsdt, 18, 6) : "--"}
-                disabled
-              />
-            </label>
-          </div>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#caff00] px-5 text-sm font-semibold tracking-wide text-black transition hover:shadow-[0_0_30px_rgba(202,255,0,0.45)] disabled:cursor-not-allowed disabled:opacity-45"
-              type="button"
-              onClick={handleBuySeed}
-              disabled={!canSubmit}
-            >
+
+          <div className="seed-actions">
+            <button className="seed-button seed-button-primary" type="button" onClick={handleBuySeed} disabled={!canSubmit}>
               {submitting ? t("modules.seed.submitting") : t("modules.seed.confirm")}
             </button>
-            <button
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-white/20 bg-transparent px-5 text-sm font-semibold tracking-wide text-white transition hover:border-white/40 hover:bg-white/5"
-              type="button"
-              onClick={clearForm}
-            >
+            <button className="seed-button seed-button-ghost" type="button" onClick={clearForm}>
               {t("modules.seed.clear")}
             </button>
           </div>
-          {txMessage ? <p className="mt-3 text-xs text-white/75 break-all">{txMessage}</p> : null}
-        </article>
+        </section>
 
-        <article className="module-card space-y-4 p-5">
-          <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.seed.statusTitle")}</h2>
-          <div className="module-stat-card p-4">
-            <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.seed.seedRemaining")}</div>
-            <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{formatTokenAmount(seedRemaining, 18, 2)} NETE</div>
+        <section className="seed-panel seed-records-panel" aria-label={t("modules.seed.recordsTitle")}>
+          <div className="seed-panel-head">
+            <div>
+              <h2>{t("modules.seed.recordsTitle")}</h2>
+              <p>{t("modules.seed.recordsDesc")}</p>
+            </div>
           </div>
-          <div className="module-stat-card p-4">
-            <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.seed.posRemaining")}</div>
-            <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{formatTokenAmount(posRemaining, 18, 2)} NETE</div>
+          <div className="seed-records-list">
+            {seedPurchaseRecords.map((record, index) => (
+              <article className="seed-record-item" key={`${record.time}-${record.amount}`}>
+                <div className="seed-record-main">
+                  <strong className="seed-mono">S{String(seedPurchaseRecords.length - index).padStart(3, "0")}</strong>
+                  <span>{record.time}</span>
+                </div>
+                <div className="seed-record-values">
+                  <div className="seed-record-cell">
+                    <span>{t("modules.seed.amount")}</span>
+                    <strong className="seed-mono">{record.amount}</strong>
+                  </div>
+                  <div className="seed-record-cell">
+                    <span>{t("modules.seed.paid")}</span>
+                    <strong className="seed-mono">{record.paidUsdt}</strong>
+                  </div>
+                </div>
+                <strong className="seed-status-chip">
+                  {record.status === seedPurchaseRecords[0]?.status ? t("modules.seed.successStatus") : record.status}
+                </strong>
+              </article>
+            ))}
           </div>
-          <div className="module-stat-card p-4">
-            <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.seed.presaleActive")}</div>
-            <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">{seedInfoQuery.data?.presaleActive ? t("modules.seed.active") : t("modules.seed.inactive")}</div>
-          </div>
-        </article>
+        </section>
       </div>
-
-      <article className="module-card p-5">
-        <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.seed.recordsTitle")}</h2>
-        <div className="module-table-wrap mt-4">
-          <table className="module-table md:text-sm">
-            <thead>
-              <tr>
-                <th>{t("modules.seed.time")}</th>
-                <th>{t("modules.seed.amount")}</th>
-                <th>{t("modules.seed.paid")}</th>
-                <th>{t("modules.seed.status")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {seedPurchaseRecords.map((record) => (
-                <tr key={`${record.time}-${record.amount}`}>
-                  <td>{record.time}</td>
-                  <td>{record.amount}</td>
-                  <td>{record.paidUsdt}</td>
-                  <td>{record.status === seedPurchaseRecords[0]?.status ? t("modules.seed.successStatus") : record.status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {txMessage ? (
+        <div className="seed-toast is-show" role="status" aria-live="polite">
+          {txMessage}
         </div>
-      </article>
+      ) : null}
     </section>
   );
 }

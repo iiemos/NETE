@@ -1,10 +1,12 @@
 import { Icon } from "@iconify/react";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatUnits } from "viem";
 import C2CPageFrame from "../../components/c2c/C2CPageFrame";
+import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { getMySellOrders, getMyTakenOrders, getPublicOrders, getRuntimeConfig } from "../../services/neteApi";
 import { approveNeteToMarket, approveUsdtToMarket, cancelSellOrder, createSellOrder, fillOrder, readMarketConfig } from "../../services/neteContracts";
@@ -94,6 +96,17 @@ function toLower(value) {
   return String(value || "").toLowerCase();
 }
 
+function mergeOrders(primary, fallback) {
+  const seen = new Set();
+  return [...primary, ...fallback].filter((order) => {
+    const key = order.orderId || order.orderNo;
+    if (!key) return true;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 export default function C2CMarketPage() {
   const { i18n, t } = useTranslation();
   const wallet = useWalletConnector();
@@ -108,6 +121,7 @@ export default function C2CMarketPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sellQuantity, setSellQuantity] = useState("");
   const [sellPrice, setSellPrice] = useState("");
+  const [optimisticOrders, setOptimisticOrders] = useState([]);
   const [toastMessage, setToastMessage] = useState("");
   const [actionKey, setActionKey] = useState("");
 
@@ -149,13 +163,16 @@ export default function C2CMarketPage() {
   });
 
   const publicOrders = useMemo(
-    () => toItems(publicOrdersQuery.data).map(normalizeOrder),
-    [publicOrdersQuery.data],
+    () => mergeOrders(optimisticOrders, toItems(publicOrdersQuery.data).map(normalizeOrder)),
+    [optimisticOrders, publicOrdersQuery.data],
   );
 
   const mySellOrders = useMemo(
-    () => toItems(mySellOrdersQuery.data).map(normalizeOrder),
-    [mySellOrdersQuery.data],
+    () => mergeOrders(
+      optimisticOrders.filter((item) => toLower(item.seller) === toLower(wallet.currentAddress)),
+      toItems(mySellOrdersQuery.data).map(normalizeOrder),
+    ),
+    [mySellOrdersQuery.data, optimisticOrders, wallet.currentAddress],
   );
 
   const myTakenOrders = useMemo(
@@ -275,6 +292,7 @@ export default function C2CMarketPage() {
       setActionKey(`cancel-${order.orderId}`);
       await wallet.ensureCorrectChain();
       const tx = await cancelSellOrder(wallet.currentAddress, order.orderId);
+      setOptimisticOrders((prev) => prev.filter((item) => item.orderId !== order.orderId));
       await refreshOrders();
       setToastMessage(t("modules.c2cMarket.messages.cancelSuccess", { hash: tx.hash }));
     } catch (error) {
@@ -327,9 +345,20 @@ export default function C2CMarketPage() {
       await wallet.ensureCorrectChain();
       await approveNeteToMarket(wallet.currentAddress, neteAmount);
       const tx = await createSellOrder(wallet.currentAddress, neteAmount, pricePerNete);
+      const optimisticOrder = normalizeOrder({
+        order_id: tx.orderId || "",
+        order_no: tx.orderNo || tx.hash,
+        seller: tx.seller || wallet.currentAddress,
+        nete_amount: tx.neteAmount,
+        price_usdt: tx.pricePerNete,
+        total_usdt: tx.totalUsdt,
+        status: "Open",
+        created_at: Math.floor(Date.now() / 1000),
+      });
       setSellQuantity("");
       setSellPrice("");
       setIsModalOpen(false);
+      setOptimisticOrders((prev) => mergeOrders([optimisticOrder], prev));
       await refreshOrders();
       switchTab("mine");
       setToastMessage(t("modules.c2cMarket.messages.listingSuccess", { hash: tx.hash }));
@@ -340,6 +369,8 @@ export default function C2CMarketPage() {
       setActionKey("");
     }
   };
+
+  const portalRoot = typeof document === "undefined" ? null : document.body;
 
   return (
     <C2CPageFrame zone="self">
@@ -396,7 +427,9 @@ export default function C2CMarketPage() {
 
               <div className="c2c-order-table-body">
                 {publicOrdersQuery.isLoading ? (
-                  <div className="c2c-empty-state">{t("modules.c2cMarket.loadingOrders")}</div>
+                  <div className="c2c-empty-state c2c-empty-state--loading">
+                    <LoadingState variant="list" rows={4} cells={5} />
+                  </div>
                 ) : publicOrdersQuery.isError ? (
                   <div className="c2c-empty-state">{t("modules.c2cMarket.loadOrdersFailed")}</div>
                 ) : filteredMarketOrders.length === 0 ? (
@@ -463,7 +496,9 @@ export default function C2CMarketPage() {
 
               <div className="c2c-list-stack">
                 {mySellOrdersQuery.isLoading ? (
-                  <div className="c2c-empty-state">{t("modules.c2cMarket.loading")}</div>
+                  <div className="c2c-empty-state c2c-empty-state--loading">
+                    <LoadingState variant="list" rows={3} cells={4} />
+                  </div>
                 ) : mySellOrdersQuery.isError ? (
                   <div className="c2c-empty-state">
                     {mySellOrdersQuery.error instanceof Error ? mySellOrdersQuery.error.message : t("modules.c2cMarket.myListingsFailed")}
@@ -522,7 +557,9 @@ export default function C2CMarketPage() {
 
               <div className="c2c-list-stack">
                 {myTakenOrdersQuery.isLoading || mySellOrdersQuery.isLoading ? (
-                  <div className="c2c-empty-state">{t("modules.c2cMarket.loading")}</div>
+                  <div className="c2c-empty-state c2c-empty-state--loading">
+                    <LoadingState variant="list" rows={3} cells={3} />
+                  </div>
                 ) : myTakenOrdersQuery.isError ? (
                   <div className="c2c-empty-state">
                     {myTakenOrdersQuery.error instanceof Error ? myTakenOrdersQuery.error.message : t("modules.c2cMarket.myTakenFailed")}
@@ -564,50 +601,59 @@ export default function C2CMarketPage() {
         )}
       </section>
 
-      <div className={isModalOpen ? "c2c-modal-backdrop is-open" : "c2c-modal-backdrop"} onClick={() => setIsModalOpen(false)}>
-        <div className="c2c-modal" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="c2cListingTitle">
-          <h3 id="c2cListingTitle">{t("modules.c2cMarket.modalTitle")}</h3>
-          <p>
-            {t("modules.c2cMarket.modalGuideRange")}
-            {guideMinPrice > 0n ? `${formatTokenAmount(guideMinPrice, 18, 6)} U` : "--"}
-            {" - "}
-            {guideMaxPrice > 0n ? `${formatTokenAmount(guideMaxPrice, 18, 6)} U` : "--"}
-          </p>
-
-          <form className="c2c-modal-form" onSubmit={handleCreateListing}>
-            <label className="c2c-modal-field">
-              <span>{t("modules.c2cMarket.sellQuantityLabel")}</span>
-              <input
-                type="number"
-                min="0.0001"
-                step="0.0001"
-                value={sellQuantity}
-                onChange={(event) => setSellQuantity(event.target.value)}
-                placeholder={t("modules.c2cMarket.sellQuantityPlaceholder")}
-              />
-            </label>
-            <label className="c2c-modal-field">
-              <span>{t("modules.c2cMarket.sellPriceLabel")}</span>
-              <input
-                type="number"
-                min={guideMinPrice > 0n ? formatUnits(guideMinPrice, 18) : "0"}
-                max={guideMaxPrice > 0n ? formatUnits(guideMaxPrice, 18) : undefined}
-                step="0.000001"
-                value={sellPrice}
-                onChange={(event) => setSellPrice(event.target.value)}
-                placeholder={t("modules.c2cMarket.sellPricePlaceholder")}
-              />
-            </label>
-
-            <div className="c2c-modal-actions">
-              <button type="button" className="c2c-btn c2c-btn-ghost" onClick={() => setIsModalOpen(false)}>{t("modules.c2cMarket.cancel")}</button>
-              <button type="submit" className="c2c-btn c2c-btn-primary" disabled={actionKey === "create-order"}>
-                {actionKey === "create-order" ? t("modules.c2cMarket.submitting") : t("modules.c2cMarket.confirm")}
+      {isModalOpen && portalRoot ? createPortal((
+        <div className="c2c-modal-backdrop is-open" onClick={() => setIsModalOpen(false)} role="presentation">
+          <div className="c2c-modal mobile-drawer-enter" onClick={(event) => event.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="c2cListingTitle">
+            <div className="c2c-modal-head">
+              <div>
+                <h3 id="c2cListingTitle">{t("modules.c2cMarket.modalTitle")}</h3>
+                <p>
+                  {t("modules.c2cMarket.modalGuideRange")}
+                  {guideMinPrice > 0n ? `${formatTokenAmount(guideMinPrice, 18, 6)} U` : "--"}
+                  {" - "}
+                  {guideMaxPrice > 0n ? `${formatTokenAmount(guideMaxPrice, 18, 6)} U` : "--"}
+                </p>
+              </div>
+              <button className="c2c-modal-close" type="button" onClick={() => setIsModalOpen(false)} aria-label={t("modules.c2cMarket.close")}>
+                <Icon icon="solar:close-circle-outline" width="1em" height="1em" />
               </button>
             </div>
-          </form>
+
+            <form className="c2c-modal-form" onSubmit={handleCreateListing}>
+              <label className="c2c-modal-field">
+                <span>{t("modules.c2cMarket.sellQuantityLabel")}</span>
+                <input
+                  type="number"
+                  min="0.0001"
+                  step="0.0001"
+                  value={sellQuantity}
+                  onChange={(event) => setSellQuantity(event.target.value)}
+                  placeholder={t("modules.c2cMarket.sellQuantityPlaceholder")}
+                />
+              </label>
+              <label className="c2c-modal-field">
+                <span>{t("modules.c2cMarket.sellPriceLabel")}</span>
+                <input
+                  type="number"
+                  min={guideMinPrice > 0n ? formatUnits(guideMinPrice, 18) : "0"}
+                  max={guideMaxPrice > 0n ? formatUnits(guideMaxPrice, 18) : undefined}
+                  step="0.000001"
+                  value={sellPrice}
+                  onChange={(event) => setSellPrice(event.target.value)}
+                  placeholder={t("modules.c2cMarket.sellPricePlaceholder")}
+                />
+              </label>
+
+              <div className="c2c-modal-actions">
+                <button type="button" className="c2c-btn c2c-btn-ghost" onClick={() => setIsModalOpen(false)}>{t("modules.c2cMarket.cancel")}</button>
+                <button type="submit" className="c2c-btn c2c-btn-primary" disabled={actionKey === "create-order"}>
+                  {actionKey === "create-order" ? t("modules.c2cMarket.submitting") : t("modules.c2cMarket.confirm")}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      ), portalRoot) : null}
 
       <div className={toastMessage ? "c2c-toast is-show" : "c2c-toast"}>{toastMessage}</div>
     </C2CPageFrame>

@@ -1531,7 +1531,6 @@ button {
   color: var(--color-muted);
   font-size: var(--text-sm);
   line-height: 1.7;
-  max-width: 280px;
   margin-top: var(--space-4);
 }
 
@@ -1621,7 +1620,7 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-4);
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   margin-top: var(--space-10);
   padding-top: var(--space-6);
@@ -2239,6 +2238,46 @@ button {
   .features-grid {
     grid-template-columns: repeat(4, 1fr);
   }
+}
+
+.container {
+  max-width: 430px;
+  padding-inline: 12px;
+}
+
+.nav__links {
+  display: none !important;
+}
+
+.nav__burger {
+  display: flex !important;
+}
+
+.hero__inner,
+.features-grid,
+.stats-grid,
+.footer__inner {
+  grid-template-columns: 1fr !important;
+}
+
+.hero__content {
+  text-align: center;
+}
+
+.hero__subtitle {
+  margin-inline: auto;
+}
+
+.hero__actions {
+  justify-content: center;
+}
+
+.footer__desktop-links {
+  display: none !important;
+}
+
+.footer__mobile-accordion {
+  display: block;
 }
 
 /* Floating scroll-to-top (Fixed Positioning) */

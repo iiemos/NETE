@@ -270,6 +270,20 @@
   },
   {
     "type": "function",
+    "name": "claimAllRewards",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "claimAndActivateAirdropMiner",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "claimReward",
     "inputs": [
       {
@@ -553,6 +567,25 @@
   },
   {
     "type": "function",
+    "name": "nftFragmentClaimed",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool",
+        "internalType": "bool"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "owner",
     "inputs": [],
     "outputs": [
@@ -731,6 +764,13 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "repurchaseExpiredMiners",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -1114,6 +1154,24 @@
   },
   {
     "type": "function",
+    "name": "withdrawNete",
+    "inputs": [
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "withdrawProfit",
     "inputs": [
       {
@@ -1364,6 +1422,37 @@
   },
   {
     "type": "event",
+    "name": "NFTFragmentClaimed",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "nftContract",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "positionId",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "NeteNetworkUpdated",
     "inputs": [
       {
@@ -1377,6 +1466,25 @@
         "type": "address",
         "indexed": true,
         "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "NeteWithdrawn",
+    "inputs": [
+      {
+        "name": "to",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -1832,6 +1940,21 @@
   {
     "type": "error",
     "name": "MustRepurchaseExpiredMiner",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NFTAlreadyClaimed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NFTRequired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NoExpiredMinerForRepurchase",
     "inputs": []
   },
   {
