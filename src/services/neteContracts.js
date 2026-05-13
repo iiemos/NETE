@@ -5,7 +5,7 @@ import neteCoreAbi from "../abis/NeteCore.json";
 import neteMarketAbi from "../abis/NeteMarket.json";
 import neteNetworkAbi from "../abis/NeteNetwork.json";
 import neteTokenAbi from "../abis/NeteToken.json";
-import { NETE_CHAIN_ID, assertContractAddress } from "../config/neteRuntime";
+import { NETE_CHAIN_ID, assertContractAddress, getContractAddress } from "../config/neteRuntime";
 import { wagmiConfig } from "../web3/wagmiConfig";
 
 const ONE_18 = 10n ** 18n;
@@ -255,12 +255,14 @@ export async function readUserMiningData(user) {
     readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "nftFragmentClaimed", args: [user] }, false),
   ]);
   const requiresNft = Boolean(requireSBT);
-  const hasSbtContract = String(sbtContract || "").toLowerCase() !== ZERO_ADDRESS;
+  const configuredBabtAddress = getContractAddress("babt");
+  const effectiveSbtContract = String(sbtContract || "").toLowerCase() === ZERO_ADDRESS ? configuredBabtAddress : sbtContract;
+  const hasSbtContract = String(effectiveSbtContract || "").toLowerCase() !== ZERO_ADDRESS;
   let sbtBalance = 0n;
 
   if (requiresNft && hasSbtContract) {
     try {
-      sbtBalance = await read({ address: sbtContract, abi: erc721BalanceAbi, functionName: "balanceOf", args: [user] });
+      sbtBalance = await read({ address: effectiveSbtContract, abi: erc721BalanceAbi, functionName: "balanceOf", args: [user] });
     } catch {
       sbtBalance = 0n;
     }
@@ -304,7 +306,7 @@ export async function readUserMiningData(user) {
     airdropRemaining,
     airdropEligibility: {
       requireSBT: requiresNft,
-      sbtContract,
+      sbtContract: effectiveSbtContract || sbtContract,
       nftClaimed: Boolean(nftFragmentClaimed),
       sbtBalance,
       hasRequiredNft: !requiresNft || sbtBalance > 0n,

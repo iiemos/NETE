@@ -32,6 +32,7 @@ export const NETE_CONTRACTS = {
   neteNetwork: normalizeAddress(import.meta.env.VITE_NETE_NETWORK_ADDRESS),
   neteMarket: normalizeAddress(import.meta.env.VITE_NETE_MARKET_ADDRESS),
   usdt: normalizeAddress(import.meta.env.VITE_NETE_USDT_ADDRESS),
+  babt: normalizeAddress(import.meta.env.VITE_NETE_BABT_ADDRESS),
 };
 
 const CONTRACT_ENV_KEYS = {
@@ -40,6 +41,7 @@ const CONTRACT_ENV_KEYS = {
   neteNetwork: "VITE_NETE_NETWORK_ADDRESS",
   neteMarket: "VITE_NETE_MARKET_ADDRESS",
   usdt: "VITE_NETE_USDT_ADDRESS",
+  babt: "VITE_NETE_BABT_ADDRESS",
 };
 
 export function getContractAddress(name) {
