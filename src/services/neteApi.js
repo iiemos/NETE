@@ -97,6 +97,13 @@ export async function getReferralDirects(user, { page = 1, pageSize = 50 } = {})
   });
 }
 
+export async function getPresaleRecords(user, { page = 1, pageSize = 20 } = {}) {
+  const path = user ? `/v1/presale/records/${user}` : "/v1/presale/records";
+  return request(path, {
+    query: { page, page_size: pageSize },
+  });
+}
+
 export async function getIncomeOverview(user) {
   return request("/v1/income/overview", { query: { user } });
 }

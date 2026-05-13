@@ -373,6 +373,8 @@ export const moduleTranslations = {
       paid: "扣除 USDT",
       status: "交易状态",
       successStatus: "已完成",
+      emptyRecords: "暂无参与记录",
+      recordsFailed: "参与记录加载失败，请稍后重试",
       messages: {
         success: "参与成功，交易哈希：{{hash}}",
         failed: "参与失败，请稍后重试",
@@ -856,6 +858,8 @@ export const moduleTranslations = {
       paid: "Deducted USDT",
       status: "Status",
       successStatus: "Completed",
+      emptyRecords: "No participation records yet",
+      recordsFailed: "Failed to load participation records. Please try again later.",
       messages: {
         success: "Participation successful. Transaction hash: {{hash}}",
         failed: "Participation failed. Please try again later.",

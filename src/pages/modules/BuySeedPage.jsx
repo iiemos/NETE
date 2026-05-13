@@ -3,8 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
+import { getPresaleRecords } from "../../services/neteApi";
 import { approveUsdtToCore, buySeed, readCoreSeedInfo, readUserBalances, readUserMiningData } from "../../services/neteContracts";
-import { formatTokenAmount, parseTokenInput } from "../../utils/formatters";
+import { formatTokenAmount, formatUnixTime, parseTokenInput, shortAddress } from "../../utils/formatters";
 
 const ONE_18 = 10n ** 18n;
 
@@ -39,6 +40,14 @@ export default function BuySeedPage() {
     retry: 1,
   });
 
+  const recordsQuery = useQuery({
+    queryKey: ["nete", "presale-records", wallet.currentAddress],
+    queryFn: () => getPresaleRecords(wallet.currentAddress, { pageSize: 20 }),
+    enabled: Boolean(wallet.currentAddress),
+    staleTime: 15_000,
+    retry: 1,
+  });
+
   const parsedQuantity = useMemo(() => {
     try {
       return parseTokenInput(quantityInput || "0");
@@ -62,6 +71,13 @@ export default function BuySeedPage() {
   const seedInfoLoading = seedInfoQuery.isLoading;
   const balanceLoading = balanceQuery.isLoading;
   const principalPoolLoading = miningDataQuery.isLoading;
+  const presaleRecords = useMemo(() => {
+    const data = recordsQuery.data;
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.items)) return data.items;
+    if (Array.isArray(data?.rows)) return data.rows;
+    return [];
+  }, [recordsQuery.data]);
 
   const estimatedUsdt = useMemo(() => {
     if (parsedQuantity <= 0n || seedPrice <= 0n) return 0n;
@@ -95,6 +111,7 @@ export default function BuySeedPage() {
         queryClient.invalidateQueries({ queryKey: ["nete", "seed-info"] }),
         queryClient.invalidateQueries({ queryKey: ["nete", "balances", wallet.currentAddress] }),
         queryClient.invalidateQueries({ queryKey: ["nete", "mining", wallet.currentAddress] }),
+        queryClient.invalidateQueries({ queryKey: ["nete", "presale-records", wallet.currentAddress] }),
       ]);
     } catch (error) {
       const message = error instanceof Error ? error.message : t("modules.seed.messages.failed");
@@ -205,6 +222,55 @@ export default function BuySeedPage() {
           </div>
         </section>
 
+        <section className="seed-panel seed-records-panel" aria-label={t("modules.seed.recordsTitle")}>
+          <div className="seed-panel-head">
+            <div>
+              <h2>{t("modules.seed.recordsTitle")}</h2>
+              <p>{t("modules.seed.recordsDesc")}</p>
+            </div>
+          </div>
+
+          {!wallet.isConnected ? (
+            <p className="seed-record-empty">{t("modules.seed.connectWallet")}</p>
+          ) : recordsQuery.isLoading ? (
+            <LoadingState className="seed-loading-card" />
+          ) : recordsQuery.isError ? (
+            <p className="seed-record-empty">{t("modules.seed.recordsFailed")}</p>
+          ) : presaleRecords.length > 0 ? (
+            <div className="seed-records-list">
+              {presaleRecords.map((record) => {
+                const key = `${record.tx_hash || record.txHash || record.created_at}-${record.log_index ?? record.buyer}`;
+                const amount = record.nete_amount ?? record.neteAmount ?? "0";
+                const paid = record.usdt_amount ?? record.usdtAmount ?? "0";
+                const hash = record.tx_hash || record.txHash || "";
+
+                return (
+                  <article className="seed-record-item" key={key}>
+                    <div className="seed-record-main">
+                      <span>{t("modules.seed.time")}</span>
+                      <strong>{formatUnixTime(record.created_at ?? record.createdAt)}</strong>
+                      <small className="seed-record-buyer">{shortAddress(record.buyer)}</small>
+                    </div>
+                    <div className="seed-record-values">
+                      <div className="seed-record-cell">
+                        <span>{t("modules.seed.amount")}</span>
+                        <strong className="seed-mono">{formatTokenAmount(amount, 18, 4)} NETE</strong>
+                      </div>
+                      <div className="seed-record-cell">
+                        <span>{t("modules.seed.paid")}</span>
+                        <strong className="seed-mono">{formatTokenAmount(paid, 18, 4)} USDT</strong>
+                      </div>
+                    </div>
+                    <span className="seed-status-chip">{t("modules.seed.successStatus")}</span>
+                    {hash ? <small className="seed-record-hash seed-mono">{shortAddress(hash, 8, 6)}</small> : null}
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="seed-record-empty">{t("modules.seed.emptyRecords")}</p>
+          )}
+        </section>
       </div>
       {txMessage ? (
         <div className="seed-toast is-show" role="status" aria-live="polite">

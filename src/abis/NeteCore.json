@@ -32,7 +32,20 @@
   },
   {
     "type": "function",
-    "name": "FEE_DIVIDEND_BPS",
+    "name": "FEE_LEVEL_EQUAL_BPS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "FEE_PERF_WEIGHT_BPS",
     "inputs": [],
     "outputs": [
       {
@@ -1284,6 +1297,49 @@
   },
   {
     "type": "event",
+    "name": "ClaimProfitSplit",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "positionId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "principalPart",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "profitGross",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "fee",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "profitNet",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "CycleEnded",
     "inputs": [
       {
@@ -1328,7 +1384,7 @@
   },
   {
     "type": "event",
-    "name": "FeeSplit",
+    "name": "FeeSplitDetailed",
     "inputs": [
       {
         "name": "positionId",
@@ -1349,7 +1405,13 @@
         "internalType": "uint256"
       },
       {
-        "name": "dividendPart",
+        "name": "levelEqualPart",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "perfWeightedPart",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -2037,6 +2099,11 @@
   {
     "type": "error",
     "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ReferrerRequired",
     "inputs": []
   },
   {
