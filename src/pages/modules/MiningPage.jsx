@@ -33,6 +33,7 @@ const PAYMENT_METHODS = {
   wallet: "wallet",
 };
 const AIRDROP_PRINCIPAL = 100n * 10n ** 18n;
+const REPURCHASE_READY_STATES = new Set([1, 2]);
 
 function isAirdropTier(tier) {
   return tier.principal === AIRDROP_PRINCIPAL && (
@@ -163,6 +164,8 @@ export default function MiningPage() {
         pendingWei: position.pendingReward,
         remainingDays: formatDaysByEpoch(position.endAt),
         positionId: position.positionId,
+        state: Number(position.state),
+        isPendingRepurchase: REPURCHASE_READY_STATES.has(Number(position.state)),
         isAirdrop: position.isAirdrop,
         cycleCurrent,
         cycleTotal,
@@ -272,13 +275,13 @@ export default function MiningPage() {
     () => portfolioRows.reduce((sum, item) => sum + (item.pendingWei || 0n), 0n),
     [portfolioRows],
   );
-  const expiredMinerCount = useMemo(
-    () => portfolioRows.filter((item) => !item.isAirdrop && item.remainingDays <= 0).length,
+  const repurchasableMinerCount = useMemo(
+    () => portfolioRows.filter((item) => !item.isAirdrop && (item.remainingDays <= 0 || item.isPendingRepurchase)).length,
     [portfolioRows],
   );
   const actionBusy = claimingAll || repurchasingAll || withdrawingAll || Boolean(claimingId);
   const canClaimAllRewards = wallet.isConnected && totalPendingRewardWei > 0n && !actionBusy;
-  const canRepurchaseExpired = wallet.isConnected && expiredMinerCount > 0 && !repurchasePaused && !actionBusy;
+  const canRepurchaseExpired = wallet.isConnected && repurchasableMinerCount > 0 && !repurchasePaused && !actionBusy;
   const canWithdrawAllProfits = wallet.isConnected && profitPoolBalance > 0n && !actionBusy;
   const canClaimAirdrop = wallet.isConnected && !claimingAirdrop && !hasAirdropMiner && !airdropNftClaimed && hasRequiredAirdropNft;
 

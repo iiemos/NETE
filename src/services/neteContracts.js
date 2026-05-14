@@ -6,6 +6,7 @@ import neteMarketAbi from "../abis/NeteMarket.json";
 import neteNetworkAbi from "../abis/NeteNetwork.json";
 import neteTokenAbi from "../abis/NeteToken.json";
 import { NETE_CHAIN_ID, assertContractAddress, getContractAddress } from "../config/neteRuntime";
+import { formatOrderNo } from "../utils/formatters";
 import { wagmiConfig } from "../web3/wagmiConfig";
 
 const ONE_18 = 10n ** 18n;
@@ -105,7 +106,7 @@ async function send({ account, address, abi, functionName, args = [] }) {
 function toOrderView(raw) {
   return {
     order_id: raw.orderId.toString(),
-    order_no: raw.orderNo,
+    order_no: formatOrderNo(raw.orderNo),
     seller: raw.seller,
     buyer: raw.buyer,
     nete_amount: raw.neteAmount.toString(),
@@ -489,7 +490,7 @@ export async function createSellOrder(account, neteAmount, pricePerNete) {
   return {
     ...result,
     orderId: createdOrder?.orderId?.toString?.() || "",
-    orderNo: createdOrder?.orderNo || "",
+    orderNo: formatOrderNo(createdOrder?.orderNo),
     seller: createdOrder?.seller || account,
     neteAmount: createdOrder?.neteAmount?.toString?.() || toBigInt(neteAmount).toString(),
     pricePerNete: createdOrder?.pricePerNete?.toString?.() || toBigInt(pricePerNete).toString(),

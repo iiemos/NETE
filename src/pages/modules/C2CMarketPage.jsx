@@ -10,7 +10,7 @@ import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { getMySellOrders, getMyTakenOrders, getPublicOrders, getRuntimeConfig } from "../../services/neteApi";
 import { approveNeteToMarket, approveUsdtToMarket, cancelSellOrder, createSellOrder, fillOrder, readMarketConfig } from "../../services/neteContracts";
-import { formatTokenAmount, parseTokenInput, shortAddress } from "../../utils/formatters";
+import { formatOrderNo, formatTokenAmount, parseTokenInput, shortAddress } from "../../utils/formatters";
 import "../styles/c2c.css";
 
 const marketTabs = [
@@ -67,6 +67,10 @@ function isOrderOpen(status) {
   return text === "open" || text === "0";
 }
 
+function getOrderDisplayNo(order) {
+  return order?.orderNo || order?.orderId || "--";
+}
+
 function normalizeOrder(raw) {
   const neteAmount = toBigIntSafe(raw?.nete_amount ?? raw?.neteAmount ?? raw?.amount);
   const priceUsdt = toBigIntSafe(raw?.price_usdt ?? raw?.priceUsdt ?? raw?.price_per_nete ?? raw?.price);
@@ -79,7 +83,7 @@ function normalizeOrder(raw) {
 
   return {
     orderId: String(raw?.order_id ?? raw?.orderId ?? raw?.id ?? ""),
-    orderNo: String(raw?.order_no ?? raw?.orderNo ?? ""),
+    orderNo: formatOrderNo(raw?.order_no ?? raw?.orderNo ?? raw?.short_order_no ?? raw?.shortOrderNo),
     seller: String(raw?.seller ?? ""),
     buyer: String(raw?.buyer ?? ""),
     neteAmount,
@@ -99,7 +103,7 @@ function toLower(value) {
 function mergeOrders(primary, fallback) {
   const seen = new Set();
   return [...primary, ...fallback].filter((order) => {
-    const key = order.orderId || order.orderNo;
+    const key = order.orderNo || order.orderId;
     if (!key) return true;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -436,11 +440,11 @@ export default function C2CMarketPage() {
                   <div className="c2c-empty-state">{t("modules.c2cMarket.noOrders")}</div>
                 ) : (
                   filteredMarketOrders.map((order) => (
-                    <article className="c2c-order-row" key={order.orderId || order.orderNo}>
+                    <article className="c2c-order-row" key={order.orderNo || order.orderId}>
                       <div className="c2c-order-cell c2c-order-main-cell">
                         <div className="c2c-order-id-block">
                           <span className="c2c-mobile-key">{t("modules.c2cMarket.orderId")}</span>
-                          <strong className="c2c-order-id">{order.orderId || order.orderNo || "--"}</strong>
+                          <strong className="c2c-order-id">{getOrderDisplayNo(order)}</strong>
                           <p className="c2c-sub-meta">{t("modules.c2cMarket.seller")} {shortAddress(order.seller)} · {t("modules.c2cMarket.listedAt")} {formatDateTime(order.createdAt, locale)}</p>
                         </div>
                         <button
@@ -507,10 +511,10 @@ export default function C2CMarketPage() {
                   <div className="c2c-empty-state">{t("modules.c2cMarket.noListings")}</div>
                 ) : (
                   currentOrders.map((order) => (
-                    <article className="c2c-order-card" key={order.orderId || order.orderNo}>
+                    <article className="c2c-order-card" key={order.orderNo || order.orderId}>
                       <div className="c2c-order-card-top">
                         <div>
-                          <h3 className="c2c-order-card-title">{order.orderId || order.orderNo || "--"}</h3>
+                          <h3 className="c2c-order-card-title">{getOrderDisplayNo(order)}</h3>
                           <p className="c2c-sub-meta">{t("modules.c2cMarket.createdAt")} {formatDateTime(order.createdAt, locale)}</p>
                         </div>
                         <button
@@ -568,9 +572,9 @@ export default function C2CMarketPage() {
                   <div className="c2c-empty-state">{t("modules.c2cMarket.noHistory")}</div>
                 ) : (
                   historyOrders.map((item) => (
-                    <article className="c2c-history-item" key={`${item.orderId || item.orderNo}-${item.completedAt}`}>
+                    <article className="c2c-history-item" key={`${item.orderNo || item.orderId}-${item.completedAt}`}>
                       <div className="c2c-history-top">
-                        <h3 className="c2c-order-card-title">{item.orderId || item.orderNo || "--"}</h3>
+                        <h3 className="c2c-order-card-title">{getOrderDisplayNo(item)}</h3>
                         <span className={item.typeKey === "buy" ? "c2c-type-chip buy" : "c2c-type-chip sell"}>{item.type}</span>
                       </div>
 

@@ -1,4 +1,4 @@
-import { formatUnits, isAddress, parseUnits } from "viem";
+import { formatUnits, hexToString, isAddress, isHex, parseUnits } from "viem";
 
 export const TOKEN_DECIMALS = 18;
 
@@ -19,6 +19,19 @@ export function shortAddress(value, left = 6, right = 4) {
   const address = toAddress(value);
   if (!address || address.length < left + right + 2) return "--";
   return `${address.slice(0, left)}...${address.slice(-right)}`;
+}
+
+export function formatOrderNo(value) {
+  const text = String(value ?? "").trim();
+  if (!text) return "";
+  if (!isHex(text)) return text;
+
+  try {
+    const decoded = hexToString(text, { size: 32 }).replace(/\0/g, "").trim();
+    return decoded && /^[\x20-\x7E]+$/.test(decoded) ? decoded : text;
+  } catch {
+    return text;
+  }
 }
 
 export function parseTokenInput(value, decimals = TOKEN_DECIMALS) {
