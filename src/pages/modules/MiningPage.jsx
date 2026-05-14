@@ -18,7 +18,7 @@ import {
   readUserBalances,
   readUserMiningData,
   repurchaseExpiredMiners,
-  withdrawProfit,
+  withdrawAllProfit,
 } from "../../services/neteContracts";
 import { formatTokenAmount } from "../../utils/formatters";
 
@@ -404,10 +404,7 @@ export default function MiningPage() {
     try {
       setWithdrawingAll(true);
       await wallet.ensureCorrectChain();
-      for (const machine of portfolioRows) {
-        if (machine.profitWei <= 0n) continue;
-        await withdrawProfit(wallet.currentAddress, machine.positionId, machine.profitWei);
-      }
+      await withdrawAllProfit(wallet.currentAddress);
       await refreshMiningData();
     } catch {
       return;

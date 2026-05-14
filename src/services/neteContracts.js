@@ -106,7 +106,8 @@ async function send({ account, address, abi, functionName, args = [] }) {
 function toOrderView(raw) {
   return {
     order_id: raw.orderId.toString(),
-    order_no: formatOrderNo(raw.orderNo),
+    short_order_no: formatOrderNo(raw.orderNo),
+    order_no: raw.orderNo,
     seller: raw.seller,
     buyer: raw.buyer,
     nete_amount: raw.neteAmount.toString(),
@@ -407,6 +408,15 @@ export async function repurchaseExpiredMiners(account) {
   });
 }
 
+export async function withdrawAllProfit(account) {
+  return send({
+    account,
+    address: assertContractAddress("neteCore"),
+    abi: neteCoreAbi,
+    functionName: "withdrawAllProfit",
+  });
+}
+
 export async function claimAndActivateAirdropMiner(account) {
   return send({
     account,
@@ -490,7 +500,8 @@ export async function createSellOrder(account, neteAmount, pricePerNete) {
   return {
     ...result,
     orderId: createdOrder?.orderId?.toString?.() || "",
-    orderNo: formatOrderNo(createdOrder?.orderNo),
+    shortOrderNo: formatOrderNo(createdOrder?.orderNo),
+    orderNo: createdOrder?.orderNo || "",
     seller: createdOrder?.seller || account,
     neteAmount: createdOrder?.neteAmount?.toString?.() || toBigInt(neteAmount).toString(),
     pricePerNete: createdOrder?.pricePerNete?.toString?.() || toBigInt(pricePerNete).toString(),

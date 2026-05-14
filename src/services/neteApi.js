@@ -87,6 +87,10 @@ export async function getOrderDetail(orderId) {
   return request(`/v1/orders/${orderId}`);
 }
 
+export async function getOrderByShortNo(shortNo) {
+  return request(`/v1/orders/by-short/${shortNo}`);
+}
+
 export async function getReferralInfo(user) {
   return request("/v1/referral/info", { query: { user } });
 }

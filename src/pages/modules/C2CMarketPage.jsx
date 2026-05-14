@@ -8,7 +8,7 @@ import { formatUnits } from "viem";
 import C2CPageFrame from "../../components/c2c/C2CPageFrame";
 import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
-import { getMySellOrders, getMyTakenOrders, getPublicOrders, getRuntimeConfig } from "../../services/neteApi";
+import { getMySellOrders, getMyTakenOrders, getOrderByShortNo, getPublicOrders, getRuntimeConfig } from "../../services/neteApi";
 import { approveNeteToMarket, approveUsdtToMarket, cancelSellOrder, createSellOrder, fillOrder, readMarketConfig } from "../../services/neteContracts";
 import { formatOrderNo, formatTokenAmount, parseTokenInput, shortAddress } from "../../utils/formatters";
 import "../styles/c2c.css";
@@ -68,7 +68,7 @@ function isOrderOpen(status) {
 }
 
 function getOrderDisplayNo(order) {
-  return order?.orderNo || order?.orderId || "--";
+  return order?.shortOrderNo || order?.orderId || "--";
 }
 
 function normalizeOrder(raw) {
@@ -83,7 +83,8 @@ function normalizeOrder(raw) {
 
   return {
     orderId: String(raw?.order_id ?? raw?.orderId ?? raw?.id ?? ""),
-    orderNo: formatOrderNo(raw?.order_no ?? raw?.orderNo ?? raw?.short_order_no ?? raw?.shortOrderNo),
+    shortOrderNo: String(raw?.short_order_no ?? raw?.shortOrderNo ?? "").trim(),
+    orderNo: formatOrderNo(raw?.order_no ?? raw?.orderNo ?? ""),
     seller: String(raw?.seller ?? ""),
     buyer: String(raw?.buyer ?? ""),
     neteAmount,
@@ -100,10 +101,15 @@ function toLower(value) {
   return String(value || "").toLowerCase();
 }
 
+function normalizeShortOrderSearch(value) {
+  const text = toLower(value).replace(/^0x/, "");
+  return /^[0-9a-f]{10}$/.test(text) ? text : "";
+}
+
 function mergeOrders(primary, fallback) {
   const seen = new Set();
   return [...primary, ...fallback].filter((order) => {
-    const key = order.orderNo || order.orderId;
+    const key = order.orderId || order.shortOrderNo || order.orderNo;
     if (!key) return true;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -166,9 +172,25 @@ export default function C2CMarketPage() {
     retry: 1,
   });
 
+  const shortOrderSearch = useMemo(() => normalizeShortOrderSearch(searchKeyword), [searchKeyword]);
+
+  const shortOrderQuery = useQuery({
+    queryKey: ["nete", "orders", "short", shortOrderSearch],
+    queryFn: () => getOrderByShortNo(shortOrderSearch),
+    enabled: Boolean(shortOrderSearch),
+    staleTime: 8_000,
+    retry: 1,
+  });
+
   const publicOrders = useMemo(
-    () => mergeOrders(optimisticOrders, toItems(publicOrdersQuery.data).map(normalizeOrder)),
-    [optimisticOrders, publicOrdersQuery.data],
+    () => mergeOrders(
+      [
+        ...optimisticOrders,
+        ...(shortOrderQuery.data ? [normalizeOrder(shortOrderQuery.data)] : []),
+      ],
+      toItems(publicOrdersQuery.data).map(normalizeOrder),
+    ),
+    [optimisticOrders, publicOrdersQuery.data, shortOrderQuery.data],
   );
 
   const mySellOrders = useMemo(
@@ -202,7 +224,7 @@ export default function C2CMarketPage() {
       .filter((item) => isOrderOpen(item.status))
       .filter((item) => {
         if (!term) return true;
-        return toLower(item.orderId).includes(term) || toLower(item.seller).includes(term) || toLower(item.orderNo).includes(term);
+        return toLower(item.shortOrderNo).includes(term) || toLower(item.seller).includes(term);
       });
   }, [publicOrders, searchKeyword]);
 
@@ -351,6 +373,7 @@ export default function C2CMarketPage() {
       const tx = await createSellOrder(wallet.currentAddress, neteAmount, pricePerNete);
       const optimisticOrder = normalizeOrder({
         order_id: tx.orderId || "",
+        short_order_no: tx.shortOrderNo || "",
         order_no: tx.orderNo || tx.hash,
         seller: tx.seller || wallet.currentAddress,
         nete_amount: tx.neteAmount,
@@ -440,7 +463,7 @@ export default function C2CMarketPage() {
                   <div className="c2c-empty-state">{t("modules.c2cMarket.noOrders")}</div>
                 ) : (
                   filteredMarketOrders.map((order) => (
-                    <article className="c2c-order-row" key={order.orderNo || order.orderId}>
+                    <article className="c2c-order-row" key={order.orderId || order.shortOrderNo || order.orderNo}>
                       <div className="c2c-order-cell c2c-order-main-cell">
                         <div className="c2c-order-id-block">
                           <span className="c2c-mobile-key">{t("modules.c2cMarket.orderId")}</span>
@@ -511,7 +534,7 @@ export default function C2CMarketPage() {
                   <div className="c2c-empty-state">{t("modules.c2cMarket.noListings")}</div>
                 ) : (
                   currentOrders.map((order) => (
-                    <article className="c2c-order-card" key={order.orderNo || order.orderId}>
+                    <article className="c2c-order-card" key={order.orderId || order.shortOrderNo || order.orderNo}>
                       <div className="c2c-order-card-top">
                         <div>
                           <h3 className="c2c-order-card-title">{getOrderDisplayNo(order)}</h3>
@@ -572,7 +595,7 @@ export default function C2CMarketPage() {
                   <div className="c2c-empty-state">{t("modules.c2cMarket.noHistory")}</div>
                 ) : (
                   historyOrders.map((item) => (
-                    <article className="c2c-history-item" key={`${item.orderNo || item.orderId}-${item.completedAt}`}>
+                    <article className="c2c-history-item" key={`${item.orderId || item.shortOrderNo || item.orderNo}-${item.completedAt}`}>
                       <div className="c2c-history-top">
                         <h3 className="c2c-order-card-title">{getOrderDisplayNo(item)}</h3>
                         <span className={item.typeKey === "buy" ? "c2c-type-chip buy" : "c2c-type-chip sell"}>{item.type}</span>
