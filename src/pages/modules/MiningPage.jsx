@@ -154,8 +154,15 @@ export default function MiningPage() {
 
     return positions.map((position) => {
       const tier = tiersMap.get(position.tierIndex);
-      const cycleTotal = position.cycleTotalDays > 0 ? position.cycleTotalDays : 1;
-      const cycleCurrent = Math.max(0, Math.min(position.cyclePassedDays, cycleTotal));
+      const cycleTotal = Math.max(1, Number(tier?.periodDays || position.cycleTotalDays || 1));
+      const totalRemainingDays = formatDaysByEpoch(position.endAt, timeUnitSeconds);
+      const rawPassedDays = Math.max(0, Number(position.cyclePassedDays || 0));
+      const cycleRemainder = rawPassedDays % cycleTotal;
+      const isPendingRepurchase = REPURCHASE_READY_STATES.has(Number(position.state));
+      const cycleCurrent = totalRemainingDays <= 0 || isPendingRepurchase
+        ? cycleTotal
+        : Math.max(0, Math.min(cycleRemainder || (rawPassedDays > 0 ? cycleTotal : 0), cycleTotal));
+      const remainingDays = totalRemainingDays <= 0 || isPendingRepurchase ? 0 : Math.max(cycleTotal - cycleCurrent, 0);
 
       return {
         model: tier?.model || `T${position.tierIndex}`,
@@ -166,11 +173,11 @@ export default function MiningPage() {
         profit: `${formatTokenAmount(position.profit, 18, 4)} NETE`,
         profitWei: position.profit,
         pendingWei: position.pendingReward,
-        remainingDays: formatDaysByEpoch(position.endAt, timeUnitSeconds),
+        remainingDays,
         positionId: position.positionId,
         state: Number(position.state),
-        isPendingRepurchase: REPURCHASE_READY_STATES.has(Number(position.state)),
-        canRepurchase: !position.isAirdrop && (formatDaysByEpoch(position.endAt, timeUnitSeconds) <= 0 || REPURCHASE_READY_STATES.has(Number(position.state))),
+        isPendingRepurchase,
+        canRepurchase: !position.isAirdrop && (totalRemainingDays <= 0 || isPendingRepurchase),
         isAirdrop: position.isAirdrop,
         cycleCurrent,
         cycleTotal,
@@ -282,7 +289,7 @@ export default function MiningPage() {
     [portfolioRows],
   );
   const repurchasableMinerCount = useMemo(
-    () => portfolioRows.filter((item) => !item.isAirdrop && (item.remainingDays <= 0 || item.isPendingRepurchase)).length,
+    () => portfolioRows.filter((item) => item.canRepurchase).length,
     [portfolioRows],
   );
   const actionBusy = claimingAll || repurchasingAll || withdrawingAll || Boolean(claimingId) || Boolean(repurchasingId);

@@ -28,7 +28,7 @@ const resources = {
         },
       },
       footer: {
-        tagline: "透明、可持续、社区共治的链上时间价值生态。",
+        tagline: "连接传统支付与 Web3 的透明可持续生态。",
         product: "产品",
         developers: "开发者",
         company: "公司",
@@ -60,11 +60,11 @@ const resources = {
           wallet: "正在初始化你的链上参与账户...",
         },
         hero: {
-          badge: "Onchain Live · Community Governed",
-          titleA: "透明通缩。",
-          titleB: "社区共治的",
-          titleC: "链上时间价值引擎。",
-          subtitle: "NETE 以智能合约驱动“质押销毁挖矿 + 多级社区激励 + 三重通缩机制”，构建透明、可持续、可审计的链上经济模型。发行总量恒定 30 亿枚，终极通缩目标为 2100 万枚。",
+          badge: "通缩经济｜社区自治｜透明合规",
+          titleA: "NETE｜连接传统支付",
+          titleB: "与 Web3 的",
+          titleC: "未来。",
+          subtitle: "NETE 以链上通缩经济模型、POS 质押挖矿重塑时间价值，构建透明可持续的去中心化经济引擎。",
           primary: "查看核心模型",
           secondary: "了解机制细节",
           phone: {
@@ -95,54 +95,54 @@ const resources = {
           },
         },
         features: {
-          eyebrow: "// Core Mechanisms",
-          title: "链上规则驱动的\n可持续增长模型",
-          desc: "以公开可验证的合约规则替代中心化口径，围绕发行、产出、分配、销毁与治理构建完整闭环，提升生态的透明度、稳定性与长期价值承载能力。",
+          eyebrow: "// Onchain Mechanisms",
+          title: "自动即信任\n链上核心机制",
+          desc: "以智能合约自动执行矿机质押挖矿、社区激励与安全透明机制，让产出、分配和流通规则全链上可查。",
           cards: [
-            { title: "三重通缩机制", desc: "每次链上提币与激活矿机均触发销毁，结合产出节奏调节阀控制通胀速度，通过机制化收缩推动总量从 30 亿向 2100 万持续收敛。", tag: "30 亿 → 2100 万" },
-            { title: "POS 质押销毁挖矿", desc: "约 99.66% 代币通过质押销毁挖矿释放，空投矿机作为转化入口并受有效期与转正规则约束，产出路径清晰且可审计。", tag: "约 29.9 亿 POS 释放" },
-            { title: "社区治理 V1-V9", desc: "提币手续费社区分红中，50% 按等级平分、50% 按当日新增业绩加权，并叠加固定奖励机制，形成可持续的增长激励网络。", tag: "双轨分红 + 固定奖励" },
-            { title: "链上安全与可追溯", desc: "无中心资金池，所有资金锁定在合约与用户钱包；合约自动执行、权限可放弃，交易、分红、销毁全链上公开可查。", tag: "公开透明 · 可验证" }
+            { title: "质押挖矿・复利增长", desc: "多档位矿机灵活参与，每日自动产息，本金复投、利润可提，周期自动延长减产防通胀。", tag: "多档矿机｜每日产息｜周期减产" },
+            { title: "多级激励・共治共享", desc: "直推 8 人享 20 层加速，V1-V9 等级分红，手续费全链上分配，C2C 支持做市商。", tag: "20 层加速｜V1-V9 分红" },
+            { title: "链上可信・规则透明", desc: "合约自动执行，无中央资金池，全数据上链可查。", tag: "智能合约｜无资金池｜数据可查" },
+            { title: "技术团队", desc: "EEA 联盟成员，自主研发 VIA Protocol 与 Nete 平台，拥有全栈区块链技术，安全可信。", tag: "VIA Protocol｜Nete 平台" }
           ],
         },
         project: {
-          eyebrow: "// Project Overview",
-          title: "NETE 项目介绍",
-          desc: "NETE 定位为“透明、可持续、社区共治”的链上时间价值生态，通过规则可验证、过程可追踪、分配可审计的机制设计，系统性解决传统卷轴模型中“黑箱操作、不可持续、信任脆弱”的结构性问题。",
-          mechanismsTitle: "经济模型关键机制",
-          rulesTitle: "分配与流通规则",
+          eyebrow: "// Deflation Model",
+          title: "稀缺即价值，通缩经济模型",
+          desc: "NETE 以 30 亿枚初始总量启动，通过提币及激活矿机触发直接销毁，最终通缩目标为 2100 万枚。",
+          mechanismsTitle: "发行与通缩",
+          rulesTitle: "初始分配",
           modelMechanisms: [
-            "初始总量 30 亿枚，恒定不增发。",
-            "终极通缩目标：流通量压缩至 2100 万枚。",
-            "每次链上提币与激活矿机触发销毁，形成强制通缩。",
-            "提币手续费按矿机等级收取 20%-30%，每日链上自动分配。"
+            "初始总量：30 亿枚 NETE。",
+            "终极通缩：2100 万枚。",
+            "通缩触发：提币及激活矿机直接销毁。",
+            "链上通缩经济模型持续压缩流通供给。"
           ],
           roadmapItems: [
-            "提币手续费分配：20% 销毁、30% 项目方、50% 社区分红。",
-            "社区分红中 50% 按 V1-V9 平分，50% 按当日新增业绩加权。",
-            "C2C 交易卖方手续费 10%（USDT），用于流动性支持与生态建设。",
-            "V4 及以上可申请做市商账户，免手续费并赚取 5% 市场差价。"
+            "种子轮：500 万枚，单价 0.5 USDT。",
+            "空投：500 万枚。",
+            "POS 质押产出：约 29.9 亿枚。",
+            "空投与质押产出共同构成生态启动入口。"
           ],
           contractItems: [
-            { name: "启动分配结构", detail: "种子轮 500 万（0.17%）+ 阶段空投 500 万（0.17%），其余由质押销毁挖矿释放" },
-            { name: "POS 产出配比", detail: "约 29.9 亿（99.66%）通过 POS 质押销毁挖矿产生，确保产出与通缩协同" },
-            { name: "安全与透明性", detail: "无中心资金池、合约自动执行、权限可放弃、交易与分配数据全链上可追溯" }
+            { name: "空投转化", detail: "注册送 100 型空投矿机，75 天内购买不低于 100 型真实矿机后，空投矿机可转为永久。" },
+            { name: "POS 质押挖矿", detail: "通过矿机参与产出，形成链上可追踪的时间价值释放路径。" },
+            { name: "透明合规", detail: "关键规则由合约执行，销毁、产出与分配过程全链上可查。" }
           ],
         },
         markets: {
-          eyebrow: "// Tokenomics",
-          title: "核心经济参数\n一览",
+          eyebrow: "// Token Economy",
+          title: "发行、分配与\n空投转化",
           cards: [
-            { name: "发行总量", ticker: "SUPPLY", price: "30 亿 NETE", change: "恒定不增发" },
-            { name: "极限通缩目标", ticker: "DEFLATION", price: "2100 万 NETE", change: "提币/激活触发销毁" },
-            { name: "启动分配结构", ticker: "BOOTSTRAP", price: "500 万 + 500 万", change: "种子轮 0.5 USDT / NETE" },
-            { name: "提币手续费分配", ticker: "FEE SPLIT", price: "20% / 30% / 50%", change: "销毁 / 项目方 / 社区" },
-            { name: "C2C 流通机制", ticker: "C2C", price: "卖方手续费 10%", change: "V4+ 做市商可申请免手续费" }
+            { name: "初始总量", ticker: "SUPPLY", price: "30 亿 NETE", change: "生态启动总供给" },
+            { name: "终极通缩", ticker: "DEFLATION", price: "2100 万 NETE", change: "提币及激活矿机触发销毁" },
+            { name: "种子轮", ticker: "SEED", price: "500 万 NETE", change: "0.5 USDT / NETE" },
+            { name: "空投", ticker: "AIRDROP", price: "500 万 NETE", change: "注册送 100 型空投矿机" },
+            { name: "POS 质押产出", ticker: "POS", price: "约 29.9 亿 NETE", change: "矿机产出释放" }
           ],
         },
         cta: {
-          title: "准备加入 NETE 链上经济生态？",
-          subtitle: "从矿机产出、社区治理到 C2C 流通，所有关键行为由合约自动执行并全链路可审计，为长期参与者提供可验证、可持续的价值增长路径。",
+          title: "加入 NETE｜共建透明、可持续的链上价值生态",
+          subtitle: "从通缩经济、POS 质押挖矿到社区自治，NETE 以透明规则连接传统支付与 Web3 的未来。",
           action: "立即参与 NETE",
           enter: "立即进入",
           quick: "快速前往",
