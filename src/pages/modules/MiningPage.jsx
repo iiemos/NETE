@@ -37,7 +37,11 @@ const REPURCHASE_MODES = {
   all: "all",
   single: "single",
 };
+const POSITION_STATES = {
+  running: 0,
+};
 const AIRDROP_PRINCIPAL = 100n * 10n ** 18n;
+const MIN_VISIBLE_NETE_WEI = 5n * 10n ** 13n;
 const REPURCHASE_READY_STATES = new Set([1]);
 
 function isAirdropTier(tier) {
@@ -157,6 +161,7 @@ export default function MiningPage() {
     const tiersMap = new Map(machineModels.map((model) => [model.tierIndex, model]));
     const positions = miningDataQuery.data?.positions || [];
     const timeUnitSeconds = miningDataQuery.data?.timeUnitSeconds || 600;
+    const airdropPromoted = Boolean(miningDataQuery.data?.airdropInfo?.promoted);
 
     return positions.map((position) => {
       const tier = tiersMap.get(position.tierIndex);
@@ -164,7 +169,12 @@ export default function MiningPage() {
       const totalRemainingDays = formatDaysByEpoch(position.endAt, timeUnitSeconds);
       const rawPassedDays = Math.max(0, Number(position.cyclePassedDays || 0));
       const cycleRemainder = rawPassedDays % cycleTotal;
-      const isPendingRepurchase = REPURCHASE_READY_STATES.has(Number(position.state));
+      const state = Number(position.state);
+      const isRunning = state === POSITION_STATES.running;
+      const isPendingRepurchase = REPURCHASE_READY_STATES.has(state);
+      const canClaim = isRunning
+        && position.pendingReward > 0n
+        && (!position.isAirdrop || airdropPromoted || totalRemainingDays > 0);
       const cycleCurrent = totalRemainingDays <= 0 || isPendingRepurchase
         ? cycleTotal
         : Math.max(0, Math.min(cycleRemainder || (rawPassedDays > 0 ? cycleTotal : 0), cycleTotal));
@@ -182,9 +192,10 @@ export default function MiningPage() {
         principalWei: position.principal,
         remainingDays,
         positionId: position.positionId,
-        state: Number(position.state),
+        state,
         isPendingRepurchase,
         canRepurchase: !position.isAirdrop && isPendingRepurchase && totalRemainingDays <= 0,
+        canClaim,
         isAirdrop: position.isAirdrop,
         cycleCurrent,
         cycleTotal,
@@ -291,8 +302,16 @@ export default function MiningPage() {
     [purchasedMachines],
   );
   const repurchasePaused = Boolean(runtimeConfigQuery.data?.repurchase_paused);
-  const totalPendingRewardWei = useMemo(
-    () => portfolioRows.reduce((sum, item) => sum + (item.pendingWei || 0n), 0n),
+  const claimablePortfolioRows = useMemo(
+    () => portfolioRows.filter((item) => item.canClaim),
+    [portfolioRows],
+  );
+  const totalClaimableRewardWei = useMemo(
+    () => claimablePortfolioRows.reduce((sum, item) => sum + (item.pendingWei || 0n), 0n),
+    [claimablePortfolioRows],
+  );
+  const hasClaimBlockingPosition = useMemo(
+    () => portfolioRows.some((item) => item.state === POSITION_STATES.running && (item.pendingWei || 0n) > 0n && !item.canClaim),
     [portfolioRows],
   );
   const repurchasableMinerCount = useMemo(
@@ -317,9 +336,9 @@ export default function MiningPage() {
     };
   }, [portfolioRows, repurchaseTarget, repurchasableMinerRows]);
   const actionBusy = claimingAll || repurchasingAll || withdrawingAll || Boolean(claimingId) || Boolean(repurchasingId);
-  const canClaimAllRewards = wallet.isConnected && totalPendingRewardWei > 0n && !actionBusy;
+  const canClaimAllRewards = wallet.isConnected && totalClaimableRewardWei > 0n && !hasClaimBlockingPosition && !actionBusy;
   const canRepurchaseExpired = wallet.isConnected && repurchasableMinerCount > 0 && !repurchasePaused && !actionBusy;
-  const canWithdrawAllProfits = wallet.isConnected && profitPoolBalance > 0n && !actionBusy;
+  const canWithdrawAllProfits = wallet.isConnected && profitPoolBalance >= MIN_VISIBLE_NETE_WEI && !actionBusy;
   const canClaimAirdrop = wallet.isConnected && !claimingAirdrop && !hasAirdropMiner && !airdropNftClaimed && hasRequiredAirdropNft;
   const repurchaseBalanceEnough = repurchasePaymentMethod === PAYMENT_METHODS.wallet
     ? chainNeteBalance >= (repurchaseContext?.amountWei || 0n)
@@ -474,10 +493,7 @@ export default function MiningPage() {
   };
 
   const handleWithdrawAllProfits = async () => {
-    if (!wallet.isConnected || withdrawingAllRef.current) {
-      return;
-    }
-    if (profitPoolBalance <= 0n) {
+    if (!canWithdrawAllProfits || withdrawingAllRef.current) {
       return;
     }
 
@@ -497,11 +513,12 @@ export default function MiningPage() {
 
   const handleClaim = async (positionId) => {
     if (!wallet.isConnected || !positionId || actionBusy) return;
+    const machine = portfolioRows.find((item) => item.positionId === positionId);
+    if (!machine?.canClaim) return;
 
     try {
       setClaimingId(positionId);
       await wallet.ensureCorrectChain();
-      const machine = portfolioRows.find((item) => item.positionId === positionId);
       if (machine?.isAirdrop) {
         await claimAirdropReward(wallet.currentAddress, positionId);
       } else {
@@ -692,7 +709,7 @@ export default function MiningPage() {
                             disabled={
                               machine.canRepurchase
                                 ? repurchasingId === machine.positionId || !wallet.isConnected || actionBusy || repurchasePaused
-                                : claimingId === machine.positionId || !wallet.isConnected || actionBusy
+                                : !machine.canClaim || claimingId === machine.positionId || !wallet.isConnected || actionBusy
                             }
                             onClick={() => (
                               machine.canRepurchase
@@ -706,7 +723,9 @@ export default function MiningPage() {
                                 : t("modules.mining.portfolio.repurchase")
                               : claimingId === machine.positionId
                                 ? t("modules.mining.portfolio.claiming")
-                                : t("modules.mining.portfolio.claim")}
+                                : machine.canClaim
+                                  ? t("modules.mining.portfolio.claim")
+                                  : t("modules.mining.portfolio.noClaimableReward")}
                           </button>
                         </div>
                       </div>
