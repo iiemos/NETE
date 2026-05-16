@@ -33,6 +33,10 @@ const PAYMENT_METHODS = {
   principal: "principal",
   wallet: "wallet",
 };
+const REPURCHASE_MODES = {
+  all: "all",
+  single: "single",
+};
 const AIRDROP_PRINCIPAL = 100n * 10n ** 18n;
 const REPURCHASE_READY_STATES = new Set([1]);
 
@@ -75,6 +79,8 @@ export default function MiningPage() {
   const [claimingAll, setClaimingAll] = useState(false);
   const [repurchasingAll, setRepurchasingAll] = useState(false);
   const [repurchasingId, setRepurchasingId] = useState("");
+  const [repurchaseTarget, setRepurchaseTarget] = useState(null);
+  const [repurchasePaymentMethod, setRepurchasePaymentMethod] = useState(PAYMENT_METHODS.principal);
   const [claimingId, setClaimingId] = useState("");
   const [withdrawingAll, setWithdrawingAll] = useState(false);
 
@@ -173,11 +179,12 @@ export default function MiningPage() {
         profit: `${formatTokenAmount(position.profit, 18, 4)} NETE`,
         profitWei: position.profit,
         pendingWei: position.pendingReward,
+        principalWei: position.principal,
         remainingDays,
         positionId: position.positionId,
         state: Number(position.state),
         isPendingRepurchase,
-        canRepurchase: !position.isAirdrop && (totalRemainingDays <= 0 || isPendingRepurchase),
+        canRepurchase: !position.isAirdrop && isPendingRepurchase && totalRemainingDays <= 0,
         isAirdrop: position.isAirdrop,
         cycleCurrent,
         cycleTotal,
@@ -292,11 +299,43 @@ export default function MiningPage() {
     () => portfolioRows.filter((item) => item.canRepurchase).length,
     [portfolioRows],
   );
+  const repurchasableMinerRows = useMemo(
+    () => portfolioRows.filter((item) => item.canRepurchase),
+    [portfolioRows],
+  );
+  const repurchaseContext = useMemo(() => {
+    if (!repurchaseTarget) return null;
+    const rows = repurchaseTarget.mode === REPURCHASE_MODES.all
+      ? repurchasableMinerRows
+      : portfolioRows.filter((item) => item.positionId === repurchaseTarget.positionId && item.canRepurchase);
+    const amountWei = rows.reduce((sum, item) => sum + (item.principalWei || 0n), 0n);
+
+    return {
+      ...repurchaseTarget,
+      rows,
+      amountWei,
+    };
+  }, [portfolioRows, repurchaseTarget, repurchasableMinerRows]);
   const actionBusy = claimingAll || repurchasingAll || withdrawingAll || Boolean(claimingId) || Boolean(repurchasingId);
   const canClaimAllRewards = wallet.isConnected && totalPendingRewardWei > 0n && !actionBusy;
   const canRepurchaseExpired = wallet.isConnected && repurchasableMinerCount > 0 && !repurchasePaused && !actionBusy;
   const canWithdrawAllProfits = wallet.isConnected && profitPoolBalance > 0n && !actionBusy;
   const canClaimAirdrop = wallet.isConnected && !claimingAirdrop && !hasAirdropMiner && !airdropNftClaimed && hasRequiredAirdropNft;
+  const repurchaseBalanceEnough = repurchasePaymentMethod === PAYMENT_METHODS.wallet
+    ? chainNeteBalance >= (repurchaseContext?.amountWei || 0n)
+    : principalPoolBalance >= (repurchaseContext?.amountWei || 0n);
+  const canSubmitRepurchase = Boolean(repurchaseContext)
+    && wallet.isConnected
+    && !actionBusy
+    && !repurchasePaused
+    && repurchaseContext.rows.length > 0
+    && repurchaseContext.amountWei > 0n
+    && repurchaseBalanceEnough;
+  const repurchaseSubmitting = Boolean(repurchaseContext) && (
+    repurchaseContext.mode === REPURCHASE_MODES.all
+      ? repurchasingAll
+      : repurchasingId === repurchaseContext.positionId
+  );
 
   function openPurchaseModal(model = machineModels[0]) {
     if (!model) return;
@@ -324,6 +363,16 @@ export default function MiningPage() {
 
   function closeAirdropModal() {
     setAirdropModel(null);
+  }
+
+  function openRepurchaseModal(target) {
+    setRepurchaseTarget(target);
+    setRepurchasePaymentMethod(PAYMENT_METHODS.principal);
+  }
+
+  function closeRepurchaseModal() {
+    setRepurchaseTarget(null);
+    setRepurchasePaymentMethod(PAYMENT_METHODS.principal);
   }
 
   function openAgreementModal() {
@@ -391,33 +440,36 @@ export default function MiningPage() {
     }
   };
 
-  const handleRepurchaseExpired = async () => {
-    if (!canRepurchaseExpired) return;
+  const handleSubmitRepurchase = async () => {
+    if (!canSubmitRepurchase || !repurchaseContext) return;
+    const isBatch = repurchaseContext.mode === REPURCHASE_MODES.all;
+    const positionId = repurchaseContext.positionId;
 
     try {
-      setRepurchasingAll(true);
+      if (isBatch) {
+        setRepurchasingAll(true);
+      } else {
+        setRepurchasingId(positionId);
+      }
       await wallet.ensureCorrectChain();
-      await repurchaseExpiredMiners(wallet.currentAddress);
+      if (repurchasePaymentMethod === PAYMENT_METHODS.wallet) {
+        await approveNeteToCore(wallet.currentAddress, repurchaseContext.amountWei);
+      }
+      if (isBatch) {
+        await repurchaseExpiredMiners(wallet.currentAddress);
+      } else {
+        await repurchaseMiner(wallet.currentAddress, positionId);
+      }
       await refreshMiningData();
+      closeRepurchaseModal();
     } catch {
       return;
     } finally {
-      setRepurchasingAll(false);
-    }
-  };
-
-  const handleRepurchasePosition = async (positionId) => {
-    if (!wallet.isConnected || !positionId || actionBusy || repurchasePaused) return;
-
-    try {
-      setRepurchasingId(positionId);
-      await wallet.ensureCorrectChain();
-      await repurchaseMiner(wallet.currentAddress, positionId);
-      await refreshMiningData();
-    } catch {
-      return;
-    } finally {
-      setRepurchasingId("");
+      if (isBatch) {
+        setRepurchasingAll(false);
+      } else {
+        setRepurchasingId("");
+      }
     }
   };
 
@@ -554,7 +606,7 @@ export default function MiningPage() {
                 className="mining-btn mining-btn--ghost"
                 type="button"
                 disabled={!canRepurchaseExpired}
-                onClick={handleRepurchaseExpired}
+                onClick={() => openRepurchaseModal({ mode: REPURCHASE_MODES.all })}
               >
                 {repurchasingAll ? t("modules.mining.portfolio.repurchasing") : t("modules.mining.portfolio.repurchaseAll")}
               </button>
@@ -642,7 +694,11 @@ export default function MiningPage() {
                                 ? repurchasingId === machine.positionId || !wallet.isConnected || actionBusy || repurchasePaused
                                 : claimingId === machine.positionId || !wallet.isConnected || actionBusy
                             }
-                            onClick={() => (machine.canRepurchase ? handleRepurchasePosition(machine.positionId) : handleClaim(machine.positionId))}
+                            onClick={() => (
+                              machine.canRepurchase
+                                ? openRepurchaseModal({ mode: REPURCHASE_MODES.single, positionId: machine.positionId })
+                                : handleClaim(machine.positionId)
+                            )}
                           >
                             {machine.canRepurchase
                               ? repurchasingId === machine.positionId
@@ -976,6 +1032,97 @@ export default function MiningPage() {
               {purchasing ? t("modules.mining.modal.submitting") : t("modules.mining.modal.submit")}
             </button>
             {repurchasePaused ? <p className="mt-2 text-center text-xs text-white/65">{t("modules.mining.messages.paused")}</p> : null}
+          </article>
+        </div>
+      ), portalRoot) : null}
+
+      {repurchaseContext && portalRoot ? createPortal((
+        <div className="fixed inset-0 z-[535] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" onClick={closeRepurchaseModal} role="presentation">
+          <article
+            className="max-h-[88dvh] w-full max-w-[520px] overflow-y-auto rounded-[20px] border border-white/10 bg-[#141419] p-4 text-white shadow-[0_25px_80px_rgba(0,0,0,0.55)] md:max-h-[92vh] md:rounded-[24px] md:p-5"
+            role="dialog"
+            aria-modal="true"
+            aria-label={repurchaseContext.mode === REPURCHASE_MODES.all ? t("modules.mining.modal.repurchaseAllTitle") : t("modules.mining.modal.repurchaseTitle")}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span className="mining-chip mining-chip--status">
+                  {repurchaseContext.mode === REPURCHASE_MODES.all ? t("modules.mining.portfolio.repurchaseAll") : t("modules.mining.portfolio.repurchase")}
+                </span>
+                <h3 className="mt-3 font-display text-xl font-bold tracking-tight text-white">
+                  {repurchaseContext.mode === REPURCHASE_MODES.all ? t("modules.mining.modal.repurchaseAllTitle") : t("modules.mining.modal.repurchaseTitle")}
+                </h3>
+              </div>
+              <button className="inline-flex h-8 w-8 items-center justify-center rounded-full text-2xl leading-none text-white/70 transition hover:bg-white/10 hover:text-white" type="button" onClick={closeRepurchaseModal} aria-label={t("modules.mining.modal.close")}>
+                <Icon icon="solar:close-circle-outline" width="1em" height="1em" />
+              </button>
+            </div>
+
+            <section className="mt-4">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                  <span className="text-white/55">{t("modules.mining.modal.repurchaseCount")}</span>
+                  <strong className="mt-1 block text-white">{t("modules.mining.units.machines", { count: repurchaseContext.rows.length })}</strong>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                  <span className="text-white/55">{t("modules.mining.modal.repurchaseCost")}</span>
+                  <strong className="mt-1 block text-[#caff00]">{formatTokenAmount(repurchaseContext.amountWei, 18, 4)} NETE</strong>
+                </div>
+              </div>
+              {repurchaseContext.mode === REPURCHASE_MODES.single && repurchaseContext.positionId ? (
+                <p className="mt-2 text-xs text-white/55">{t("modules.mining.portfolio.positionId")}：{repurchaseContext.positionId}</p>
+              ) : null}
+            </section>
+
+            <section className="mt-4">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                  <span className="text-white/55">{t("modules.mining.modal.principalBalance")}</span>
+                  <strong className="mt-1 block text-white">{formatTokenAmount(principalPoolBalance, 18, 4)} NETE</strong>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                  <span className="text-white/55">{t("modules.mining.modal.chainBalance")}</span>
+                  <strong className="mt-1 block text-white">{formatTokenAmount(chainNeteBalance, 18, 4)} NETE</strong>
+                </div>
+              </div>
+            </section>
+
+            <section className="mt-4">
+              <div className="text-sm font-semibold text-white/90">{t("modules.mining.modal.paymentMethod")}</div>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <button
+                  className={repurchasePaymentMethod === PAYMENT_METHODS.principal ? "mining-payment-option is-active" : "mining-payment-option"}
+                  type="button"
+                  onClick={() => setRepurchasePaymentMethod(PAYMENT_METHODS.principal)}
+                >
+                  {t("modules.mining.modal.payWithPrincipal")}
+                </button>
+                <button
+                  className={repurchasePaymentMethod === PAYMENT_METHODS.wallet ? "mining-payment-option is-active" : "mining-payment-option"}
+                  type="button"
+                  onClick={() => setRepurchasePaymentMethod(PAYMENT_METHODS.wallet)}
+                >
+                  {t("modules.mining.modal.payWithWallet")}
+                </button>
+              </div>
+              {!repurchaseBalanceEnough && repurchaseContext.amountWei > 0n ? (
+                <p className="mt-2 text-xs text-[#ffb199]">{t("modules.mining.modal.insufficientBalance")}</p>
+              ) : null}
+              {repurchaseContext.rows.length === 0 ? (
+                <p className="mt-2 text-xs text-[#ffb199]">{t("modules.mining.modal.repurchaseUnavailable")}</p>
+              ) : null}
+              {repurchasePaused ? <p className="mt-2 text-xs text-white/65">{t("modules.mining.messages.paused")}</p> : null}
+            </section>
+
+            <button
+              className="mining-modal-submit mt-5 inline-flex h-11 w-full items-center justify-center rounded-full bg-[#caff00] text-base font-semibold text-black transition enabled:hover:shadow-[0_0_30px_rgba(202,255,0,0.45)] disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-white/45"
+              type="button"
+              disabled={!canSubmitRepurchase}
+              onClick={handleSubmitRepurchase}
+            >
+              {repurchaseSubmitting ? t("modules.mining.portfolio.repurchasing") : t("modules.mining.modal.repurchaseSubmit")}
+            </button>
           </article>
         </div>
       ), portalRoot) : null}
