@@ -501,6 +501,15 @@ export async function approveUsdtToCore(account, amount) {
   });
 }
 
+export async function readUsdtCoreAllowance(user) {
+  return read({
+    address: assertContractAddress("usdt"),
+    abi: mockUsdtAbi,
+    functionName: "allowance",
+    args: [user, assertContractAddress("neteCore")],
+  });
+}
+
 export async function buySeed(account, usdtAmount) {
   return send({
     account,

@@ -25,6 +25,10 @@ const resources = {
           disconnect: "断开连接",
           switchChain: "切换到目标链",
           processing: "处理中...",
+          select: "选择钱包",
+          connecting: "连接中...",
+          noConnector: "暂无可用钱包连接方式",
+          connectionFailed: "钱包连接失败",
         },
       },
       footer: {
@@ -174,6 +178,10 @@ const resources = {
           disconnect: "Disconnect",
           switchChain: "Switch Chain",
           processing: "Processing...",
+          select: "Select Wallet",
+          connecting: "Connecting...",
+          noConnector: "No wallet connector available",
+          connectionFailed: "Wallet connection failed",
         },
       },
       footer: {

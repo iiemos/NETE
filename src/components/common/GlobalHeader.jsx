@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Icon } from "@iconify/react";
 import logoIcon from "../../assets/images/logo-icon.svg";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 
@@ -11,6 +12,12 @@ const navItems = [
   { key: "seed", to: "/finance/buy-seed" },
   { key: "team", to: "/account/team" },
   { key: "my", to: "/my" },
+];
+const walletIconDefs = [
+  { keys: ["metamask", "meta mask"], icon: "logos:metamask-icon", className: "is-official" },
+  { keys: ["coinbase"], icon: "token-branded:coinbase", className: "is-coinbase" },
+  { keys: ["walletconnect", "wallet connect"], icon: "logos:walletconnect", className: "is-official" },
+  { keys: ["injected", "browser wallet"], icon: "solar:wallet-money-bold", className: "is-injected" },
 ];
 
 function desktopNavClassName(isActive) {
@@ -25,6 +32,93 @@ function normalizeLanguage(language) {
   return language?.toLowerCase().startsWith("en") ? "en" : "zh";
 }
 
+function getConnectorLabel(connector) {
+  return connector?.name || connector?.id || "Wallet";
+}
+
+function getWalletOptions(connectors) {
+  const seen = new Set();
+  return (connectors || []).filter((connector) => {
+    const key = getConnectorLabel(connector).toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function findWalletIcon(connector, label) {
+  const key = `${connector?.id || ""} ${connector?.type || ""} ${label || ""}`.toLowerCase();
+  return walletIconDefs.find((item) => item.keys.some((name) => key.includes(name)));
+}
+
+function getConnectorIcon(connector, label) {
+  if (connector?.icon) {
+    return { src: connector.icon, className: "is-image" };
+  }
+
+  const walletIcon = findWalletIcon(connector, label);
+  if (walletIcon) {
+    return { icon: walletIcon.icon, className: walletIcon.className };
+  }
+
+  return { icon: "solar:wallet-money-bold", className: "is-default" };
+}
+
+function WalletOptionIcon({ connector, label }) {
+  const walletIcon = getConnectorIcon(connector, label);
+
+  return (
+    <span className={`wallet-modal__mark ${walletIcon.className}`} aria-hidden="true">
+      {walletIcon.src ? <img src={walletIcon.src} alt="" /> : <Icon icon={walletIcon.icon} width="26" height="26" />}
+    </span>
+  );
+}
+
+function WalletConnectModal({ errorMessage, onClose, onConnect, open, options, t, wallet }) {
+  if (!open) return null;
+
+  return (
+    <div className="wallet-modal-backdrop" role="presentation" onClick={onClose}>
+      <section className="wallet-modal" role="dialog" aria-modal="true" aria-label={t("nav.wallet.connect")} onClick={(event) => event.stopPropagation()}>
+        <div className="wallet-modal__header">
+          <div>
+            <p className="wallet-modal__eyebrow">NETE WALLET</p>
+            <h2>{t("nav.wallet.select")}</h2>
+          </div>
+          <button className="wallet-modal__close" type="button" onClick={onClose} aria-label={t("modules.team.closeBindPrompt")}>
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M7 7L17 17M17 7L7 17" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="wallet-modal__list">
+          {options.length ? options.map((connector) => {
+            const label = getConnectorLabel(connector);
+            const connecting = wallet.isConnecting && wallet.connectingConnectorUid === connector.uid;
+
+            return (
+              <button
+                className="wallet-modal__option"
+                type="button"
+                key={connector.uid || connector.id || label}
+                disabled={wallet.isConnecting}
+                onClick={() => onConnect(connector)}
+              >
+                <WalletOptionIcon connector={connector} label={label} />
+                <span>{connecting ? t("nav.wallet.connecting") : label}</span>
+                {connecting ? <span className="wallet-modal__spinner" aria-hidden="true" /> : null}
+              </button>
+            );
+          }) : <p className="wallet-modal__empty">{t("nav.wallet.noConnector")}</p>}
+        </div>
+
+        {errorMessage ? <p className="wallet-modal__error">{errorMessage}</p> : null}
+      </section>
+    </div>
+  );
+}
+
 export default function GlobalHeader() {
   const { i18n, t } = useTranslation();
   const location = useLocation();
@@ -32,8 +126,11 @@ export default function GlobalHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [walletError, setWalletError] = useState("");
   const languageMenuRef = useRef(null);
   const currentLanguage = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
+  const walletOptions = useMemo(() => getWalletOptions(wallet.connectors), [wallet.connectors]);
   const connectLabel = t("nav.wallet.connect");
   const disconnectLabel = t("nav.wallet.disconnect");
   const switchChainLabel = t("nav.wallet.switchChain");
@@ -54,20 +151,29 @@ export default function GlobalHeader() {
   useEffect(() => {
     setMenuOpen(false);
     setLanguageMenuOpen(false);
+    setWalletModalOpen(false);
   }, [location.pathname]);
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? "hidden" : "";
+    document.body.style.overflow = menuOpen || walletModalOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
-  }, [menuOpen]);
+  }, [menuOpen, walletModalOpen]);
+
+  useEffect(() => {
+    if (wallet.isConnected) {
+      setWalletModalOpen(false);
+      setWalletError("");
+    }
+  }, [wallet.isConnected]);
 
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
         setMenuOpen(false);
         setLanguageMenuOpen(false);
+        setWalletModalOpen(false);
       }
     };
     document.addEventListener("keydown", onKeyDown);
@@ -95,7 +201,10 @@ export default function GlobalHeader() {
   const handleWalletAction = async () => {
     try {
       if (!wallet.isConnected) {
-        await wallet.connectWallet();
+        setMenuOpen(false);
+        setLanguageMenuOpen(false);
+        setWalletError("");
+        setWalletModalOpen(true);
         return;
       }
 
@@ -108,6 +217,17 @@ export default function GlobalHeader() {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Wallet action failed";
       window.alert(message);
+    }
+  };
+
+  const handleWalletConnect = async (connector) => {
+    try {
+      setWalletError("");
+      await wallet.connectWallet(connector);
+      setWalletModalOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t("nav.wallet.connectionFailed");
+      setWalletError(message);
     }
   };
 
@@ -248,6 +368,16 @@ export default function GlobalHeader() {
           </button>
         </div>
       </div>
+
+      <WalletConnectModal
+        errorMessage={walletError}
+        onClose={() => setWalletModalOpen(false)}
+        onConnect={handleWalletConnect}
+        open={walletModalOpen && !wallet.isConnected}
+        options={walletOptions}
+        t={t}
+        wallet={wallet}
+      />
     </>
   );
 }

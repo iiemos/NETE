@@ -176,7 +176,7 @@ export const moduleTranslations = {
         nftAlreadyClaimed: "该地址已领取过空投矿机",
         airdropAlreadyComposed: "该地址已存在空投矿机，不能重复激活",
         fragmentInsufficient: "碎片不足，无法合成空投矿机",
-        noExpiredMiners: "暂无可复投的到期矿机",
+        noExpiredMiners: "暂无可复投矿机",
         paused: "系统当前暂停复投/申购，请稍后再试。",
       },
       summary: {
@@ -674,7 +674,7 @@ export const moduleTranslations = {
         nftAlreadyClaimed: "This address has already claimed the airdrop miner.",
         airdropAlreadyComposed: "This address already has an airdrop miner.",
         fragmentInsufficient: "Insufficient fragments to compose the airdrop miner.",
-        noExpiredMiners: "No expired miners available for reinvestment.",
+        noExpiredMiners: "No miners available for reinvestment.",
         paused: "Reinvestment and subscription are paused. Please try again later.",
       },
       summary: {

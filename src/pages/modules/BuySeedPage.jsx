@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { getPresaleRecords } from "../../services/neteApi";
-import { approveUsdtToCore, buySeed, readCoreSeedInfo, readUserBalances, readUserMiningData } from "../../services/neteContracts";
+import { approveUsdtToCore, buySeed, readCoreSeedInfo, readUsdtCoreAllowance, readUserBalances, readUserMiningData } from "../../services/neteContracts";
 import { formatTokenAmount, formatUnixTime, parseTokenInput, shortAddress } from "../../utils/formatters";
 
 const ONE_18 = 10n ** 18n;
@@ -101,7 +101,10 @@ export default function BuySeedPage() {
       await wallet.ensureCorrectChain();
 
       const account = wallet.currentAddress;
-      await approveUsdtToCore(account, estimatedUsdt);
+      const allowance = await readUsdtCoreAllowance(account);
+      if (allowance < estimatedUsdt) {
+        await approveUsdtToCore(account, estimatedUsdt);
+      }
       const result = await buySeed(account, estimatedUsdt);
 
       setTxMessage(t("modules.seed.messages.success", { hash: result.hash }));

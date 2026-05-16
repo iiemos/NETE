@@ -45,11 +45,12 @@ const REPURCHASE_MODES = {
 };
 const POSITION_STATES = {
   running: 0,
+  pendingRepurchase: 1,
   ended: 2,
 };
 const AIRDROP_PRINCIPAL = 100n * 10n ** 18n;
 const MIN_VISIBLE_NETE_WEI = 5n * 10n ** 13n;
-const REPURCHASE_READY_STATES = new Set([1]);
+const REPURCHASE_READY_STATES = new Set([POSITION_STATES.pendingRepurchase]);
 
 function isAirdropTier(tier) {
   return tier.principal === AIRDROP_PRINCIPAL && (
@@ -183,10 +184,15 @@ export default function MiningPage() {
       const canClaim = isRunning
         && position.pendingReward > 0n
         && (!position.isAirdrop || airdropPromoted || totalRemainingDays > 0);
-      const cycleCurrent = totalRemainingDays <= 0 || isPendingRepurchase
+      const canRepurchase = !position.isAirdrop && (
+        isPendingRepurchase ||
+        (isRunning && totalRemainingDays <= 0) ||
+        isEnded
+      );
+      const cycleCurrent = totalRemainingDays <= 0 || isPendingRepurchase || isEnded
         ? cycleTotal
         : Math.max(0, Math.min(cycleRemainder || (rawPassedDays > 0 ? cycleTotal : 0), cycleTotal));
-      const remainingDays = totalRemainingDays <= 0 || isPendingRepurchase ? 0 : Math.max(cycleTotal - cycleCurrent, 0);
+      const remainingDays = totalRemainingDays <= 0 || isPendingRepurchase || isEnded ? 0 : Math.max(cycleTotal - cycleCurrent, 0);
 
       return {
         model: tier?.model || `T${position.tierIndex}`,
@@ -203,7 +209,7 @@ export default function MiningPage() {
         state,
         isEnded,
         isPendingRepurchase,
-        canRepurchase: !position.isAirdrop && totalRemainingDays <= 0 && (isRunning || isPendingRepurchase),
+        canRepurchase,
         canClaim,
         isAirdrop: position.isAirdrop,
         cycleCurrent,

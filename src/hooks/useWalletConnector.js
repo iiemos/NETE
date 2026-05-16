@@ -1,19 +1,22 @@
 import { useCallback, useEffect, useRef } from "react";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from "wagmi";
 import { NETE_CHAIN_ID } from "../config/neteRuntime";
 import { shortAddress } from "../utils/formatters";
 
 function createNoProviderError() {
-  const error = new Error("未检测到可用钱包连接器");
+  const error = new Error("暂无可用钱包连接方式");
   error.code = "NO_PROVIDER";
   return error;
 }
 
 export function useWalletConnector() {
   const account = useAccount();
-  const { openConnectModal } = useConnectModal();
-  const { isPending: connectPending } = useConnect();
+  const {
+    connectors,
+    connectAsync,
+    isPending: connectPending,
+    variables: connectVariables,
+  } = useConnect();
   const { disconnect } = useDisconnect();
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain();
   const latestAddressRef = useRef(account.address || "");
@@ -49,16 +52,21 @@ export function useWalletConnector() {
     });
   }, []);
 
-  async function connectWallet() {
+  async function connectWallet(connector) {
     if (latestAddressRef.current) {
       return latestAddressRef.current;
     }
 
-    if (!openConnectModal) {
+    const targetConnector = connector || connectors[0];
+    if (!targetConnector) {
       throw createNoProviderError();
     }
 
-    openConnectModal();
+    const result = await connectAsync({ connector: targetConnector, chainId: NETE_CHAIN_ID });
+    const connectedAccount = result.accounts?.[0];
+    if (typeof connectedAccount === "string") return connectedAccount;
+    if (connectedAccount?.address) return connectedAccount.address;
+
     return waitForConnectedAddress();
   }
 
@@ -79,6 +87,8 @@ export function useWalletConnector() {
     isWrongChain,
     isConnecting,
     isSwitching,
+    connectors,
+    connectingConnectorUid: connectVariables?.connector?.uid || "",
     connectWallet,
     disconnectWallet,
     ensureCorrectChain,
