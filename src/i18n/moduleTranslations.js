@@ -371,6 +371,7 @@ export const moduleTranslations = {
       estimatedUsdt: "预计扣除 USDT",
       confirm: "确认参与",
       submitting: "提交中...",
+      saleClosed: "预售未开启",
       clear: "清空",
       statusTitle: "链上状态",
       seedRemaining: "种子池剩余",
@@ -390,6 +391,7 @@ export const moduleTranslations = {
       recordsFailed: "参与记录加载失败，请稍后重试",
       messages: {
         success: "参与成功，交易哈希：{{hash}}",
+        saleClosed: "当前预售未开启或已结束，暂时无法参与。",
         failed: "参与失败，请稍后重试",
       },
     },
@@ -869,6 +871,7 @@ export const moduleTranslations = {
       estimatedUsdt: "Estimated USDT Deduction",
       confirm: "Confirm",
       submitting: "Submitting...",
+      saleClosed: "Presale Closed",
       clear: "Clear",
       statusTitle: "On-chain Status",
       seedRemaining: "Seed Pool Remaining",
@@ -888,6 +891,7 @@ export const moduleTranslations = {
       recordsFailed: "Failed to load participation records. Please try again later.",
       messages: {
         success: "Participation successful. Transaction hash: {{hash}}",
+        saleClosed: "The presale is not active or has ended.",
         failed: "Participation failed. Please try again later.",
       },
     },

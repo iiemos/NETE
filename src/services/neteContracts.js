@@ -11,6 +11,7 @@ import { wagmiConfig } from "../web3/wagmiConfig";
 
 const ONE_18 = 10n ** 18n;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const BUY_SEED_GAS_LIMIT = 1_500_000n;
 const neteCoreRepurchaseModeAbi = [
   ...neteCoreAbi,
   {
@@ -102,15 +103,21 @@ async function readOptional(request, fallback) {
   }
 }
 
-async function send({ account, address, abi, functionName, args = [] }) {
-  const hash = await writeContract(wagmiConfig, {
+async function send({ account, address, abi, functionName, args = [], gas }) {
+  const request = {
     chainId: NETE_CHAIN_ID,
     account: ensureAccount(account),
     address,
     abi,
     functionName,
     args,
-  });
+  };
+
+  if (gas) {
+    request.gas = gas;
+  }
+
+  const hash = await writeContract(wagmiConfig, request);
 
   const receipt = await waitForTransactionReceipt(wagmiConfig, {
     chainId: NETE_CHAIN_ID,
@@ -517,6 +524,7 @@ export async function buySeed(account, usdtAmount) {
     abi: neteCoreAbi,
     functionName: "buySeed",
     args: [toBigInt(usdtAmount)],
+    gas: BUY_SEED_GAS_LIMIT,
   });
 }
 

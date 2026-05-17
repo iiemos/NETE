@@ -931,7 +931,7 @@ button {
   overflow: hidden;
   border-radius: 32px;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
+  background: #000;
   box-shadow: var(--shadow-purple), var(--shadow-card);
   animation: fadeInUp 1s 0.4s var(--ease-out-expo) both;
 }
@@ -941,6 +941,7 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  background: #000;
 }
 
 .phone {

@@ -60,6 +60,7 @@ export default function BuySeedPage() {
   const seedRemaining = seedInfoQuery.data?.seedRemaining ?? 0n;
   const seedPoolInit = seedInfoQuery.data?.seedPoolInit ?? 0n;
   const seedSold = seedInfoQuery.data?.seedSold ?? 0n;
+  const presaleActive = Boolean(seedInfoQuery.data?.presaleActive);
   const usdtBalance = balanceQuery.data?.usdtBalance ?? 0n;
   const principalPoolBalance = miningDataQuery.data?.repurchaseBalance ?? 0n;
   const seedTotal = seedPoolInit > 0n ? seedPoolInit : seedRemaining + seedSold;
@@ -85,7 +86,12 @@ export default function BuySeedPage() {
   }, [parsedQuantity, seedPrice]);
   const estimatedUsdtText = estimatedUsdt > 0n ? `${formatTokenAmount(estimatedUsdt, 18, 6)} USDT` : "--";
 
-  const canSubmit = wallet.isConnected && parsedQuantity > 0n && estimatedUsdt > 0n && !submitting;
+  const canSubmit = wallet.isConnected && presaleActive && parsedQuantity > 0n && estimatedUsdt > 0n && !submitting;
+  const submitLabel = submitting
+    ? t("modules.seed.submitting")
+    : presaleActive
+      ? t("modules.seed.confirm")
+      : t("modules.seed.saleClosed");
 
   const clearForm = () => {
     setQuantityInput("");
@@ -117,7 +123,10 @@ export default function BuySeedPage() {
         queryClient.invalidateQueries({ queryKey: ["nete", "presale-records", wallet.currentAddress] }),
       ]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : t("modules.seed.messages.failed");
+      const rawMessage = error instanceof Error ? error.message : "";
+      const message = rawMessage.includes("SeedSaleClosed") || rawMessage.includes("0xc038c35b")
+        ? t("modules.seed.messages.saleClosed")
+        : rawMessage || t("modules.seed.messages.failed");
       setTxMessage(message);
     } finally {
       setSubmitting(false);
@@ -217,7 +226,7 @@ export default function BuySeedPage() {
 
           <div className="seed-actions">
             <button className="seed-button seed-button-primary" type="button" onClick={handleBuySeed} disabled={!canSubmit}>
-              {submitting ? t("modules.seed.submitting") : t("modules.seed.confirm")}
+              {submitLabel}
             </button>
             <button className="seed-button seed-button-ghost" type="button" onClick={clearForm}>
               {t("modules.seed.clear")}
