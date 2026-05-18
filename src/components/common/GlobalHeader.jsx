@@ -52,7 +52,7 @@ function findWalletIcon(connector, label) {
 }
 
 function getConnectorIcon(connector, label) {
-  if (connector?.icon) {
+  if (typeof connector?.icon === "string" && connector.icon) {
     return { src: connector.icon, className: "is-image" };
   }
 

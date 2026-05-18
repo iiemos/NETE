@@ -1,6 +1,6 @@
 import { createConfig, http } from "wagmi";
 import { bsc, bscTestnet } from "wagmi/chains";
-import { coinbaseWallet, injected, metaMask, walletConnect } from "wagmi/connectors";
+import { coinbaseWallet, injected, walletConnect } from "wagmi/connectors";
 import { NETE_CHAIN } from "../config/neteRuntime";
 
 const chains = NETE_CHAIN.id === bsc.id ? [bsc, bscTestnet] : [bscTestnet, bsc];
@@ -16,8 +16,8 @@ const metadata = {
 };
 
 const connectors = [
+  injected({ target: "metaMask", shimDisconnect: true, unstable_shimAsyncInject: 1000 }),
   injected({ shimDisconnect: true }),
-  metaMask({ dappMetadata: { name: appName } }),
   coinbaseWallet({ appName }),
   ...(walletConnectProjectId
     ? [walletConnect({ projectId: walletConnectProjectId, metadata, showQrModal: true })]
