@@ -411,6 +411,15 @@ export async function approveNeteToCore(account, amount) {
   });
 }
 
+export async function readNeteCoreAllowance(user) {
+  return read({
+    address: assertContractAddress("neteToken"),
+    abi: neteTokenAbi,
+    functionName: "allowance",
+    args: [user, assertContractAddress("neteCore")],
+  });
+}
+
 export async function activateMiner(account, tierIndex) {
   return send({
     account,
@@ -538,6 +547,15 @@ export async function approveNeteToMarket(account, amount) {
   });
 }
 
+export async function readNeteMarketAllowance(user) {
+  return read({
+    address: assertContractAddress("neteToken"),
+    abi: neteTokenAbi,
+    functionName: "allowance",
+    args: [user, assertContractAddress("neteMarket")],
+  });
+}
+
 export async function createSellOrder(account, neteAmount, pricePerNete) {
   const marketAddress = assertContractAddress("neteMarket");
   const result = await send({
@@ -568,6 +586,15 @@ export async function approveUsdtToMarket(account, amount) {
     abi: mockUsdtAbi,
     functionName: "approve",
     args: [assertContractAddress("neteMarket"), toBigInt(amount)],
+  });
+}
+
+export async function readUsdtMarketAllowance(user) {
+  return read({
+    address: assertContractAddress("usdt"),
+    abi: mockUsdtAbi,
+    functionName: "allowance",
+    args: [user, assertContractAddress("neteMarket")],
   });
 }
 

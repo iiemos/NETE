@@ -14,6 +14,7 @@ import {
   claimAllRewards,
   claimAirdropReward,
   claimReward,
+  readNeteCoreAllowance,
   readTierConfigs,
   readUserBalances,
   readUserMiningData,
@@ -166,7 +167,7 @@ export default function MiningPage() {
           extendDays: tier.extendDays,
           returnRate: isAirdrop ? "120%" : tier.returnRateText,
           maxPeriodDays: tier.maxDays,
-          withdrawFee: Number((tier.feeBps / 100).toFixed(2)),
+          withdrawFee: 20,
           remaining: Math.max(tier.maxSlots - ownedCount, 0),
           tierIndex: tier.tierIndex,
           isAirdrop,
@@ -450,7 +451,10 @@ export default function MiningPage() {
       await wallet.ensureCorrectChain();
 
       if (paymentMethod === PAYMENT_METHODS.wallet) {
-        await approveNeteToCore(wallet.currentAddress, projectedCostWei);
+        const allowance = await readNeteCoreAllowance(wallet.currentAddress);
+        if (allowance < projectedCostWei) {
+          await approveNeteToCore(wallet.currentAddress, projectedCostWei);
+        }
       }
 
       for (let index = 0; index < amountValue; index += 1) {
@@ -506,7 +510,10 @@ export default function MiningPage() {
       }
       await wallet.ensureCorrectChain();
       if (repurchaseWalletApprovalWei > 0n) {
-        await approveNeteToCore(wallet.currentAddress, repurchaseWalletApprovalWei);
+        const allowance = await readNeteCoreAllowance(wallet.currentAddress);
+        if (allowance < repurchaseWalletApprovalWei) {
+          await approveNeteToCore(wallet.currentAddress, repurchaseWalletApprovalWei);
+        }
       }
       if (isBatch) {
         await repurchaseExpiredMiners(wallet.currentAddress, REPURCHASE_PAY_MODES[repurchasePaymentMethod]);

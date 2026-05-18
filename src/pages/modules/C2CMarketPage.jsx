@@ -9,7 +9,17 @@ import C2CPageFrame from "../../components/c2c/C2CPageFrame";
 import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { getMySellOrders, getMyTakenOrders, getOrderByShortNo, getPublicOrders, getRuntimeConfig } from "../../services/neteApi";
-import { approveNeteToMarket, approveUsdtToMarket, cancelSellOrder, createSellOrder, fillOrder, readMarketConfig, readUserBalances } from "../../services/neteContracts";
+import {
+  approveNeteToMarket,
+  approveUsdtToMarket,
+  cancelSellOrder,
+  createSellOrder,
+  fillOrder,
+  readMarketConfig,
+  readNeteMarketAllowance,
+  readUserBalances,
+  readUsdtMarketAllowance,
+} from "../../services/neteContracts";
 import { formatOrderNo, formatTokenAmount, parseTokenInput, shortAddress } from "../../utils/formatters";
 import "../styles/c2c.css";
 
@@ -282,6 +292,18 @@ export default function C2CMarketPage() {
     setSearchKeyword(searchInput.trim().toLowerCase());
   };
 
+  const copyOrderNo = async (order) => {
+    const orderNo = getOrderDisplayNo(order);
+    if (!orderNo || orderNo === "--") return;
+
+    try {
+      await navigator.clipboard.writeText(orderNo);
+      setToastMessage(t("modules.c2cMarket.messages.orderCopied"));
+    } catch {
+      setToastMessage(orderNo);
+    }
+  };
+
   async function refreshOrders() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["nete", "orders", "public"] }),
@@ -304,7 +326,10 @@ export default function C2CMarketPage() {
     try {
       setActionKey(`fill-${order.orderId}`);
       await wallet.ensureCorrectChain();
-      await approveUsdtToMarket(wallet.currentAddress, order.totalUsdt);
+      const allowance = await readUsdtMarketAllowance(wallet.currentAddress);
+      if (allowance < order.totalUsdt) {
+        await approveUsdtToMarket(wallet.currentAddress, order.totalUsdt);
+      }
       const tx = await fillOrder(wallet.currentAddress, order.orderId);
       await refreshOrders();
       setToastMessage(t("modules.c2cMarket.messages.buySuccess", { hash: tx.hash }));
@@ -378,7 +403,10 @@ export default function C2CMarketPage() {
     try {
       setActionKey("create-order");
       await wallet.ensureCorrectChain();
-      await approveNeteToMarket(wallet.currentAddress, neteAmount);
+      const allowance = await readNeteMarketAllowance(wallet.currentAddress);
+      if (allowance < neteAmount) {
+        await approveNeteToMarket(wallet.currentAddress, neteAmount);
+      }
       const tx = await createSellOrder(wallet.currentAddress, neteAmount, pricePerNete);
       const shortOrderNo = tx.shortOrderNo || formatOrderNo(tx.orderNo);
       const optimisticOrder = normalizeOrder({
@@ -477,7 +505,17 @@ export default function C2CMarketPage() {
                       <div className="c2c-order-cell c2c-order-main-cell">
                         <div className="c2c-order-id-block">
                           <span className="c2c-mobile-key">{t("modules.c2cMarket.orderId")}</span>
-                          <strong className="c2c-order-id">{getOrderDisplayNo(order)}</strong>
+                          <div className="c2c-order-no-line">
+                            <strong className="c2c-order-id">{getOrderDisplayNo(order)}</strong>
+                            <button
+                              className="c2c-copy-order"
+                              type="button"
+                              onClick={() => copyOrderNo(order)}
+                              aria-label={t("modules.c2cMarket.copyOrderId")}
+                            >
+                              <Icon icon="mdi:content-copy" aria-hidden="true" />
+                            </button>
+                          </div>
                           <p className="c2c-sub-meta">{t("modules.c2cMarket.seller")} {shortAddress(order.seller)} · {t("modules.c2cMarket.listedAt")} {formatDateTime(order.createdAt, locale)}</p>
                         </div>
                         <button
@@ -547,7 +585,17 @@ export default function C2CMarketPage() {
                     <article className="c2c-order-card" key={order.orderId || order.shortOrderNo || order.orderNo}>
                       <div className="c2c-order-card-top">
                         <div>
-                          <h3 className="c2c-order-card-title">{getOrderDisplayNo(order)}</h3>
+                          <div className="c2c-order-no-line">
+                            <h3 className="c2c-order-card-title">{getOrderDisplayNo(order)}</h3>
+                            <button
+                              className="c2c-copy-order"
+                              type="button"
+                              onClick={() => copyOrderNo(order)}
+                              aria-label={t("modules.c2cMarket.copyOrderId")}
+                            >
+                              <Icon icon="mdi:content-copy" aria-hidden="true" />
+                            </button>
+                          </div>
                           <p className="c2c-sub-meta">{t("modules.c2cMarket.createdAt")} {formatDateTime(order.createdAt, locale)}</p>
                         </div>
                         <button
@@ -607,7 +655,17 @@ export default function C2CMarketPage() {
                   historyOrders.map((item) => (
                     <article className="c2c-history-item" key={`${item.orderId || item.shortOrderNo || item.orderNo}-${item.completedAt}`}>
                       <div className="c2c-history-top">
-                        <h3 className="c2c-order-card-title">{getOrderDisplayNo(item)}</h3>
+                        <div className="c2c-order-no-line">
+                          <h3 className="c2c-order-card-title">{getOrderDisplayNo(item)}</h3>
+                          <button
+                            className="c2c-copy-order"
+                            type="button"
+                            onClick={() => copyOrderNo(item)}
+                            aria-label={t("modules.c2cMarket.copyOrderId")}
+                          >
+                            <Icon icon="mdi:content-copy" aria-hidden="true" />
+                          </button>
+                        </div>
                         <span className={item.typeKey === "buy" ? "c2c-type-chip buy" : "c2c-type-chip sell"}>{item.type}</span>
                       </div>
 

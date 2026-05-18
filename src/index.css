@@ -792,6 +792,7 @@ button {
   position: relative;
   overflow: hidden; /* Overflow Hidden */
   isolation: isolate; /* Stacking Context */
+  background: #000;
 }
 
 /* Background grid */
@@ -799,21 +800,7 @@ button {
   position: absolute;
   inset: 0;
   z-index: -2;
-  background: radial-gradient(
-      ellipse 80% 50% at 60% 40%,
-      rgba(123, 77, 255, 0.15) 0%,
-      transparent 60%
-    ),
-    radial-gradient(
-      ellipse 60% 80% at 10% 90%,
-      rgba(202, 255, 0, 0.08) 0%,
-      transparent 50%
-    ),
-    radial-gradient(
-      ellipse 40% 40% at 90% 10%,
-      rgba(255, 45, 120, 0.12) 0%,
-      transparent 50%
-    );
+  background: #000;
 }
 
 .hero__grid {
@@ -831,6 +818,7 @@ button {
     black 40%,
     transparent 100%
   );
+  opacity: 0;
 }
 
 .hero__inner {
@@ -924,15 +912,14 @@ button {
 }
 
 .hero__video-wrap {
-  width: min(100%, 440px);
+  width: min(100%, 390px);
+  height: min(54svh, 520px);
   margin-inline: auto;
-  aspect-ratio: 9 / 16;
-  max-height: min(62svh, 620px);
   overflow: hidden;
   border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 0;
   background: #000;
-  box-shadow: var(--shadow-purple), var(--shadow-card);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
   animation: fadeInUp 1s 0.4s var(--ease-out-expo) both;
 }
 
@@ -1899,6 +1886,10 @@ button {
   bottom: 20%;
   left: -50px;
 }
+.glow-orb--hero-purple,
+.glow-orb--hero-acid {
+  display: none;
+}
 .glow-orb--tokens-center {
   width: 400px;
   height: 400px;
@@ -2350,8 +2341,8 @@ button {
   }
 
   .hero__video-wrap {
-    width: min(100%, 300px);
-    max-height: 50svh;
+    width: min(100%, 270px);
+    height: min(44svh, 430px);
     border-radius: 26px;
   }
 
@@ -2382,8 +2373,8 @@ button {
   }
 
   .hero__video-wrap {
-    width: min(100%, 270px);
-    max-height: 48svh;
+    width: min(100%, 240px);
+    height: min(40svh, 380px);
     border-radius: 22px;
   }
 

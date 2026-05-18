@@ -95,9 +95,9 @@ export async function getReferralInfo(user) {
   return request("/v1/referral/info", { query: { user } });
 }
 
-export async function getReferralDirects(user, { page = 1, pageSize = 50 } = {}) {
+export async function getReferralDirects(user, { page = 1, pageSize = 50, type } = {}) {
   return request("/v1/referral/directs", {
-    query: { user, page, page_size: pageSize },
+    query: { user, page, page_size: pageSize, type },
   });
 }
 

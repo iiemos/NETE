@@ -116,6 +116,89 @@
   transform: translateY(-2px);
 }
 
+.team-income-card {
+  padding: 18px;
+}
+
+.team-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 360px);
+  margin: 0 auto 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.team-tabs button {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.team-tabs button.is-active {
+  background: var(--module-accent);
+  color: #10150e;
+}
+
+.module-table.team-performance-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.module-table.team-performance-table th,
+.module-table.team-performance-table td {
+  padding: 11px 6px;
+}
+
+.module-table.team-performance-table th {
+  white-space: normal;
+}
+
+.module-table.team-performance-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-performance-table th:first-child,
+.team-performance-table td:first-child {
+  text-align: left;
+}
+
+.team-performance-table th:nth-child(2),
+.team-performance-table td:nth-child(2),
+.team-performance-table th:nth-child(3),
+.team-performance-table td:nth-child(3) {
+  text-align: center;
+}
+
+.team-performance-table th:last-child,
+.team-performance-table td:last-child {
+  text-align: right;
+}
+
+.team-address-cell {
+  min-width: 0;
+}
+
+.team-table-head-label {
+  display: inline-grid;
+  gap: 2px;
+  line-height: 1.15;
+}
+
+.team-table-head-label small {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  font-weight: 800;
+}
+
 .my-account-page {
   display: grid;
   gap: 14px;
@@ -265,6 +348,15 @@
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.my-invite-desc {
+  max-width: 620px;
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.55;
 }
 
 .my-copy-button {
@@ -528,6 +620,10 @@
 }
 
 @media (max-width: 560px) {
+  .team-tabs {
+    width: 100%;
+  }
+
   .my-account-page {
     gap: 12px;
   }

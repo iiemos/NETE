@@ -211,7 +211,7 @@ export default function BuySeedPage() {
               <input
                 className="seed-input seed-mono"
                 type="number"
-                min="100"
+                min="30"
                 step="1"
                 placeholder={t("modules.seed.quantityPlaceholder")}
                 value={quantityInput}

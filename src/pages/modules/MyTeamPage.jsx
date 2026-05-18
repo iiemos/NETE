@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import LoadingState from "../../components/common/LoadingState";
@@ -7,6 +7,33 @@ import { getReferralDirects, getReferralInfo } from "../../services/neteApi";
 import { readNetworkUserData } from "../../services/neteContracts";
 import { formatTokenAmount, shortAddress } from "../../utils/formatters";
 
+const performanceTabs = [
+  { key: "miner", labelKey: "modules.team.performanceTabs.miner" },
+  { key: "seed", labelKey: "modules.team.performanceTabs.seed" },
+];
+
+const performanceFieldMap = {
+  miner: {
+    own: ["miner_own_perf", "own_miner_perf", "mining_own_perf", "own_mining_perf", "miner_perf", "mining_perf", "own_perf"],
+    team: ["miner_team_perf", "team_miner_perf", "mining_team_perf", "team_mining_perf"],
+    subtree: ["miner_subtree_perf", "subtree_miner_perf", "mining_subtree_perf", "subtree_mining_perf", "subtree_perf", "team_perf", "total_perf"],
+    direct: ["miner_direct_perf", "direct_miner_perf", "mining_direct_perf", "direct_mining_perf", "direct_perf", "performance", "total_perf"],
+    small: ["miner_small_leg_perf", "small_miner_perf", "mining_small_leg_perf", "small_mining_perf", "small_leg_perf"],
+  },
+  seed: {
+    own: ["seed_own_perf", "own_seed_perf", "presale_own_perf", "own_presale_perf", "seed_perf", "presale_perf"],
+    team: ["seed_team_perf", "team_seed_perf", "presale_team_perf", "team_presale_perf"],
+    subtree: ["seed_subtree_perf", "subtree_seed_perf", "presale_subtree_perf", "subtree_presale_perf"],
+    direct: ["seed_direct_perf", "direct_seed_perf", "presale_direct_perf", "direct_presale_perf"],
+    small: ["seed_small_leg_perf", "small_seed_perf", "presale_small_leg_perf", "small_presale_perf"],
+  },
+};
+
+const teamCountFieldMap = {
+  miner: ["miner_team_count", "mining_team_count", "team_count", "subtree_count", "member_count", "downline_count", "direct_count"],
+  seed: ["seed_team_count", "presale_team_count", "team_count", "subtree_count", "member_count", "downline_count", "direct_count"],
+};
+
 function toItems(payload) {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.items)) return payload.items;
@@ -14,9 +41,107 @@ function toItems(payload) {
   return [];
 }
 
+function toBigIntSafe(value) {
+  if (typeof value === "bigint") return value;
+  if (value === null || value === undefined || value === "") return 0n;
+  try {
+    return BigInt(String(value));
+  } catch {
+    return 0n;
+  }
+}
+
+function pickBigInt(source, keys) {
+  for (const key of keys) {
+    if (source?.[key] !== undefined && source?.[key] !== null) {
+      return toBigIntSafe(source[key]);
+    }
+  }
+  return 0n;
+}
+
+function pickOptionalBigInt(source, keys) {
+  for (const key of keys) {
+    if (source?.[key] !== undefined && source?.[key] !== null) {
+      return toBigIntSafe(source[key]);
+    }
+  }
+  return null;
+}
+
+function pickNumber(source, keys) {
+  for (const key of keys) {
+    if (source?.[key] !== undefined && source?.[key] !== null) {
+      const value = Number(source[key]);
+      return Number.isFinite(value) ? value : 0;
+    }
+  }
+  return 0;
+}
+
+function getPerformance(source, type) {
+  const fields = performanceFieldMap[type];
+  const own = pickBigInt(source, fields.own);
+  const explicitTeam = pickOptionalBigInt(source, fields.team);
+  const subtree = pickBigInt(source, fields.subtree);
+  const team = explicitTeam ?? (subtree > own ? subtree - own : 0n);
+
+  return {
+    own,
+    team,
+    direct: pickBigInt(source, fields.direct),
+    small: pickBigInt(source, fields.small),
+  };
+}
+
+function getMemberPerformance(member, type) {
+  const fields = performanceFieldMap[type];
+  const own = pickBigInt(member, fields.own);
+  const explicitTeam = pickOptionalBigInt(member, fields.team);
+  const subtree = pickBigInt(member, fields.subtree);
+
+  return {
+    direct: pickBigInt(member, fields.direct) || own,
+    team: explicitTeam ?? (subtree > own ? subtree - own : 0n),
+    teamCount: pickNumber(member, teamCountFieldMap[type]),
+  };
+}
+
+function getFallbackDirects(source, type) {
+  if (type === "seed") {
+    return toItems(source.seed_directs ?? source.seed_direct_members ?? source.presale_directs ?? source.presale_direct_members);
+  }
+
+  return toItems(
+    source.miner_directs ??
+    source.miner_direct_members ??
+    source.mining_directs ??
+    source.mining_direct_members ??
+    source.directs ??
+    source.direct_members ??
+    source.direct_list ??
+    source.children ??
+    source.members
+  );
+}
+
+function renderMetricHeader(label) {
+  const text = String(label ?? "");
+  const match = text.match(/^(.*?)(?:（(.+)）|\s*\((.+)\))$/);
+  if (!match) return text;
+
+  return (
+    <span className="team-table-head-label">
+      <span>{match[1]}</span>
+      <small>{match[2] || match[3]}</small>
+    </span>
+  );
+}
+
 export default function MyTeamPage() {
   const { t } = useTranslation();
   const wallet = useWalletConnector();
+  const [activePerformance, setActivePerformance] = useState("miner");
 
   const referralInfoQuery = useQuery({
     queryKey: ["nete", "referral-info", wallet.currentAddress],
@@ -35,26 +160,25 @@ export default function MyTeamPage() {
   });
 
   const directListQuery = useQuery({
-    queryKey: ["nete", "referral-directs", wallet.currentAddress],
-    queryFn: () => getReferralDirects(wallet.currentAddress, { page: 1, pageSize: 50 }).catch(() => []),
+    queryKey: ["nete", "referral-directs", wallet.currentAddress, activePerformance],
+    queryFn: () => getReferralDirects(wallet.currentAddress, { page: 1, pageSize: 50, type: activePerformance }).catch(() => []),
     enabled: Boolean(wallet.currentAddress),
-    staleTime: 15_000,
+    staleTime: 0,
     retry: 0,
   });
 
   const referralInfo = referralInfoQuery.data || {};
-
   const directCount = Number(referralInfo.direct_count ?? 0);
-  const totalPerformance = formatTokenAmount(referralInfo.subtree_perf ?? 0n, 18, 2);
-  const smallLegPerformance = formatTokenAmount(referralInfo.small_leg_perf ?? 0n, 18, 2);
   const maxDepth = Number(referralInfo.max_depth ?? 0);
+  const currentLevel = referralInfo.user_level ?? networkDataQuery.data?.userLevel ?? 0;
+
   const directMembers = useMemo(
     () => {
       const apiRows = toItems(directListQuery.data);
       if (apiRows.length > 0) return apiRows;
-      return toItems(referralInfo.directs ?? referralInfo.direct_members ?? referralInfo.direct_list ?? referralInfo.children ?? referralInfo.members);
+      return getFallbackDirects(referralInfo, activePerformance);
     },
-    [directListQuery.data, referralInfo.children, referralInfo.direct_list, referralInfo.direct_members, referralInfo.directs, referralInfo.members],
+    [activePerformance, directListQuery.data, referralInfo],
   );
 
   const currentLayers = useMemo(() => {
@@ -62,8 +186,46 @@ export default function MyTeamPage() {
     return directCount >= 8 ? t("modules.team.layersRange") : t("modules.team.layers", { count: Math.min(directCount, maxDepth || directCount) });
   }, [directCount, maxDepth, t]);
 
+  const seedPerformance = getPerformance(referralInfo, "seed");
+  const minerPerformance = getPerformance(referralInfo, "miner");
+  const totalPerformance = seedPerformance.team + minerPerformance.team;
+  const smallLegPerformance = seedPerformance.small + minerPerformance.small;
+  const directListLoading = directListQuery.isLoading || referralInfoQuery.isLoading;
   const teamLoading = referralInfoQuery.isLoading || networkDataQuery.isLoading;
-  const directListLoading = directListQuery.isLoading || teamLoading;
+
+  const renderPerformanceRows = () => {
+    if (directListLoading) {
+      return (
+        <tr className="module-loading-row">
+          <td colSpan={4}>
+            <LoadingState variant="list" rows={4} cells={4} />
+          </td>
+        </tr>
+      );
+    }
+
+    if (directMembers.length === 0) {
+      return (
+        <tr>
+          <td colSpan={4} className="text-center text-white/65">{t("modules.team.emptyIncomeDetails")}</td>
+        </tr>
+      );
+    }
+
+    return directMembers.map((member, index) => {
+      const address = member.address ?? member.user ?? member.wallet ?? member.account ?? "";
+      const performance = getMemberPerformance(member, activePerformance);
+
+      return (
+        <tr key={`${activePerformance}-${address || "direct"}-${index}`}>
+          <td className="team-address-cell font-mono text-xs text-[#caff00]">{address ? shortAddress(address, 4, 4) : "--"}</td>
+          <td>{performance.teamCount}</td>
+          <td>{formatTokenAmount(performance.direct, 18, 1)}</td>
+          <td>{formatTokenAmount(performance.team, 18, 1)}</td>
+        </tr>
+      );
+    });
+  };
 
   return (
     <section className="module-page space-y-6">
@@ -89,13 +251,13 @@ export default function MyTeamPage() {
         <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.performance")}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
-            {teamLoading ? <LoadingState compact /> : totalPerformance}
+            {teamLoading ? <LoadingState compact /> : formatTokenAmount(totalPerformance, 18, 2)}
           </div>
         </article>
         <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.zonePerformance")}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
-            {teamLoading ? <LoadingState compact /> : smallLegPerformance}
+            {teamLoading ? <LoadingState compact /> : formatTokenAmount(smallLegPerformance, 18, 2)}
           </div>
         </article>
         <article className="module-stat-card p-4">
@@ -107,51 +269,38 @@ export default function MyTeamPage() {
         <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.level")}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
-            {teamLoading ? <LoadingState compact /> : `V${networkDataQuery.data?.userLevel ?? 0}`}
+            {teamLoading ? <LoadingState compact /> : `V${currentLevel}`}
           </div>
         </article>
       </div>
 
-      <article className="module-card p-5">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-display text-base font-bold tracking-wide text-white md:text-xl">{t("modules.team.directListTitle")}</h2>
-          <span className="text-xs text-white/50">{t("modules.team.directCountValue", { count: directCount })}</span>
+      <article className="module-card team-income-card">
+        <div className="team-tabs" role="tablist" aria-label={t("modules.team.performanceTabLabel")}>
+          {performanceTabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={activePerformance === tab.key}
+              className={activePerformance === tab.key ? "is-active" : ""}
+              onClick={() => setActivePerformance(tab.key)}
+            >
+              {t(tab.labelKey)}
+            </button>
+          ))}
         </div>
+
         <div className="module-table-wrap">
-          <table className="module-table md:text-sm">
+          <table className="module-table team-performance-table md:text-sm">
             <thead>
               <tr>
                 <th>{t("modules.team.address")}</th>
-                <th>{t("modules.team.performance")}</th>
-                <th>{t("modules.team.level")}</th>
+                <th>{t("modules.team.teamCount")}</th>
+                <th>{renderMetricHeader(t("modules.team.directPerformance"))}</th>
+                <th>{renderMetricHeader(t("modules.team.teamPerformance"))}</th>
               </tr>
             </thead>
-            <tbody>
-              {directListLoading ? (
-                <tr className="module-loading-row">
-                  <td colSpan={3}>
-                    <LoadingState variant="list" rows={4} cells={3} />
-                  </td>
-                </tr>
-              ) : directMembers.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="text-center text-white/65">{t("modules.team.emptyDirects")}</td>
-                </tr>
-              ) : (
-                directMembers.map((member, index) => {
-                  const address = member.address ?? member.user ?? member.wallet ?? member.account ?? "";
-                  const performance = member.performance ?? member.own_perf ?? member.total_perf ?? member.subtree_perf ?? 0n;
-                  const level = member.level ?? member.user_level ?? member.vip_level ?? 0;
-                  return (
-                    <tr key={`${address || "direct"}-${index}`}>
-                      <td className="font-mono text-xs text-[#caff00]">{address ? shortAddress(address) : "--"}</td>
-                      <td>{formatTokenAmount(performance, 18, 2)} NETE</td>
-                      <td>V{level}</td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
+            <tbody>{renderPerformanceRows()}</tbody>
           </table>
         </div>
       </article>

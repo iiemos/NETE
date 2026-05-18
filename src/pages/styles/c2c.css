@@ -661,6 +661,38 @@
   word-break: break-word;
 }
 
+.c2c-order-no-line {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+}
+
+.c2c-copy-order {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(194, 255, 26, 0.24);
+  border-radius: 50%;
+  background: rgba(194, 255, 26, 0.08);
+  color: var(--c2c-accent);
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+
+.c2c-copy-order:hover {
+  border-color: rgba(194, 255, 26, 0.45);
+  background: rgba(194, 255, 26, 0.14);
+  transform: translateY(-1px);
+}
+
+.c2c-copy-order svg {
+  width: 15px;
+  height: 15px;
+}
+
 .c2c-sub-meta {
   margin: 6px 0 0;
   color: var(--c2c-muted);
