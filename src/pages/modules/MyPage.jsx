@@ -7,6 +7,8 @@ import { getClaimMessage, getIncomeLedger, getIncomeOverview, getPerformanceLegs
 import { claimWithSignature, readNetworkUserData, readUserBalances, readUserMiningData } from "../../services/neteContracts";
 import { formatTokenAmount, formatUnixTime, shortAddress } from "../../utils/formatters";
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
 function toItems(payload) {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.items)) return payload.items;
@@ -22,6 +24,18 @@ function toBigIntSafe(value) {
   } catch {
     return 0n;
   }
+}
+
+function pickAccountField(account, name, index) {
+  if (!account) return undefined;
+  if (account[name] !== undefined) return account[name];
+  if (Array.isArray(account) && account[index] !== undefined) return account[index];
+  return undefined;
+}
+
+function normalizeReferrer(value) {
+  const address = String(value || "");
+  return address && address.toLowerCase() !== ZERO_ADDRESS ? address : "";
 }
 
 function normalizeLedgerRow(row, index) {
@@ -116,10 +130,19 @@ export default function MyPage() {
   const balances = balancesQuery.data || {};
   const network = networkDataQuery.data || {};
   const miningData = miningDataQuery.data || {};
+  const referralAccount = network.referralAccount || {};
   const currentLevel = performanceLegs.user_level ?? referral.user_level ?? overview.user_level ?? network.userLevel ?? 0;
+  const joinedAt = Number(pickAccountField(referralAccount, "updatedAt", 3) || 0);
+  const referrerAddress = normalizeReferrer(
+    pickAccountField(referralAccount, "referrer", 0)
+      ?? referral.referrer
+      ?? referral.referrer_address
+      ?? referral.parent
+      ?? referral.parent_address,
+  );
   const ownPerformance = toBigIntSafe(referral.own_perf);
-  const teamPerformance = toBigIntSafe(performanceLegs.team_perf ?? referral.team_perf);
-  const zonePerformance = toBigIntSafe(performanceLegs.small_leg_perf ?? referral.small_leg_perf);
+  const teamPerformance = toBigIntSafe(performanceLegs.team_perf);
+  const zonePerformance = toBigIntSafe(performanceLegs.small_leg_perf);
   const totalDividend = toBigIntSafe(overview.dividend_income_total) + toBigIntSafe(overview.v9_income_total);
   const profitPoolBalance = useMemo(
     () => (miningData.positions || []).reduce((sum, position) => sum + (position.profit || 0n), 0n),
@@ -215,8 +238,12 @@ export default function MyPage() {
 
           <div className="my-account-row" aria-label={t("modules.my.accountInfo")}>
             <article className="my-account-chip">
-              <span className="my-account-label">{t("modules.my.summary.wallet")}</span>
-              <strong>{wallet.isConnected ? shortAddress(wallet.currentAddress) : t("modules.my.disconnected")}</strong>
+              <span className="my-account-label">{t("modules.my.summary.joinedAt")}</span>
+              <strong>{wallet.isConnected ? formatUnixTime(joinedAt) : t("modules.my.disconnected")}</strong>
+            </article>
+            <article className="my-account-chip">
+              <span className="my-account-label">{t("modules.my.summary.referrer")}</span>
+              <strong>{wallet.isConnected ? (referrerAddress ? shortAddress(referrerAddress) : t("modules.my.unbound")) : t("modules.my.disconnected")}</strong>
             </article>
             <article className="my-account-chip my-account-chip--vip">
               <span className="my-account-label">{t("modules.my.summary.level")}</span>
@@ -230,12 +257,11 @@ export default function MyPage() {
 
       <section className="my-account-panel my-invite-panel" aria-label={t("modules.my.inviteTitle")}>
         <div>
-          <span className="my-account-label">{t("modules.my.inviteTitle")}</span>
           <p className="my-invite-desc">{t("modules.my.inviteDesc")}</p>
           <span className="my-invite-link">{inviteLink}</span>
         </div>
         <button className="my-copy-button" type="button" disabled={!wallet.currentAddress} onClick={copyInviteLink}>
-          {t("modules.my.copy")}
+          {t("modules.my.share")}
         </button>
       </section>
       {copyNotice ? <p className="my-account-note my-account-note--flush" aria-live="polite">{copyNotice}</p> : null}

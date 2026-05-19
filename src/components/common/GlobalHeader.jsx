@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
 import logoIcon from "../../assets/images/logo-icon.svg";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
+import { languageOptions } from "../../i18n";
 
 const navItems = [
   { key: "home", to: "/" },
@@ -14,7 +15,7 @@ const navItems = [
   { key: "my", to: "/my" },
 ];
 const walletIconDefs = [
-  { keys: ["metamask", "meta mask"], icon: "logos:metamask-icon", className: "is-official" },
+  { keys: ["metamask", "meta mask"], icon: "logos:metamask-icon", className: "is-metamask" },
   { keys: ["coinbase"], icon: "token-branded:coinbase", className: "is-coinbase" },
   { keys: ["walletconnect", "wallet connect"], icon: "logos:walletconnect", className: "is-official" },
   { keys: ["injected", "browser wallet"], icon: "solar:wallet-money-bold", className: "is-injected" },
@@ -29,7 +30,12 @@ function mobileNavClassName(isActive) {
 }
 
 function normalizeLanguage(language) {
-  return language?.toLowerCase().startsWith("en") ? "en" : "zh";
+  const value = String(language || "").toLowerCase();
+  if (value.startsWith("zh-tw") || value.startsWith("zh-hk") || value.includes("hant")) return "zh-TW";
+  if (value.startsWith("en")) return "en";
+  if (value.startsWith("ja")) return "ja";
+  if (value.startsWith("ko")) return "ko";
+  return "zh";
 }
 
 function getConnectorLabel(connector) {
@@ -296,20 +302,16 @@ export default function GlobalHeader() {
                   role="menu"
                   aria-hidden={!languageMenuOpen}
                 >
-                  <button
-                    className={currentLanguage === "zh" ? "nav__lang-option is-active" : "nav__lang-option"}
-                    onClick={() => switchLanguage("zh")}
-                    role="menuitem"
-                  >
-                    {t("common.chinese")}
-                  </button>
-                  <button
-                    className={currentLanguage === "en" ? "nav__lang-option is-active" : "nav__lang-option"}
-                    onClick={() => switchLanguage("en")}
-                    role="menuitem"
-                  >
-                    {t("common.english")}
-                  </button>
+                  {languageOptions.map((item) => (
+                    <button
+                      className={currentLanguage === item.key ? "nav__lang-option is-active" : "nav__lang-option"}
+                      onClick={() => switchLanguage(item.key)}
+                      role="menuitem"
+                      key={item.key}
+                    >
+                      {t(item.labelKey)}
+                    </button>
+                  ))}
                 </div>
               </div>
               <button

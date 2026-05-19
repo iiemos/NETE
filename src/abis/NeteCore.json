@@ -6,7 +6,59 @@
   },
   {
     "type": "function",
+    "name": "AIRDROP_BASE_CYCLE_DAYS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "AIRDROP_CYCLE_STEP_DAYS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "AIRDROP_MAX_CYCLE_DAYS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint32",
+        "internalType": "uint32"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "AIRDROP_POOL_INIT",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "CHECKIN_REWARD_AMOUNT",
     "inputs": [],
     "outputs": [
       {
@@ -203,16 +255,6 @@
         "name": "composeAt",
         "type": "uint256",
         "internalType": "uint256"
-      },
-      {
-        "name": "expireAt",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "promoted",
-        "type": "bool",
-        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -229,24 +271,6 @@
       }
     ],
     "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "batchGrantFragments",
-    "inputs": [
-      {
-        "name": "users",
-        "type": "address[]",
-        "internalType": "address[]"
-      },
-      {
-        "name": "amounts",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -270,6 +294,32 @@
   },
   {
     "type": "function",
+    "name": "checkInWithBABT",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "checkinProfitBalance",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "claimAirdropReward",
     "inputs": [
       {
@@ -290,13 +340,6 @@
   },
   {
     "type": "function",
-    "name": "claimAndActivateAirdropMiner",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "claimReward",
     "inputs": [
       {
@@ -305,13 +348,6 @@
         "internalType": "uint256"
       }
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "composeAirdropMiner",
-    "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -337,22 +373,16 @@
   },
   {
     "type": "function",
-    "name": "fragmentBalance",
+    "name": "extendSeedEndTime",
     "inputs": [
       {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
+        "name": "newSeedEndTime",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
-    "stateMutability": "view"
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -485,24 +515,6 @@
   },
   {
     "type": "function",
-    "name": "grantFragments",
-    "inputs": [
-      {
-        "name": "user",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "initialize",
     "inputs": [
       {
@@ -541,6 +553,25 @@
   },
   {
     "type": "function",
+    "name": "lastCheckinAt",
+    "inputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "nete",
     "inputs": [],
     "outputs": [
@@ -574,25 +605,6 @@
         "name": "",
         "type": "uint256",
         "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "nftFragmentClaimed",
-    "inputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
       }
     ],
     "stateMutability": "view"
@@ -715,19 +727,6 @@
   },
   {
     "type": "function",
-    "name": "promoteAirdropMiner",
-    "inputs": [
-      {
-        "name": "posId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "proxiableUUID",
     "inputs": [],
     "outputs": [
@@ -787,6 +786,19 @@
   },
   {
     "type": "function",
+    "name": "repurchaseExpiredMinersWithMode",
+    "inputs": [
+      {
+        "name": "payMode",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "repurchasePaused",
     "inputs": [],
     "outputs": [
@@ -797,6 +809,24 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "repurchaseWithMode",
+    "inputs": [
+      {
+        "name": "posId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "payMode",
+        "type": "uint8",
+        "internalType": "uint8"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -1174,6 +1204,19 @@
   },
   {
     "type": "function",
+    "name": "withdrawCheckInProfit",
+    "inputs": [
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "withdrawNete",
     "inputs": [
       {
@@ -1248,31 +1291,6 @@
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
-      },
-      {
-        "name": "expireAt",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "AirdropMinerPromoted",
-    "inputs": [
-      {
-        "name": "user",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "positionId",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -1295,6 +1313,31 @@
       },
       {
         "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "CheckedIn",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "checkinAt",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -1428,25 +1471,6 @@
   },
   {
     "type": "event",
-    "name": "FragmentsGranted",
-    "inputs": [
-      {
-        "name": "user",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Initialized",
     "inputs": [
       {
@@ -1482,37 +1506,6 @@
       },
       {
         "name": "principal",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "NFTFragmentClaimed",
-    "inputs": [
-      {
-        "name": "user",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "nftContract",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "positionId",
         "type": "uint256",
         "indexed": false,
         "internalType": "uint256"
@@ -1661,6 +1654,43 @@
   },
   {
     "type": "event",
+    "name": "RepurchasePayment",
+    "inputs": [
+      {
+        "name": "user",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "payMode",
+        "type": "uint8",
+        "indexed": false,
+        "internalType": "uint8"
+      },
+      {
+        "name": "fromRepurchasePool",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "fromWallet",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "totalAmount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Repurchased",
     "inputs": [
       {
@@ -1761,6 +1791,25 @@
         "type": "address",
         "indexed": true,
         "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SeedEndTimeUpdated",
+    "inputs": [
+      {
+        "name": "oldSeedEndTime",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "newSeedEndTime",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -1927,17 +1976,17 @@
   },
   {
     "type": "error",
-    "name": "AirdropExpired",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "AlreadyPromoted",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "BelowMinPurchase",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CheckInDisabledAfterMinerPurchased",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "CheckInTooFrequent",
     "inputs": []
   },
   {
@@ -1973,11 +2022,6 @@
   },
   {
     "type": "error",
-    "name": "FragmentInsufficient",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InsufficientBalance",
     "inputs": []
   },
@@ -1998,6 +2042,11 @@
   },
   {
     "type": "error",
+    "name": "InvalidRepurchasePayMode",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "InvalidTier",
     "inputs": []
   },
@@ -2009,11 +2058,6 @@
   {
     "type": "error",
     "name": "MustRepurchaseExpiredMiner",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "NFTAlreadyClaimed",
     "inputs": []
   },
   {
@@ -2034,11 +2078,6 @@
   {
     "type": "error",
     "name": "NoProfitToWithdraw",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "NoRealMinerPurchased",
     "inputs": []
   },
   {
@@ -2101,11 +2140,6 @@
   {
     "type": "error",
     "name": "PresaleTierSoldOut",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "PromotionWindowClosed",
     "inputs": []
   },
   {

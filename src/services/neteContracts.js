@@ -250,7 +250,7 @@ export async function readUserBalances(user) {
 
 export async function readUserMiningData(user) {
   const coreAddress = assertContractAddress("neteCore");
-  const [positionIds, airdropInfo, timeUnit] = await Promise.all([
+  const [positionIds, airdropInfoRaw, timeUnit] = await Promise.all([
     read({ address: coreAddress, abi: neteCoreAbi, functionName: "getUserPositions", args: [user] }),
     readOptional(
       { address: coreAddress, abi: neteCoreAbi, functionName: "airdropInfos", args: [user] },
@@ -260,13 +260,24 @@ export async function readUserMiningData(user) {
   ]);
   const timeUnitSeconds = Number(timeUnit || 600n) || 600;
   const timeUnitBigInt = BigInt(timeUnitSeconds);
-  const [repurchaseBalance, fragmentBalance, airdropRemaining, requireSBT, sbtContract, nftFragmentClaimed] = await Promise.all([
+  const airdropInfo = {
+    composed: Boolean(pickTierField(airdropInfoRaw, "composed", 0)),
+    positionId: toBigInt(pickTierField(airdropInfoRaw, "positionId", 1)),
+    composeAt: toBigInt(pickTierField(airdropInfoRaw, "composeAt", 2)),
+    expireAt: toBigInt(pickTierField(airdropInfoRaw, "expireAt", 3)),
+    promoted: Boolean(pickTierField(airdropInfoRaw, "promoted", 4)),
+  };
+
+  const [repurchaseBalance, fragmentBalance, airdropRemaining, requireSBT, sbtContract, nftFragmentClaimed, checkinProfitBalance, lastCheckinAt, checkinRewardAmount] = await Promise.all([
     readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "repurchaseBalance", args: [user] }, 0n),
     readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "fragmentBalance", args: [user] }, 0n),
     readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "airdropRemaining" }, 0n),
     readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "requireSBT" }, false),
     readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "sbtContract" }, ZERO_ADDRESS),
     readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "nftFragmentClaimed", args: [user] }, false),
+    readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "checkinProfitBalance", args: [user] }, 0n),
+    readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "lastCheckinAt", args: [user] }, 0n),
+    readOptional({ address: coreAddress, abi: neteCoreAbi, functionName: "CHECKIN_REWARD_AMOUNT" }, 0n),
   ]);
   const requiresNft = Boolean(requireSBT);
   const configuredBabtAddress = getContractAddress("babt");
@@ -319,6 +330,9 @@ export async function readUserMiningData(user) {
     repurchaseBalance,
     fragmentBalance,
     airdropRemaining,
+    checkinProfitBalance,
+    lastCheckinAt,
+    checkinRewardAmount,
     airdropEligibility: {
       requireSBT: requiresNft,
       sbtContract: effectiveSbtContract || sbtContract,
@@ -455,6 +469,25 @@ export async function claimAndActivateAirdropMiner(account) {
     address: assertContractAddress("neteCore"),
     abi: neteCoreAbi,
     functionName: "claimAndActivateAirdropMiner",
+  });
+}
+
+export async function checkInWithBABT(account) {
+  return send({
+    account,
+    address: assertContractAddress("neteCore"),
+    abi: neteCoreAbi,
+    functionName: "checkInWithBABT",
+  });
+}
+
+export async function withdrawCheckInProfit(account, amount) {
+  return send({
+    account,
+    address: assertContractAddress("neteCore"),
+    abi: neteCoreAbi,
+    functionName: "withdrawCheckInProfit",
+    args: [toBigInt(amount)],
   });
 }
 

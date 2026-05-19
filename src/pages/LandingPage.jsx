@@ -7,12 +7,26 @@ import FeaturesSection from "../components/landing/FeaturesSection";
 import FooterSection from "../components/landing/FooterSection";
 import HeroSection from "../components/landing/HeroSection";
 import MarketsSection from "../components/landing/MarketsSection";
+import announcementsData from "../data/announcements.json";
+
+function normalizeAnnouncementLanguage(language) {
+  const value = String(language || "").toLowerCase();
+  if (value.startsWith("zh-tw") || value.startsWith("zh-hk") || value.includes("hant")) return "zh-TW";
+  if (value.startsWith("en")) return "en";
+  if (value.startsWith("ja")) return "ja";
+  if (value.startsWith("ko")) return "ko";
+  return "zh";
+}
 
 export default function LandingPage() {
-  const { t } = useTranslation();
+  const { i18n, t } = useTranslation();
   const modelMechanisms = t("landing.project.modelMechanisms", { returnObjects: true });
   const roadmapItems = t("landing.project.roadmapItems", { returnObjects: true });
   const contractItems = t("landing.project.contractItems", { returnObjects: true });
+  const teamSectionItems = t("landing.team.items", { returnObjects: true });
+  const announcementLanguage = normalizeAnnouncementLanguage(i18n.resolvedLanguage || i18n.language);
+  const announcements = announcementsData[announcementLanguage] || announcementsData.zh;
+  const teamItems = Array.isArray(teamSectionItems) ? teamSectionItems : [];
 
   useEffect(() => {
     document.title = "NETE";
@@ -79,80 +93,16 @@ export default function LandingPage() {
       <main id="main-content" tabIndex={-1}>
         <HeroSection />
 
-        <div className="stats-bar" role="marquee" aria-label="Live market data" aria-live="off">
+        <div className="stats-bar stats-bar--announcements" role="marquee" aria-label={t("landing.announcements.aria")} aria-live="off">
           <div className="stats-bar__track" aria-hidden="true">
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">BTC</span>
-              <span className="stats-bar__value">$67,234.50</span>
-              <span className="stats-bar__change--up">▲ 3.24%</span>
-            </div>
-            <div className="stats-bar__dot"></div>
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">ETH</span>
-              <span className="stats-bar__value">$2,321.79</span>
-              <span className="stats-bar__change--down">▼ 1.18%</span>
-            </div>
-            <div className="stats-bar__dot"></div>
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">BNB</span>
-              <span className="stats-bar__value">$416.32</span>
-              <span className="stats-bar__change--up">▲ 5.67%</span>
-            </div>
-            <div className="stats-bar__dot"></div>
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">SOL</span>
-              <span className="stats-bar__value">$183.44</span>
-              <span className="stats-bar__change--up">▲ 8.91%</span>
-            </div>
-            <div className="stats-bar__dot"></div>
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">MATIC</span>
-              <span className="stats-bar__value">$0.987</span>
-              <span className="stats-bar__change--down">▼ 2.33%</span>
-            </div>
-            <div className="stats-bar__dot"></div>
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">AVAX</span>
-              <span className="stats-bar__value">$38.12</span>
-              <span className="stats-bar__change--up">▲ 4.55%</span>
-            </div>
-            <div className="stats-bar__dot"></div>
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">NFT Cap</span>
-              <span className="stats-bar__value">$2.16B</span>
-              <span className="stats-bar__change--up">▲ 2.91%</span>
-            </div>
-            <div className="stats-bar__dot"></div>
-
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">BTC</span>
-              <span className="stats-bar__value">$67,234.50</span>
-              <span className="stats-bar__change--up">▲ 3.24%</span>
-            </div>
-            <div className="stats-bar__dot"></div>
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">ETH</span>
-              <span className="stats-bar__value">$2,321.79</span>
-              <span className="stats-bar__change--down">▼ 1.18%</span>
-            </div>
-            <div className="stats-bar__dot"></div>
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">BNB</span>
-              <span className="stats-bar__value">$416.32</span>
-              <span className="stats-bar__change--down">▼ 0.45%</span>
-            </div>
-            <div className="stats-bar__dot"></div>
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">SOL</span>
-              <span className="stats-bar__value">$183.44</span>
-              <span className="stats-bar__change--up">▲ 8.91%</span>
-            </div>
-            <div className="stats-bar__dot"></div>
-            <div className="stats-bar__item">
-              <span className="stats-bar__label">NFT Cap</span>
-              <span className="stats-bar__value">$2.16B</span>
-              <span className="stats-bar__change--up">▲ 2.91%</span>
-            </div>
+            {[...announcements, ...announcements].map((item, index) => (
+              <div className="stats-bar__item" key={`${item.title}-${index}`}>
+                <span className="stats-bar__label">{t("landing.announcements.label")}</span>
+                <span className="stats-bar__value">{item.title}</span>
+                <span className="stats-bar__change--up">{item.desc}</span>
+                <div className="stats-bar__dot"></div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -203,6 +153,35 @@ export default function LandingPage() {
                 <article key={item.name} className="feature-card" tabIndex={0}>
                   <h3 className="feature-card__title">{item.name}</h3>
                   <p className="text-sm text-white/80">{item.detail}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="section team-section" aria-labelledby="team-heading">
+          <div className="container">
+            <div className="section__header">
+              <span className="section__eyebrow" aria-hidden="true">
+                {t("landing.team.eyebrow")}
+              </span>
+              <h2 className="section__title" id="team-heading">
+                {t("landing.team.title")}
+              </h2>
+              <p className="section__desc">
+                {t("landing.team.desc")}
+              </p>
+            </div>
+
+            <div className="features-grid features-grid--team">
+              {teamItems.map((item, index) => (
+                <article className={index === 0 ? "feature-card feature-card--highlight" : "feature-card"} tabIndex={0} key={item.title}>
+                  <div className="feature-card__icon feature-card__icon--teal" role="img" aria-label={item.title}>
+                    <Icon className="feature-card__icon-svg" icon={index === 0 ? "mdi:shield-star-outline" : "mdi:source-branch"} />
+                  </div>
+                  <h3 className="feature-card__title">{item.title}</h3>
+                  <p className="feature-card__desc">{item.desc}</p>
+                  <span className="feature-card__tag">{item.tag}</span>
                 </article>
               ))}
             </div>

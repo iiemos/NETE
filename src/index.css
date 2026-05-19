@@ -1257,6 +1257,10 @@ button {
   overflow: hidden; /* Overflow Hidden */
 }
 
+.stats-bar--announcements {
+  background: #050705;
+}
+
 .stats-bar__track {
   display: flex;
   gap: var(--space-16);
@@ -1272,6 +1276,10 @@ button {
   font-size: var(--text-sm);
   font-family: var(--font-display);
   letter-spacing: 0.03em;
+}
+
+.stats-bar--announcements .stats-bar__item {
+  gap: var(--space-4);
 }
 
 .stats-bar__label {
@@ -1345,6 +1353,11 @@ button {
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-6);
+}
+
+.features-grid--team {
+  max-width: 900px;
+  margin-inline: auto;
 }
 
 .feature-card {
@@ -1718,9 +1731,9 @@ button {
 }
 
 .footer__inner {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
+  display: flex;
+  justify-content: center;
+  text-align: center;
 }
 
 .footer__brand p {
@@ -2425,6 +2438,9 @@ button {
   }
   .features-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+  .features-grid--team {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .stats-grid {
     grid-template-columns: repeat(4, 1fr);

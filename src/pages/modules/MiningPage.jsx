@@ -10,6 +10,7 @@ import { getRuntimeConfig } from "../../services/neteApi";
 import {
   activateMiner,
   approveNeteToCore,
+  checkInWithBABT,
   claimAndActivateAirdropMiner,
   claimAllRewards,
   claimAirdropReward,
@@ -20,9 +21,10 @@ import {
   readUserMiningData,
   repurchaseExpiredMiners,
   repurchaseMiner,
+  withdrawCheckInProfit,
   withdrawAllProfit,
 } from "../../services/neteContracts";
-import { formatTokenAmount } from "../../utils/formatters";
+import { formatTokenAmount, formatUnixTime } from "../../utils/formatters";
 
 const MINING_VIEWS = [
   { key: "buy-miners", labelKey: "modules.mining.tabs.buyMiners" },
@@ -78,6 +80,24 @@ function getPositionCycleDays(tier, position) {
   return Math.max(1, maxDays > 0 ? Math.min(cycleDays, maxDays) : cycleDays);
 }
 
+function getMinerModelSuffix(amount, t) {
+  if (amount === 100) return t("modules.mining.buy.modelSuffix.starter");
+  if (amount === 300 || amount === 500) return t("modules.mining.buy.modelSuffix.classic");
+  if (amount === 1000 || amount === 3000) return t("modules.mining.buy.modelSuffix.hot");
+  if ([5000, 10000, 30000, 50000].includes(amount)) return t("modules.mining.buy.modelSuffix.advanced");
+  return "";
+}
+
+function getMinerModelName(amountText, t) {
+  const amount = Number(String(amountText || "").replace(/,/g, ""));
+  const suffix = getMinerModelSuffix(amount, t);
+  return suffix ? `${amountText}型·${amountText}NETE ${suffix}` : `${amountText}型·${amountText}NETE`;
+}
+
+function getMinerAmountText(value) {
+  return String(value || "0").replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+}
+
 export default function MiningPage() {
   const { t } = useTranslation();
   const wallet = useWalletConnector();
@@ -99,6 +119,8 @@ export default function MiningPage() {
   const [repurchaseTarget, setRepurchaseTarget] = useState(null);
   const [claimingId, setClaimingId] = useState("");
   const [withdrawingAll, setWithdrawingAll] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [withdrawingCheckin, setWithdrawingCheckin] = useState(false);
 
   const tiersQuery = useQuery({
     queryKey: ["nete", "miner-tiers"],
@@ -143,18 +165,17 @@ export default function MiningPage() {
 
   const machineModels = useMemo(
     () => {
-      const badges = t("modules.mining.buy.badges", { returnObjects: true });
-      const badgeList = Array.isArray(badges) ? badges : [];
-
-      return (tiersQuery.data || []).map((tier, index) => {
+      return (tiersQuery.data || []).map((tier) => {
         const isAirdrop = isAirdropTier(tier);
         const ownedCount = userTierCounts.get(tier.tierIndex) || 0;
+        const amountText = getMinerAmountText(tier.principalText);
 
         return {
-          model: t("modules.mining.modelName", { amount: formatTokenAmount(tier.principal, 18, 0) }),
-          badge: isAirdrop ? t("modules.mining.buy.airdropBadge") : badgeList[index % badgeList.length] || "",
+          model: getMinerModelName(amountText, t),
+          badge: isAirdrop ? t("modules.mining.buy.airdropBadge") : "",
           price: Number(tier.principalText),
           principalWei: tier.principal,
+          ownedCount,
           unitCount: tier.maxSlots,
           periodDays: tier.cycleDays,
           extendDays: tier.extendDays,
@@ -174,14 +195,19 @@ export default function MiningPage() {
     const tiersMap = new Map(machineModels.map((model) => [model.tierIndex, model]));
     const positions = miningDataQuery.data?.positions || [];
     const timeUnitSeconds = miningDataQuery.data?.timeUnitSeconds || 600;
-    const airdropPromoted = Boolean(miningDataQuery.data?.airdropInfo?.promoted);
+    const airdropPromoted = Boolean(miningDataQuery.data?.airdropInfo?.promoted)
+      || positions.some((position) => !position.isAirdrop);
 
     return positions.map((position) => {
       const tier = tiersMap.get(position.tierIndex);
       const configuredCycleTotal = getPositionCycleDays(tier, position);
       const totalRemainingDays = formatDaysByEpoch(position.endAt, timeUnitSeconds);
       const cycleTotal = Math.max(configuredCycleTotal, totalRemainingDays);
-      const state = Number(position.state);
+      const rawState = Number(position.state);
+      const hasReachedEnd = !position.isAirdrop && Number(position.endAt || 0) > 0 && totalRemainingDays <= 0;
+      const state = rawState === POSITION_STATES.running && hasReachedEnd
+        ? POSITION_STATES.pendingRepurchase
+        : rawState;
       const isRunning = state === POSITION_STATES.running;
       const isEnded = state === POSITION_STATES.ended;
       const isPendingRepurchase = REPURCHASE_READY_STATES.has(state);
@@ -198,12 +224,13 @@ export default function MiningPage() {
         model: tier?.model || `T${position.tierIndex}`,
         quantity: 1,
         cycleProgress: t("modules.mining.units.positionProgress", { current: cycleCurrent, total: cycleTotal }),
-        output: `${formatTokenAmount(position.grossClaimed, 18, 4)} NETE`,
-        pending: `${formatTokenAmount(position.pendingReward, 18, 4)} NETE`,
-        profit: `${formatTokenAmount(position.profit, 18, 4)} NETE`,
+        output: formatTokenAmount(position.grossClaimed, 18, 4),
+        pending: formatTokenAmount(position.pendingReward, 18, 4),
+        profit: formatTokenAmount(position.profit, 18, 4),
         profitWei: position.profit,
         pendingWei: position.pendingReward,
         principalWei: position.principal,
+        purchaseTime: formatUnixTime(position.startAt),
         remainingDays,
         positionId: position.positionId,
         state,
@@ -222,11 +249,20 @@ export default function MiningPage() {
     const info = miningDataQuery.data?.airdropInfo;
     const related = (miningDataQuery.data?.positions || []).find((item) => item.positionId === String(info?.positionId || ""));
     const timeUnitSeconds = miningDataQuery.data?.timeUnitSeconds || 600;
+    const permanent = Boolean(info?.promoted)
+      || Boolean(info?.composed && related && Number(related.endAt || 0) === 0)
+      || (Boolean(info?.composed) && (miningDataQuery.data?.positions || []).some((item) => !item.isAirdrop));
 
     return {
       synthesized: Boolean(info?.composed),
-      permanent: Boolean(info?.promoted),
-      validityLeftDays: info?.expireAt ? formatDaysByEpoch(Number(info.expireAt), timeUnitSeconds) : 0,
+      permanent,
+      validityLeftDays: permanent
+        ? 0
+        : related?.endAt
+          ? formatDaysByEpoch(Number(related.endAt), timeUnitSeconds)
+          : info?.expireAt
+            ? formatDaysByEpoch(Number(info.expireAt), timeUnitSeconds)
+            : 0,
       produced: related ? `${formatTokenAmount(related.grossClaimed, 18, 4)} NETE` : "0 NETE",
       triggerGiftRule: t("modules.mining.rules.giftRuleValue"),
     };
@@ -244,6 +280,11 @@ export default function MiningPage() {
   const airdropEligibility = miningDataQuery.data?.airdropEligibility || {};
   const hasRequiredAirdropNft = airdropEligibility.hasRequiredNft ?? true;
   const airdropNftClaimed = Boolean(airdropEligibility.nftClaimed);
+  const hasAnyMinerPosition = (miningDataQuery.data?.positions || []).length > 0;
+  const checkinProfitBalance = miningDataQuery.data?.checkinProfitBalance ?? 0n;
+  const checkinRewardAmount = miningDataQuery.data?.checkinRewardAmount ?? 0n;
+  const lastCheckinAt = Number(miningDataQuery.data?.lastCheckinAt || 0n);
+  const lastCheckinAtText = lastCheckinAt > 0 ? new Date(lastCheckinAt * 1000).toLocaleString() : "--";
   const airdropHidden = hasAirdropMiner || airdropNftClaimed;
   const visibleMachineModels = useMemo(
     () => machineModels.filter((model) => !model.isAirdrop || !airdropHidden),
@@ -273,8 +314,8 @@ export default function MiningPage() {
     }, 0);
 
     return [
-      { label: t("modules.mining.summary.holdings"), value: t("modules.mining.units.machines", { count: holdings }) },
-      { label: t("modules.mining.summary.output"), value: `${totalOutputValue.toLocaleString(undefined, { maximumFractionDigits: 4 })} NETE`, accent: true },
+      { label: t("modules.mining.summary.holdings"), value: holdings },
+      { label: t("modules.mining.summary.output"), value: totalOutputValue.toLocaleString(undefined, { maximumFractionDigits: 4 }), accent: true },
     ];
   }, [purchasedMachines, t]);
 
@@ -350,11 +391,13 @@ export default function MiningPage() {
       amountWei,
     };
   }, [portfolioRows, repurchaseTarget, repurchasableMinerRows]);
-  const actionBusy = claimingAll || repurchasingAll || withdrawingAll || Boolean(claimingId) || Boolean(repurchasingId);
+  const actionBusy = claimingAll || repurchasingAll || withdrawingAll || checkingIn || withdrawingCheckin || Boolean(claimingId) || Boolean(repurchasingId);
   const canClaimAllRewards = wallet.isConnected && totalClaimableRewardWei > 0n && !hasClaimBlockingPosition && !actionBusy;
   const canRepurchaseExpired = wallet.isConnected && repurchasableMinerCount > 0 && !repurchasePaused && !actionBusy;
   const canWithdrawAllProfits = wallet.isConnected && profitPoolBalance >= MIN_VISIBLE_NETE_WEI && !actionBusy;
   const canClaimAirdrop = wallet.isConnected && !claimingAirdrop && !hasAirdropMiner && !airdropNftClaimed && hasRequiredAirdropNft;
+  const canCheckInWithBABT = wallet.isConnected && !actionBusy && !hasAnyMinerPosition && hasRequiredAirdropNft && checkinRewardAmount > 0n;
+  const canWithdrawCheckinProfit = wallet.isConnected && !actionBusy && checkinProfitBalance >= MIN_VISIBLE_NETE_WEI;
   const repurchaseRequiredWei = repurchaseContext?.amountWei || 0n;
   const repurchaseBalanceEnough = principalPoolBalance >= repurchaseRequiredWei;
   const canSubmitRepurchase = Boolean(repurchaseContext)
@@ -523,6 +566,36 @@ export default function MiningPage() {
     }
   };
 
+  const handleCheckInWithBABT = async () => {
+    if (!canCheckInWithBABT) return;
+
+    try {
+      setCheckingIn(true);
+      await wallet.ensureCorrectChain();
+      await checkInWithBABT(wallet.currentAddress);
+      await refreshMiningData();
+    } catch {
+      return;
+    } finally {
+      setCheckingIn(false);
+    }
+  };
+
+  const handleWithdrawCheckinProfit = async () => {
+    if (!canWithdrawCheckinProfit) return;
+
+    try {
+      setWithdrawingCheckin(true);
+      await wallet.ensureCorrectChain();
+      await withdrawCheckInProfit(wallet.currentAddress, checkinProfitBalance);
+      await refreshMiningData();
+    } catch {
+      return;
+    } finally {
+      setWithdrawingCheckin(false);
+    }
+  };
+
   const handleClaim = async (positionId) => {
     if (!wallet.isConnected || !positionId || actionBusy) return;
     const machine = portfolioRows.find((item) => item.positionId === positionId);
@@ -560,6 +633,58 @@ export default function MiningPage() {
       setClaimingAirdrop(false);
     }
   };
+
+  const checkinSection = (
+    <section className="mining-section">
+      <div className="mining-panel-card mining-checkin-card">
+        <div className="mining-checkin-card__head">
+          <h3>{t("modules.mining.checkin.title")}</h3>
+          <p>{t("modules.mining.checkin.desc")}</p>
+        </div>
+        <div className="mining-checkin-grid">
+          <div className="mining-info-tile">
+            <span>{t("modules.mining.checkin.reward")}</span>
+            <strong className="is-accent">{formatTokenAmount(checkinRewardAmount, 18, 4)} NETE</strong>
+          </div>
+          <div className="mining-info-tile">
+            <span>{t("modules.mining.checkin.balance")}</span>
+            <strong>{formatTokenAmount(checkinProfitBalance, 18, 4)} NETE</strong>
+          </div>
+          <div className="mining-info-tile">
+            <span>{t("modules.mining.checkin.last")}</span>
+            <strong>{lastCheckinAtText}</strong>
+          </div>
+        </div>
+
+        <div className="mining-checkin-actions">
+          <button
+            className="mining-btn mining-btn--primary"
+            type="button"
+            disabled={!canCheckInWithBABT}
+            onClick={handleCheckInWithBABT}
+          >
+            {checkingIn ? t("modules.mining.checkin.checking") : t("modules.mining.checkin.checkIn")}
+          </button>
+          <button
+            className="mining-btn mining-btn--ghost"
+            type="button"
+            disabled={!canWithdrawCheckinProfit}
+            onClick={handleWithdrawCheckinProfit}
+          >
+            {withdrawingCheckin ? t("modules.mining.checkin.withdrawing") : t("modules.mining.checkin.withdraw")}
+          </button>
+        </div>
+
+        {!wallet.isConnected ? (
+          <p className="mining-checkin-hint">{t("modules.mining.checkin.connectHint")}</p>
+        ) : !hasRequiredAirdropNft ? (
+          <p className="mining-checkin-hint">{t("modules.mining.checkin.nftRequired")}</p>
+        ) : hasAnyMinerPosition ? (
+          <p className="mining-checkin-hint">{t("modules.mining.checkin.purchasedLocked")}</p>
+        ) : null}
+      </div>
+    </section>
+  );
 
   const portalRoot = typeof document === "undefined" ? null : document.body;
 
@@ -613,12 +738,12 @@ export default function MiningPage() {
             <div className="mining-summary-strip mining-summary-strip--two mt-2">
               <article className="mining-summary-card">
                 <span>{t("modules.mining.modal.principalBalance")}</span>
-                <strong>{formatTokenAmount(principalPoolBalance, 18, 4)} NETE</strong>
+                <strong>{formatTokenAmount(principalPoolBalance, 18, 4)}</strong>
               </article>
               <article className="mining-summary-card">
                 <div>
                   <span>{t("modules.mining.modal.profitBalance")}</span>
-                  <strong className="is-accent">{formatTokenAmount(profitPoolBalance, 18, 4)} NETE</strong>
+                  <strong className="is-accent">{formatTokenAmount(profitPoolBalance, 18, 4)}</strong>
                 </div>
               </article>
             </div>
@@ -720,6 +845,10 @@ export default function MiningPage() {
                           <span>{t("modules.mining.portfolio.remainingCycle")}</span>
                           <strong>{t("modules.mining.units.days", { count: machine.remainingDays })}</strong>
                         </div>
+                        <div className="mining-info-tile">
+                          <span>{t("modules.mining.portfolio.purchaseTime")}</span>
+                          <strong>{machine.purchaseTime}</strong>
+                        </div>
                         <div className="mining-info-tile mining-info-tile--action">
                           <button
                             className="mining-btn mining-btn--inline"
@@ -777,6 +906,8 @@ export default function MiningPage() {
             </div>
           </div>
 
+          {checkinSection}
+
           <section className="mining-section">
             <div className="mining-section__head">
               <div>
@@ -802,15 +933,13 @@ export default function MiningPage() {
                     <article key={model.tierIndex} className={model.isAirdrop ? "mining-plan-item mining-plan-item--airdrop" : "mining-plan-item"}>
                       <div>
                         <h4>{model.model}</h4>
-                        <p>{model.price} NETE</p>
                       </div>
                       {model.badge ? <span className="mining-plan-badge">{model.isAirdrop && airdropMachineStatus.permanent ? t("modules.mining.buy.airdropPermanentBadge") : model.badge}</span> : null}
 
                       <div className="mining-plan-grid">
                         <div className="mining-info-tile"><span>{t("modules.mining.buy.totalRate")}</span><strong className="is-accent">{model.returnRate}</strong></div>
-                        <div className="mining-info-tile"><span>{t("modules.mining.buy.unitLimit")}</span><strong>{t("modules.mining.units.machines", { count: model.unitCount })}</strong></div>
+                        <div className="mining-info-tile"><span>{t("modules.mining.buy.quantity")}</span><strong>{model.ownedCount}/{model.unitCount}</strong></div>
                         <div className="mining-info-tile"><span>{t("modules.mining.buy.cycle")}</span><strong>{t("modules.mining.units.days", { count: model.periodDays })}</strong></div>
-                        <div className="mining-info-tile"><span>{t("modules.mining.buy.remaining")}</span><strong>{t("modules.mining.units.machines", { count: model.remaining })}</strong></div>
                       </div>
 
                       <div className="mining-plan-action">

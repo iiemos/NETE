@@ -1,0 +1,72 @@
+{
+  "zh": [
+    {
+      "title": "NETE 生态模块已开放",
+      "desc": "矿机、C2C、种子预售与团队数据同步上线"
+    },
+    {
+      "title": "链上规则自动执行",
+      "desc": "收益、复投、销毁与分配全链上可查"
+    },
+    {
+      "title": "多语言体验升级",
+      "desc": "支持英语、日语、韩语、繁体中文、简体中文"
+    }
+  ],
+  "zh-TW": [
+    {
+      "title": "NETE 生態模組已開放",
+      "desc": "礦機、C2C、種子預售與團隊數據同步上線"
+    },
+    {
+      "title": "鏈上規則自動執行",
+      "desc": "收益、復投、銷毀與分配全鏈上可查"
+    },
+    {
+      "title": "多語言體驗升級",
+      "desc": "支援英語、日語、韓語、繁體中文、簡體中文"
+    }
+  ],
+  "en": [
+    {
+      "title": "NETE ecosystem modules are live",
+      "desc": "Mining, C2C, seed presale, and team data are online"
+    },
+    {
+      "title": "On-chain rules execute automatically",
+      "desc": "Rewards, reinvestment, burns, and distribution are verifiable"
+    },
+    {
+      "title": "Multilingual experience upgraded",
+      "desc": "English, Japanese, Korean, Traditional Chinese, and Simplified Chinese"
+    }
+  ],
+  "ja": [
+    {
+      "title": "NETEエコシステム機能が公開",
+      "desc": "マイニング、C2C、シード、チームデータが利用可能"
+    },
+    {
+      "title": "オンチェーンルールを自動実行",
+      "desc": "収益、再投資、バーン、分配を検証可能"
+    },
+    {
+      "title": "多言語体験をアップグレード",
+      "desc": "英語、日本語、韓国語、繁体字、簡体字に対応"
+    }
+  ],
+  "ko": [
+    {
+      "title": "NETE 생태계 모듈 오픈",
+      "desc": "마이닝, C2C, 시드, 팀 데이터 사용 가능"
+    },
+    {
+      "title": "온체인 규칙 자동 실행",
+      "desc": "수익, 재투자, 소각, 분배를 검증 가능"
+    },
+    {
+      "title": "다국어 경험 업그레이드",
+      "desc": "영어, 일본어, 한국어, 번체, 간체 지원"
+    }
+  ]
+}

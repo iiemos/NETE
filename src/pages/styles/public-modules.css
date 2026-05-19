@@ -116,6 +116,40 @@
   transform: translateY(-2px);
 }
 
+.team-level-banner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border: 1px solid rgba(202, 255, 0, 0.2);
+  border-radius: 8px;
+  background: rgba(6, 10, 8, 0.45);
+}
+
+.team-level-banner span {
+  color: var(--module-muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.team-level-banner strong {
+  color: var(--module-accent);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.team-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .team-income-card {
   padding: 18px;
 }
@@ -259,7 +293,7 @@
 
 .my-account-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   align-items: center;
   margin-top: 18px;
@@ -275,7 +309,6 @@
 }
 
 .my-account-chip--vip {
-  min-width: 88px;
   text-align: right;
 }
 
@@ -352,7 +385,7 @@
 
 .my-invite-desc {
   max-width: 620px;
-  margin: 6px 0 0;
+  margin: 0;
   color: rgba(255, 255, 255, 0.68);
   font-size: 12px;
   font-weight: 650;
@@ -624,6 +657,16 @@
     width: 100%;
   }
 
+  .team-stats-grid {
+    gap: 8px;
+  }
+
+  .team-level-banner {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
   .my-account-page {
     gap: 12px;
   }
@@ -634,6 +677,10 @@
 
   .my-account-hero h1 {
     font-size: 32px;
+  }
+
+  .my-account-row {
+    grid-template-columns: 1fr;
   }
 
   .my-section-head {
@@ -654,7 +701,7 @@
   }
 
   .my-account-row {
-    grid-template-columns: minmax(0, 1fr) 82px;
+    grid-template-columns: 1fr;
   }
 
   .my-metric-row {
@@ -1811,7 +1858,7 @@
 .mining-stat-card,
 .mining-summary-card,
 .mining-info-tile {
-  padding: 12px;
+  padding: 10px;
   background: rgba(255, 255, 255, 0.03);
 }
 
@@ -1831,8 +1878,8 @@
 .mining-summary-card strong,
 .mining-info-tile strong {
   display: block;
-  margin-top: 8px;
-  font-size: 18px;
+  margin-top: 6px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -1867,6 +1914,44 @@
   gap: 8px;
   margin-bottom: 10px;
   margin-top: 10px;
+}
+
+.mining-checkin-card {
+  display: grid;
+  gap: 12px;
+}
+
+.mining-checkin-card__head h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.mining-checkin-card__head p {
+  margin: 6px 0 0;
+  color: var(--mining-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.mining-checkin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mining-checkin-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.mining-checkin-hint {
+  margin: 0;
+  color: var(--mining-muted);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .mining-summary-strip {
@@ -2066,7 +2151,7 @@
 }
 
 .mining-portfolio-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-top: 12px;
 }
 
@@ -2106,7 +2191,7 @@
 }
 
 .mining-plan-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .mining-plan-action {
@@ -2167,6 +2252,7 @@
   .mining-stats-strip,
   .mining-side-grid,
   .mining-portfolio-grid,
+  .mining-checkin-grid,
   .mining-plan-grid,
   .mining-rules-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2228,10 +2314,15 @@
   .mining-summary-strip,
   .mining-stats-strip,
   .mining-side-grid,
-  .mining-portfolio-grid,
-  .mining-plan-grid,
+  .mining-checkin-grid,
+  .mining-checkin-actions,
   .mining-rules-grid {
     grid-template-columns: 1fr;
+  }
+
+  .mining-portfolio-grid,
+  .mining-plan-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .mining-panel-card,
@@ -2510,8 +2601,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.mining-portfolio-actions,
-.mining-portfolio-grid {
+.mining-portfolio-actions {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
@@ -2532,7 +2622,7 @@
 }
 
 .mining-plan-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 7px;
 }
 

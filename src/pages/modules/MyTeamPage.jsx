@@ -162,13 +162,11 @@ export default function MyTeamPage() {
     [activePerformance, directListQuery.data, referralInfo],
   );
 
-  const currentLayers = useMemo(() => {
-    if (!directCount) return t("modules.team.layers", { count: 0 });
-    return directCount >= 8 ? t("modules.team.layersRange") : t("modules.team.layers", { count: Math.min(directCount, maxDepth || directCount) });
-  }, [directCount, maxDepth, t]);
+  const currentLayers = useMemo(() => t("modules.team.layers", { count: maxDepth }), [maxDepth, t]);
 
-  const teamPerformance = pickBigInt({ ...referralInfo, ...performanceLegs }, ["team_perf"]);
-  const smallLegPerformance = pickBigInt({ ...referralInfo, ...performanceLegs }, ["small_leg_perf"]);
+  const teamPerformance = pickBigInt(performanceLegs, ["team_perf"]);
+  const smallLegPerformance = pickBigInt(performanceLegs, ["small_leg_perf"]);
+  const bigLegPerformance = pickBigInt(performanceLegs, ["big_leg_perf"]);
   const directListLoading = directListQuery.isLoading || referralInfoQuery.isLoading;
   const teamLoading = referralInfoQuery.isLoading || networkDataQuery.isLoading || performanceLegsQuery.isLoading;
 
@@ -216,27 +214,19 @@ export default function MyTeamPage() {
             <p className="mt-3 max-w-2xl text-sm text-white/80">{t("modules.team.desc")}</p>
           </div>
         </div>
+        <article className="team-level-banner">
+          <span>{t("modules.team.stats.level")}</span>
+          <strong>{teamLoading ? <LoadingState compact /> : `V${currentLevel}`}</strong>
+        </article>
       </header>
 
       {!wallet.isConnected ? <p className="text-xs text-white/70">{t("modules.team.connectHint")}</p> : null}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="team-stats-grid">
         <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.directs")}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
             {teamLoading ? <LoadingState compact /> : directCount}
-          </div>
-        </article>
-        <article className="module-stat-card p-4">
-          <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.performance")}</div>
-          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
-            {teamLoading ? <LoadingState compact /> : formatTokenAmount(teamPerformance, 18, 2)}
-          </div>
-        </article>
-        <article className="module-stat-card p-4">
-          <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.zonePerformance")}</div>
-          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
-            {teamLoading ? <LoadingState compact /> : formatTokenAmount(smallLegPerformance, 18, 2)}
           </div>
         </article>
         <article className="module-stat-card p-4">
@@ -246,9 +236,15 @@ export default function MyTeamPage() {
           </div>
         </article>
         <article className="module-stat-card p-4">
-          <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.level")}</div>
+          <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.bigLegPerformance")}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
-            {teamLoading ? <LoadingState compact /> : `V${currentLevel}`}
+            {teamLoading ? <LoadingState compact /> : formatTokenAmount(bigLegPerformance, 18, 2)}
+          </div>
+        </article>
+        <article className="module-stat-card p-4">
+          <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.zonePerformance")}</div>
+          <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
+            {teamLoading ? <LoadingState compact /> : formatTokenAmount(smallLegPerformance, 18, 2)}
           </div>
         </article>
       </div>
