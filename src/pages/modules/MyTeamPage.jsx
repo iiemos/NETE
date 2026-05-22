@@ -15,14 +15,14 @@ const PERFORMANCE_PAGE_SIZE = 10;
 
 const performanceFieldMap = {
   miner: {
-    direct: ["direct_miner_perf", "miner_direct_perf", "direct_mining_perf", "direct_perf"],
-    team: ["team_miner_total_perf", "team_miner_perf", "miner_team_perf", "team_perf"],
+    direct: ["direct_miner_perf"],
+    team: ["team_miner_total_perf"],
     big: ["team_miner_big_leg_perf", "big_leg_miner_perf", "miner_big_leg_perf", "big_leg_perf"],
     small: ["team_miner_small_leg_perf", "small_leg_miner_perf", "miner_small_leg_perf", "small_leg_perf"],
   },
   seed: {
-    direct: ["direct_presale_perf", "direct_seed_perf", "seed_direct_perf", "presale_direct_perf", "direct_perf"],
-    team: ["team_seed_total_perf", "team_seed_perf", "seed_team_perf", "presale_team_perf", "team_perf"],
+    direct: ["direct_presale_perf"],
+    team: ["team_seed_total_perf"],
     big: ["team_seed_big_leg_perf", "seed_big_leg_perf", "presale_big_leg_perf", "big_leg_perf"],
     small: ["team_seed_small_leg_perf", "small_leg_seed_perf", "seed_small_leg_perf", "presale_small_leg_perf", "small_leg_perf"],
   },
@@ -223,6 +223,12 @@ export default function MyTeamPage() {
   const currentLayers = useMemo(() => t("modules.team.layers", { count: maxDepth }), [maxDepth, t]);
 
   const currentPerformanceFields = performanceFieldMap[activePerformance];
+  const bigLegStatsLabelKey = activePerformance === "seed"
+    ? "modules.team.stats.seedBigLegPerformance"
+    : "modules.team.stats.minerBigLegPerformance";
+  const smallLegStatsLabelKey = activePerformance === "seed"
+    ? "modules.team.stats.seedZonePerformance"
+    : "modules.team.stats.minerZonePerformance";
   const teamPerformanceCandidate = pickBigIntCandidate(referralInfo, currentPerformanceFields.team);
   const smallLegPerformanceCandidate = pickBigIntCandidate(referralInfo, currentPerformanceFields.small);
   const teamPerformance = teamPerformanceCandidate.found ? teamPerformanceCandidate.value : pickBigInt(performanceLegs, ["team_perf"]);
@@ -304,13 +310,13 @@ export default function MyTeamPage() {
           </div>
         </article>
         <article className="module-stat-card p-4">
-          <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.bigLegPerformance")}</div>
+          <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t(bigLegStatsLabelKey)}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
             {teamLoading ? <LoadingState compact /> : formatTokenAmount(bigLegPerformance, 18, 2)}
           </div>
         </article>
         <article className="module-stat-card p-4">
-          <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.zonePerformance")}</div>
+          <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t(smallLegStatsLabelKey)}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
             {teamLoading ? <LoadingState compact /> : formatTokenAmount(smallLegPerformance, 18, 2)}
           </div>
