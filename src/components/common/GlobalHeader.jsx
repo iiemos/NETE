@@ -3,6 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
 import logoIcon from "../../assets/images/logo-icon.svg";
+import { useGlobalMessage } from "./GlobalMessage";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { languageOptions } from "../../i18n";
 import { getWalletErrorMessage } from "../../utils/walletErrors";
@@ -81,7 +82,7 @@ function WalletOptionIcon({ connector, label }) {
   );
 }
 
-function WalletConnectModal({ errorMessage, onClose, onConnect, open, options, t, wallet }) {
+function WalletConnectModal({ onClose, onConnect, open, options, t, wallet }) {
   if (!open) return null;
 
   return (
@@ -119,8 +120,6 @@ function WalletConnectModal({ errorMessage, onClose, onConnect, open, options, t
             );
           }) : <p className="wallet-modal__empty">{t("nav.wallet.noConnector")}</p>}
         </div>
-
-        {errorMessage ? <p className="wallet-modal__error">{errorMessage}</p> : null}
       </section>
     </div>
   );
@@ -130,11 +129,11 @@ export default function GlobalHeader() {
   const { i18n, t } = useTranslation();
   const location = useLocation();
   const wallet = useWalletConnector();
+  const message = useGlobalMessage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const [walletModalOpen, setWalletModalOpen] = useState(false);
-  const [walletError, setWalletError] = useState("");
   const languageMenuRef = useRef(null);
   const currentLanguage = normalizeLanguage(i18n.resolvedLanguage || i18n.language);
   const walletOptions = useMemo(() => getWalletOptions(wallet.connectors), [wallet.connectors]);
@@ -171,15 +170,8 @@ export default function GlobalHeader() {
   useEffect(() => {
     if (wallet.isConnected) {
       setWalletModalOpen(false);
-      setWalletError("");
     }
   }, [wallet.isConnected]);
-
-  useEffect(() => {
-    if (!walletError) return undefined;
-    const timer = window.setTimeout(() => setWalletError(""), 3000);
-    return () => window.clearTimeout(timer);
-  }, [walletError]);
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -216,7 +208,6 @@ export default function GlobalHeader() {
       if (!wallet.isConnected) {
         setMenuOpen(false);
         setLanguageMenuOpen(false);
-        setWalletError("");
         setWalletModalOpen(true);
         return;
       }
@@ -228,17 +219,16 @@ export default function GlobalHeader() {
 
       wallet.disconnectWallet();
     } catch (error) {
-      setWalletError(getWalletErrorMessage(error, t, "nav.wallet.connectionFailed"));
+      message.error(getWalletErrorMessage(error, t, "nav.wallet.connectionFailed"));
     }
   };
 
   const handleWalletConnect = async (connector) => {
     try {
-      setWalletError("");
       await wallet.connectWallet(connector);
       setWalletModalOpen(false);
     } catch (error) {
-      setWalletError(getWalletErrorMessage(error, t, "nav.wallet.connectionFailed"));
+      message.error(getWalletErrorMessage(error, t, "nav.wallet.connectionFailed"));
     }
   };
 
@@ -377,7 +367,6 @@ export default function GlobalHeader() {
       </div>
 
       <WalletConnectModal
-        errorMessage={walletError}
         onClose={() => setWalletModalOpen(false)}
         onConnect={handleWalletConnect}
         open={walletModalOpen && !wallet.isConnected}
@@ -385,11 +374,6 @@ export default function GlobalHeader() {
         t={t}
         wallet={wallet}
       />
-      {walletError && (!walletModalOpen || wallet.isConnected) ? (
-        <div className="fixed bottom-6 left-1/2 z-[720] max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-xl border border-white/10 bg-black/90 px-4 py-3 text-center text-sm text-white shadow-[0_24px_70px_rgba(0,0,0,0.36)]" role="status" aria-live="polite">
-          {walletError}
-        </div>
-      ) : null}
     </>
   );
 }

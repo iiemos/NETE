@@ -1045,33 +1045,8 @@
   background: linear-gradient(180deg, rgba(20, 20, 25, 0), #141419 28%);
 }
 
-.c2c-toast {
-  position: fixed;
-  left: 50%;
-  bottom: 28px;
-  transform: translate(-50%, 18px);
-  min-width: 240px;
-  max-width: calc(100vw - 32px);
-  padding: 12px 16px;
-  border: 1px solid rgba(194, 255, 26, 0.18);
-  border-radius: 8px;
-  background: rgba(9, 12, 11, 0.96);
-  text-align: center;
-  color: var(--c2c-text);
-  box-shadow: var(--c2c-shadow);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.22s ease, transform 0.22s ease;
-  z-index: 80;
-}
-
 .c2c-reference--loading .data-loading-state {
   color: var(--c2c-muted-strong);
-}
-
-.c2c-toast.is-show {
-  opacity: 1;
-  transform: translate(-50%, 0);
 }
 
 @media (max-width: 1100px) {

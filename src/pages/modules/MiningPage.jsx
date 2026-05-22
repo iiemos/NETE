@@ -3,10 +3,11 @@ import { createPortal } from "react-dom";
 import { Icon } from "@iconify/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useGlobalMessage } from "../../components/common/GlobalMessage";
 import LoadingState from "../../components/common/LoadingState";
 import { NETE_CHAIN, getContractConfigMissingKeys, isContractConfigReady } from "../../config/neteRuntime";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
-import { getRuntimeConfig } from "../../services/neteApi";
+import { getCheckInRecords, getRuntimeConfig } from "../../services/neteApi";
 import {
   activateMiner,
   approveNeteToCore,
@@ -58,6 +59,52 @@ const POSITION_STATES = {
 const AIRDROP_PRINCIPAL = 100n * 10n ** 18n;
 const MIN_VISIBLE_NETE_WEI = 5n * 10n ** 13n;
 const REPURCHASE_READY_STATES = new Set([POSITION_STATES.pendingRepurchase, POSITION_STATES.ended]);
+const CHECKIN_TIME_ZONE = "Asia/Shanghai";
+const CHECKIN_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  timeZone: CHECKIN_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function getCheckInDateParts(timestamp) {
+  const seconds = Number(timestamp);
+  if (!Number.isFinite(seconds) || seconds <= 0) return null;
+
+  const date = new Date(seconds * 1000);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const parts = Object.fromEntries(CHECKIN_DATE_FORMATTER.formatToParts(date).map((part) => [part.type, part.value]));
+  const year = Number(parts.year);
+  const month = Number(parts.month);
+  const day = Number(parts.day);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+
+  return {
+    year,
+    month,
+    day,
+  };
+}
+
+function getCurrentCheckInMonth() {
+  const parts = getCheckInDateParts(Math.floor(Date.now() / 1000));
+  return { year: parts?.year || new Date().getFullYear(), month: parts?.month || new Date().getMonth() + 1 };
+}
+
+function formatCheckInTime(timestamp) {
+  const seconds = Number(timestamp);
+  if (!Number.isFinite(seconds) || seconds <= 0) return "--";
+
+  const date = new Date(seconds * 1000);
+  return Number.isNaN(date.getTime()) ? "--" : date.toLocaleString(undefined, { hour12: false, timeZone: CHECKIN_TIME_ZONE });
+}
+
+function shiftCalendarMonth(calendarMonth, offset) {
+  const date = new Date(calendarMonth.year, calendarMonth.month - 1 + offset, 1);
+  return { year: date.getFullYear(), month: date.getMonth() + 1 };
+}
 
 function isAirdropTier(tier) {
   return Number(tier.tierIndex) === 0 || (tier.principal === AIRDROP_PRINCIPAL && (
@@ -138,6 +185,7 @@ export default function MiningPage() {
   const { t } = useTranslation();
   const wallet = useWalletConnector();
   const queryClient = useQueryClient();
+  const message = useGlobalMessage();
   const withdrawingAllRef = useRef(false);
 
   const [activeView, setActiveView] = useState("buy-miners");
@@ -159,7 +207,7 @@ export default function MiningPage() {
   const [checkingIn, setCheckingIn] = useState(false);
   const [withdrawingCheckin, setWithdrawingCheckin] = useState(false);
   const [checkinCalendarOpen, setCheckinCalendarOpen] = useState(false);
-  const [actionNotice, setActionNotice] = useState("");
+  const [checkinCalendarMonth, setCheckinCalendarMonth] = useState(getCurrentCheckInMonth);
 
   const tiersQuery = useQuery({
     queryKey: ["nete", "miner-tiers"],
@@ -194,17 +242,21 @@ export default function MiningPage() {
 
   const checkInRecordsQuery = useQuery({
     queryKey: ["nete", "checkin-records", wallet.currentAddress],
-    queryFn: () => readCheckInRecords(wallet.currentAddress),
+    queryFn: async () => {
+      try {
+        return await getCheckInRecords(wallet.currentAddress);
+      } catch {
+        try {
+          return await readCheckInRecords(wallet.currentAddress);
+        } catch {
+          return [];
+        }
+      }
+    },
     enabled: Boolean(wallet.currentAddress),
     staleTime: 30_000,
     retry: 0,
   });
-
-  useEffect(() => {
-    if (!actionNotice) return undefined;
-    const timer = window.setTimeout(() => setActionNotice(""), 3000);
-    return () => window.clearTimeout(timer);
-  }, [actionNotice]);
 
   const userTierCounts = useMemo(() => {
     const counts = new Map();
@@ -353,7 +405,7 @@ export default function MiningPage() {
   const checkinProfitBalance = miningDataQuery.data?.checkinProfitBalance ?? 0n;
   const checkinRewardAmount = miningDataQuery.data?.checkinRewardAmount ?? 0n;
   const lastCheckinAt = Number(miningDataQuery.data?.lastCheckinAt || 0n);
-  const lastCheckinAtText = lastCheckinAt > 0 ? new Date(lastCheckinAt * 1000).toLocaleString() : "--";
+  const lastCheckinAtText = formatCheckInTime(lastCheckinAt);
   const checkInRecords = checkInRecordsQuery.data || [];
   const cumulativeCheckInReward = useMemo(
     () => {
@@ -363,20 +415,19 @@ export default function MiningPage() {
     [checkInRecords, checkinProfitBalance],
   );
   const checkInCalendar = useMemo(() => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const totalDays = new Date(year, month + 1, 0).getDate();
+    const { year, month } = checkinCalendarMonth;
+    const monthIndex = month - 1;
+    const firstDay = new Date(year, monthIndex, 1).getDay();
+    const totalDays = new Date(year, month, 0).getDate();
     const signedDates = [
       ...checkInRecords.map((item) => Number(item.checkinAt || 0)),
       lastCheckinAt,
     ].filter((value) => Number.isFinite(value) && value > 0);
     const signedDays = new Set(
       signedDates
-        .map((value) => new Date(value * 1000))
-        .filter((date) => date.getFullYear() === year && date.getMonth() === month)
-        .map((date) => date.getDate()),
+        .map(getCheckInDateParts)
+        .filter((date) => date && date.year === year && date.month === month)
+        .map((date) => date.day),
     );
     const cells = [
       ...Array.from({ length: firstDay }, (_, index) => ({ key: `empty-${index}`, day: "", empty: true, signed: false })),
@@ -388,11 +439,11 @@ export default function MiningPage() {
 
     return {
       year,
-      month: month + 1,
+      month,
       cells,
       signedCount: signedDays.size,
     };
-  }, [checkInRecords, lastCheckinAt]);
+  }, [checkInRecords, checkinCalendarMonth, lastCheckinAt]);
   const airdropHidden = hasAirdropMiner || airdropNftClaimed;
   const visibleMachineModels = useMemo(
     () => machineModels.filter((model) => !model.isAirdrop || !airdropHidden),
@@ -619,7 +670,7 @@ export default function MiningPage() {
       ]);
       closePurchaseModal();
     } catch (error) {
-      setActionNotice(getWalletErrorMessage(error, t, "modules.mining.messages.purchaseFailed"));
+      message.error(getWalletErrorMessage(error, t, "modules.mining.messages.purchaseFailed"));
       return;
     } finally {
       setPurchasing(false);
@@ -646,7 +697,7 @@ export default function MiningPage() {
       await claimAllRewards(wallet.currentAddress);
       await refreshMiningData();
     } catch (error) {
-      setActionNotice(getWalletErrorMessage(error, t, "modules.mining.messages.claimAllFailed"));
+      message.error(getWalletErrorMessage(error, t, "modules.mining.messages.claimAllFailed"));
       return;
     } finally {
       setClaimingAll(false);
@@ -679,7 +730,7 @@ export default function MiningPage() {
       await refreshMiningData();
       closeRepurchaseModal();
     } catch (error) {
-      setActionNotice(getWalletErrorMessage(error, t, "modules.mining.messages.repurchaseFailed"));
+      message.error(getWalletErrorMessage(error, t, "modules.mining.messages.repurchaseFailed"));
       return;
     } finally {
       if (isBatch) {
@@ -702,7 +753,7 @@ export default function MiningPage() {
       await withdrawAllProfit(wallet.currentAddress);
       await refreshMiningData();
     } catch (error) {
-      setActionNotice(getWalletErrorMessage(error, t, "modules.mining.messages.withdrawFailed"));
+      message.error(getWalletErrorMessage(error, t, "modules.mining.messages.withdrawFailed"));
       return;
     } finally {
       withdrawingAllRef.current = false;
@@ -719,7 +770,7 @@ export default function MiningPage() {
       await checkInWithBABT(wallet.currentAddress);
       await refreshMiningData();
     } catch (error) {
-      setActionNotice(getWalletErrorMessage(error, t, "modules.mining.messages.claimFailed"));
+      message.error(getWalletErrorMessage(error, t, "modules.mining.messages.claimFailed"));
       return;
     } finally {
       setCheckingIn(false);
@@ -735,7 +786,7 @@ export default function MiningPage() {
       await withdrawCheckInProfit(wallet.currentAddress, checkinProfitBalance);
       await refreshMiningData();
     } catch (error) {
-      setActionNotice(getWalletErrorMessage(error, t, "modules.mining.messages.withdrawFailed"));
+      message.error(getWalletErrorMessage(error, t, "modules.mining.messages.withdrawFailed"));
       return;
     } finally {
       setWithdrawingCheckin(false);
@@ -757,7 +808,7 @@ export default function MiningPage() {
       }
       await refreshMiningData();
     } catch (error) {
-      setActionNotice(getWalletErrorMessage(error, t, "modules.mining.messages.claimFailed"));
+      message.error(getWalletErrorMessage(error, t, "modules.mining.messages.claimFailed"));
       return;
     } finally {
       setClaimingId("");
@@ -775,7 +826,7 @@ export default function MiningPage() {
       closeAirdropModal();
       setActiveView("my-miners");
     } catch (error) {
-      setActionNotice(getWalletErrorMessage(error, t, "modules.mining.messages.airdropFailed"));
+      message.error(getWalletErrorMessage(error, t, "modules.mining.messages.airdropFailed"));
       return;
     } finally {
       setClaimingAirdrop(false);
@@ -824,7 +875,10 @@ export default function MiningPage() {
             className="mining-btn mining-btn--ghost"
             type="button"
             disabled={!wallet.isConnected}
-            onClick={() => setCheckinCalendarOpen(true)}
+            onClick={() => {
+              setCheckinCalendarMonth(getCurrentCheckInMonth());
+              setCheckinCalendarOpen(true);
+            }}
           >
             {t("modules.mining.checkin.records")}
           </button>
@@ -1548,7 +1602,15 @@ export default function MiningPage() {
               </button>
             </div>
 
-            <div className="calendar-month">{t("modules.mining.checkin.calendarMonth", { year: checkInCalendar.year, month: checkInCalendar.month })}</div>
+            <div className="calendar-month">
+              <button type="button" onClick={() => setCheckinCalendarMonth((value) => shiftCalendarMonth(value, -1))} aria-label={t("modules.mining.checkin.calendarPrev")} title={t("modules.mining.checkin.calendarPrev")}>
+                <Icon icon="solar:alt-arrow-left-linear" width="1em" height="1em" />
+              </button>
+              <span>{t("modules.mining.checkin.calendarMonth", { year: checkInCalendar.year, month: checkInCalendar.month })}</span>
+              <button type="button" onClick={() => setCheckinCalendarMonth((value) => shiftCalendarMonth(value, 1))} aria-label={t("modules.mining.checkin.calendarNext")} title={t("modules.mining.checkin.calendarNext")}>
+                <Icon icon="solar:alt-arrow-right-linear" width="1em" height="1em" />
+              </button>
+            </div>
 
             <div className="calendar-week" aria-hidden="true">
               {t("modules.mining.checkin.weekdays", { returnObjects: true }).map((day) => (
@@ -1676,11 +1738,6 @@ export default function MiningPage() {
           </article>
         </div>
       ), portalRoot) : null}
-      {actionNotice ? (
-        <div className="fixed bottom-6 left-1/2 z-[700] max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-xl border border-white/10 bg-black/90 px-4 py-3 text-center text-sm text-white shadow-[0_24px_70px_rgba(0,0,0,0.36)]" role="status" aria-live="polite">
-          {actionNotice}
-        </div>
-      ) : null}
     </section>
   );
 }

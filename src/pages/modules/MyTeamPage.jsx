@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
-import { getPerformanceLegs, getPersonalPerformance, getReferralDownlines, getReferralInfo } from "../../services/neteApi";
+import { getPerformanceLegs, getReferralDownlines, getReferralInfo } from "../../services/neteApi";
 import { readNetworkUserData } from "../../services/neteContracts";
 import { formatTokenAmount, shortAddress } from "../../utils/formatters";
 
@@ -15,16 +15,16 @@ const PERFORMANCE_PAGE_SIZE = 10;
 
 const performanceFieldMap = {
   miner: {
-    own: ["miner_perf", "own_miner_perf", "miner_own_perf", "mining_own_perf", "own_mining_perf", "mining_perf", "own_perf"],
-    team: ["subtree_miner_perf", "miner_team_perf", "team_miner_perf", "mining_team_perf", "team_mining_perf", "team_perf"],
-    big: ["big_leg_miner_perf", "miner_big_leg_perf", "big_miner_perf", "mining_big_leg_perf", "big_mining_perf", "big_leg_perf"],
-    small: ["small_leg_miner_perf", "miner_small_leg_perf", "small_miner_perf", "mining_small_leg_perf", "small_mining_perf", "small_leg_perf"],
+    direct: ["direct_miner_perf", "miner_direct_perf", "direct_mining_perf", "direct_perf"],
+    team: ["team_miner_total_perf", "team_miner_perf", "miner_team_perf", "team_perf"],
+    big: ["team_miner_big_leg_perf", "big_leg_miner_perf", "miner_big_leg_perf", "big_leg_perf"],
+    small: ["team_miner_small_leg_perf", "small_leg_miner_perf", "miner_small_leg_perf", "small_leg_perf"],
   },
   seed: {
-    own: ["presale_perf", "own_seed_perf", "seed_own_perf", "presale_own_perf", "own_presale_perf", "seed_perf"],
-    team: ["subtree_seed_perf", "seed_team_perf", "team_seed_perf", "presale_team_perf", "team_presale_perf", "team_perf"],
-    big: ["seed_big_leg_perf", "big_seed_perf", "presale_big_leg_perf", "big_presale_perf", "big_leg_perf"],
-    small: ["small_leg_seed_perf", "seed_small_leg_perf", "small_seed_perf", "presale_small_leg_perf", "small_presale_perf"],
+    direct: ["direct_presale_perf", "direct_seed_perf", "seed_direct_perf", "presale_direct_perf", "direct_perf"],
+    team: ["team_seed_total_perf", "team_seed_perf", "seed_team_perf", "presale_team_perf", "team_perf"],
+    big: ["team_seed_big_leg_perf", "seed_big_leg_perf", "presale_big_leg_perf", "big_leg_perf"],
+    small: ["team_seed_small_leg_perf", "small_leg_seed_perf", "seed_small_leg_perf", "presale_small_leg_perf", "small_leg_perf"],
   },
 };
 
@@ -72,13 +72,6 @@ function pickField(source, keys) {
   return undefined;
 }
 
-function pickAccountField(account, name, index) {
-  if (!account) return undefined;
-  if (account[name] !== undefined) return account[name];
-  if (Array.isArray(account) && account[index] !== undefined) return account[index];
-  return undefined;
-}
-
 function pickBigIntCandidate(source, keys) {
   for (const key of keys) {
     if (source?.[key] !== undefined && source?.[key] !== null && source?.[key] !== "") {
@@ -97,55 +90,17 @@ function getMemberAddress(member) {
   return member?.address ?? member?.user ?? member?.wallet ?? member?.account ?? "";
 }
 
-function toUnixSeconds(value) {
-  if (value === null || value === undefined || value === "") return 0;
-  const text = String(value).trim();
-  const numeric = /^\d+$/.test(text) ? Number(text) : Number.NaN;
-  const seconds = Number.isFinite(numeric) ? numeric : Math.floor(Date.parse(text) / 1000);
+function renderPerformanceHeaderLabel(label) {
+  const text = String(label || "");
+  const match = text.match(/^(.*?)([（(]NETE[）)])$/);
+  if (!match) return text;
 
-  if (!Number.isFinite(seconds) || seconds <= 0) return 0;
-  return seconds > 1_000_000_000_000 ? Math.floor(seconds / 1000) : Math.floor(seconds);
-}
-
-function getMemberJoinedAt(member) {
-  const joinedAt = toUnixSeconds(pickField(member, [
-    "joined_at",
-    "joinedAt",
-    "join_time",
-    "joinTime",
-    "bound_at",
-    "boundAt",
-    "created_at",
-    "createdAt",
-    "registered_at",
-    "registeredAt",
-    "updated_at",
-    "updatedAt",
-    "timestamp",
-  ]));
-
-  if (joinedAt > 0) return joinedAt;
-
-  const account = member?.referralAccount ?? member?.referral_account;
-  return toUnixSeconds(pickAccountField(account, "updatedAt", 3));
-}
-
-function getMemberPersonalPerformance(member, type) {
-  return pickBigInt(member, performanceFieldMap[type].own);
-}
-
-function formatJoinedDate(seconds) {
-  const value = Number(seconds || 0);
-  if (!Number.isFinite(value) || value <= 0) return "--";
-  const date = new Date(value * 1000);
-  if (Number.isNaN(date.getTime())) return "--";
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const secondsText = String(date.getSeconds()).padStart(2, "0");
-  return `${year}-${month}-${day} ${hours}:${minutes}:${secondsText}`;
+  return (
+    <span className="team-performance-header-label">
+      <span>{match[1]}</span>
+      <span className="team-performance-header-unit">{match[2]}</span>
+    </span>
+  );
 }
 
 function getFallbackDirects(source, type) {
@@ -243,12 +198,8 @@ export default function MyTeamPage() {
     queryKey: ["nete", "referral-downline-performance", activePerformance, visibleDirectAddresses],
     queryFn: async () => {
       const rows = await Promise.all(visibleDirectAddresses.map(async (address) => {
-        const [referral, personal, networkData] = await Promise.all([
-          getReferralInfo(address).catch(() => ({})),
-          getPersonalPerformance(address).catch(() => ({})),
-          readNetworkUserData(address).catch(() => ({})),
-        ]);
-        return { address, ...referral, ...personal, referralAccount: networkData.referralAccount };
+        const referral = await getReferralInfo(address).catch(() => ({}));
+        return { address, ...referral };
       }));
       return rows;
     },
@@ -277,7 +228,12 @@ export default function MyTeamPage() {
   const teamPerformance = teamPerformanceCandidate.found ? teamPerformanceCandidate.value : pickBigInt(performanceLegs, ["team_perf"]);
   const smallLegPerformance = smallLegPerformanceCandidate.found ? smallLegPerformanceCandidate.value : pickBigInt(performanceLegs, ["small_leg_perf"]);
   const fallbackBigLegPerformance = pickBigInt(performanceLegs, ["big_leg_perf"]);
-  const bigLegPerformance = teamPerformance > smallLegPerformance ? teamPerformance - smallLegPerformance : fallbackBigLegPerformance;
+  const bigLegPerformanceCandidate = pickBigIntCandidate(referralInfo, currentPerformanceFields.big);
+  const bigLegPerformance = bigLegPerformanceCandidate.found
+    ? bigLegPerformanceCandidate.value
+    : teamPerformance > smallLegPerformance
+      ? teamPerformance - smallLegPerformance
+      : fallbackBigLegPerformance;
   const directListLoading = directListQuery.isLoading || referralInfoQuery.isLoading || directPerformanceQuery.isLoading;
   const teamLoading = referralInfoQuery.isLoading || networkDataQuery.isLoading || performanceLegsQuery.isLoading;
 
@@ -285,7 +241,7 @@ export default function MyTeamPage() {
     if (directListLoading) {
       return (
         <div className="team-performance-state">
-          <LoadingState variant="list" rows={4} cells={3} />
+          <LoadingState variant="list" rows={4} cells={4} />
         </div>
       );
     }
@@ -301,14 +257,16 @@ export default function MyTeamPage() {
     return visibleDirectMembers.map((member, index) => {
       const address = getMemberAddress(member);
       const performanceSource = directPerformanceMap.get(String(address).toLowerCase()) || member;
-      const personalPerformance = getMemberPersonalPerformance(performanceSource, activePerformance);
-      const joinedAt = getMemberJoinedAt(performanceSource) || getMemberJoinedAt(member);
+      const directCount = Number(pickField(performanceSource, ["direct_count", "directCount"]) ?? 0);
+      const directPerformance = pickBigInt(performanceSource, currentPerformanceFields.direct);
+      const memberTeamPerformance = pickBigInt(performanceSource, currentPerformanceFields.team);
 
       return (
         <div className="team-performance-row" key={`${activePerformance}-${address || "direct"}-${index}`}>
           <span className="team-performance-cell team-address-cell font-mono text-xs text-[#caff00]" title={address || undefined}>{address ? shortAddress(address, 4, 4) : "--"}</span>
-          <span className="team-performance-cell">{formatJoinedDate(joinedAt)}</span>
-          <span className="team-performance-cell">{formatTokenAmount(personalPerformance, 18, 1)}</span>
+          <span className="team-performance-cell">{directCount}</span>
+          <span className="team-performance-cell">{formatTokenAmount(directPerformance, 18, 1)}</span>
+          <span className="team-performance-cell">{formatTokenAmount(memberTeamPerformance, 18, 1)}</span>
         </div>
       );
     });
@@ -382,8 +340,9 @@ export default function MyTeamPage() {
           <div className="team-performance-list" role="table">
             <div className="team-performance-row team-performance-head" role="row">
               <span className="team-performance-cell" role="columnheader">{t("modules.team.address")}</span>
-              <span className="team-performance-cell" role="columnheader">{t("modules.team.joinedAt")}</span>
-              <span className="team-performance-cell" role="columnheader">{t("modules.team.personalPerformance")}</span>
+              <span className="team-performance-cell" role="columnheader">{t("modules.team.directCount")}</span>
+              <span className="team-performance-cell" role="columnheader">{renderPerformanceHeaderLabel(t("modules.team.directPerformance"))}</span>
+              <span className="team-performance-cell" role="columnheader">{renderPerformanceHeaderLabel(t("modules.team.teamPerformance"))}</span>
             </div>
             <div className="team-performance-body" role="rowgroup">{renderPerformanceRows()}</div>
           </div>

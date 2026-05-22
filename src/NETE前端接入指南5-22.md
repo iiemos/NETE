@@ -126,9 +126,31 @@
 
 - `referrer`, `direct_count`, `max_depth`
 - `own_perf`, `subtree_perf`, `small_leg_perf`, `user_level`
+- `team_perf`（团队总业绩，不含本人）
+- `team_big_leg_perf`, `team_small_leg_perf`（团队大区/小区业绩）
 - `own_miner_perf`, `own_seed_perf`（`own_seed_perf` 为预售业绩）
 - `subtree_miner_perf`, `subtree_seed_perf`（`subtree_seed_perf` 为团队预售业绩）
 - `small_leg_miner_perf`, `small_leg_seed_perf`（`small_leg_seed_perf` 为小区预售业绩）
+- `team_miner_total_perf`, `team_miner_big_leg_perf`, `team_miner_small_leg_perf`（团队矿机总和/大区/小区）
+- `team_seed_total_perf`, `team_seed_big_leg_perf`, `team_seed_small_leg_perf`（团队种子总和/大区/小区）
+- `direct_miner_perf`, `direct_presale_perf`, `direct_perf`（第一层直推业绩：矿机/预售/合计）
+
+
+口径说明：
+
+
+- `subtree_*` 为全子树口径（包含本人）
+- `team_perf = subtree_perf - own_perf`（不含本人，仅团队下级）
+- `team_small_leg_perf = small_leg_perf`
+- `team_big_leg_perf = team_perf - team_small_leg_perf`
+- `team_miner_total_perf = subtree_miner_perf - own_miner_perf`
+- `team_miner_small_leg_perf = small_leg_miner_perf`
+- `team_miner_big_leg_perf = team_miner_total_perf - team_miner_small_leg_perf`
+- `team_seed_total_perf = subtree_seed_perf - own_seed_perf`
+- `team_seed_small_leg_perf = small_leg_seed_perf`
+- `team_seed_big_leg_perf = team_seed_total_perf - team_seed_small_leg_perf`
+- `team_perf = team_miner_total_perf + team_seed_total_perf`
+- `direct_*` 仅统计第一层直推用户的 `own_*` 之和，不包含更深层级
 
 
 ### 5.2.1 读取直推列表（服务端）
@@ -954,6 +976,30 @@ export type ReferralInfo = {
   small_leg_seed_perf: string;
   /** 用户等级（V0~V9） */
   user_level: number;
+  /** 团队业绩（18位精度，不含本人） */
+  team_perf: string;
+  /** 团队大区业绩（18位精度，不含本人） */
+  team_big_leg_perf: string;
+  /** 团队小区业绩（18位精度，不含本人） */
+  team_small_leg_perf: string;
+  /** 团队矿机总业绩（18位精度，不含本人） */
+  team_miner_total_perf: string;
+  /** 团队矿机大区业绩（18位精度，不含本人） */
+  team_miner_big_leg_perf: string;
+  /** 团队矿机小区业绩（18位精度，不含本人） */
+  team_miner_small_leg_perf: string;
+  /** 团队预售总业绩（18位精度，不含本人） */
+  team_seed_total_perf: string;
+  /** 团队预售大区业绩（18位精度，不含本人） */
+  team_seed_big_leg_perf: string;
+  /** 团队预售小区业绩（18位精度，不含本人） */
+  team_seed_small_leg_perf: string;
+  /** 直推总业绩（18位精度，仅第一层直推） */
+  direct_perf: string;
+  /** 直推矿机业绩（18位精度，仅第一层直推） */
+  direct_miner_perf: string;
+  /** 直推预售业绩（18位精度，仅第一层直推） */
+  direct_presale_perf: string;
 };
 
 

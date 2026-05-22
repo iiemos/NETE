@@ -1,4 +1,4 @@
-import { getPublicClient, readContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
+import { getPublicClient, readContract, simulateContract, waitForTransactionReceipt, writeContract } from "wagmi/actions";
 import { decodeEventLog, formatUnits, parseAbiItem } from "viem";
 import mockUsdtAbi from "../abis/MockUSDT.json";
 import neteCoreAbi from "../abis/NeteCore.json";
@@ -13,6 +13,13 @@ const ONE_18 = 10n ** 18n;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const BUY_SEED_GAS_LIMIT = 1_500_000n;
 const CHECKED_IN_EVENT = parseAbiItem("event CheckedIn(address indexed user,uint256 amount,uint256 checkinAt)");
+const REWARD_TYPE_MAP = {
+  referral: 0,
+  dividend: 1,
+  v9: 2,
+  v9_pool: 2,
+  v9pool: 2,
+};
 const erc721BalanceAbi = [
   {
     type: "function",
@@ -34,6 +41,27 @@ function toBigInt(value) {
   if (typeof value === "bigint") return value;
   if (value === undefined || value === null || value === "") return 0n;
   return BigInt(String(value));
+}
+
+function normalizeRewardType(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "bigint") return Number(value);
+
+  const text = String(value ?? "").trim().toLowerCase();
+  if (Object.prototype.hasOwnProperty.call(REWARD_TYPE_MAP, text)) {
+    return REWARD_TYPE_MAP[text];
+  }
+
+  const numeric = Number(text);
+  if (Number.isFinite(numeric)) return numeric;
+
+  throw new Error("Invalid claim reward type");
+}
+
+function normalizeClaimId(value) {
+  const claimId = String(value ?? "").trim();
+  if (/^0x[0-9a-fA-F]{64}$/.test(claimId)) return claimId;
+  throw new Error("Invalid claim id");
 }
 
 function ratioToPercentText(bps) {
@@ -697,21 +725,34 @@ export async function readNetworkReferrer(user) {
 }
 
 export async function claimWithSignature(account, claimMessage) {
+  const signature = claimMessage?.signature;
+  if (!signature) {
+    throw new Error("Missing claim signature");
+  }
+
   const payload = {
-    user: claimMessage.user,
+    user: claimMessage.user || account,
     amount: toBigInt(claimMessage.amount),
     epoch: toBigInt(claimMessage.epoch),
     nonce: toBigInt(claimMessage.nonce),
     deadline: toBigInt(claimMessage.deadline),
-    claimId: claimMessage.claim_id,
-    rewardType: Number(claimMessage.reward_type),
+    claimId: normalizeClaimId(claimMessage.claim_id ?? claimMessage.claimId),
+    rewardType: normalizeRewardType(claimMessage.reward_type ?? claimMessage.rewardType),
   };
-
-  return send({
+  const request = {
     account,
     address: assertContractAddress("neteNetwork"),
     abi: neteNetworkAbi,
     functionName: "claimWithSignature",
-    args: [payload, claimMessage.signature],
+    args: [payload, signature],
+  };
+
+  await simulateContract(wagmiConfig, {
+    chainId: NETE_CHAIN_ID,
+    ...request,
+  });
+
+  return send({
+    ...request,
   });
 }

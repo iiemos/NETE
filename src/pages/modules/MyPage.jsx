@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useGlobalMessage } from "../../components/common/GlobalMessage";
 import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
-import { getClaimMessage, getIncomeLedger, getIncomeOverview, getPerformanceLegs, getReferralInfo } from "../../services/neteApi";
+import { getClaimMessage, getIncomeLedger, getIncomeOverview, getPerformanceLegs, getPersonalPerformance, getReferralInfo } from "../../services/neteApi";
 import { claimWithSignature, readNetworkUserData, readUserBalances, readUserMiningData } from "../../services/neteContracts";
 import { copyText } from "../../utils/clipboard";
 import { formatTokenAmount, formatUnixTime, shortAddress } from "../../utils/formatters";
@@ -57,6 +58,21 @@ function toBigIntSafe(value) {
   }
 }
 
+function pickBigIntCandidate(sources, keys) {
+  for (const source of sources) {
+    for (const key of keys) {
+      if (source?.[key] !== undefined && source?.[key] !== null && source?.[key] !== "") {
+        return { found: true, value: toBigIntSafe(source[key]) };
+      }
+    }
+  }
+  return { found: false, value: 0n };
+}
+
+function pickBigInt(sources, keys) {
+  return pickBigIntCandidate(sources, keys).value;
+}
+
 function pickAccountField(account, name, index) {
   if (!account) return undefined;
   if (account[name] !== undefined) return account[name];
@@ -67,6 +83,45 @@ function pickAccountField(account, name, index) {
 function normalizeReferrer(value) {
   const address = String(value || "");
   return address && address.toLowerCase() !== ZERO_ADDRESS ? address : "";
+}
+
+function collectErrorText(error, depth = 0) {
+  if (!error || depth > 4) return "";
+  if (typeof error === "string") return error;
+  if (typeof error !== "object") return String(error);
+
+  return [
+    error.name,
+    error.message,
+    error.shortMessage,
+    error.details,
+    error.reason,
+    error.data,
+    error.raw,
+    error.data?.message,
+    error.data?.data,
+    error.cause?.name,
+    error.cause?.message,
+    error.cause?.shortMessage,
+    error.cause?.details,
+    collectErrorText(error.cause, depth + 1),
+  ].filter(Boolean).join(" ");
+}
+
+function getClaimErrorMessage(error, t) {
+  const text = collectErrorText(error).toLowerCase();
+
+  if (text.includes("claim signature disabled")) return t("modules.my.messages.disabled");
+  if (text.includes("expireddeadline")) return t("modules.my.messages.claimExpired");
+  if (text.includes("noncemismatch")) return t("modules.my.messages.claimNonceMismatch");
+  if (text.includes("invalidsignature") || text.includes("ecdsa")) return t("modules.my.messages.claimInvalidSignature");
+  if (text.includes("invalidrewardtype")) return t("modules.my.messages.claimInvalidRewardType");
+  if (text.includes("invalidlevel")) return t("modules.my.messages.claimInvalidLevel");
+  if (text.includes("transferrestricted") || text.includes("0xcede7487")) return t("modules.my.messages.claimTransferRestricted");
+  if (text.includes("missing claim signature")) return t("modules.my.messages.claimMissingSignature");
+  if (text.includes("invalid claim id")) return t("modules.my.messages.claimInvalidId");
+
+  return getWalletErrorMessage(error, t, "modules.my.messages.failed");
 }
 
 function getLedgerAmount(row) {
@@ -225,9 +280,8 @@ export default function MyPage() {
   const { t } = useTranslation();
   const wallet = useWalletConnector();
   const queryClient = useQueryClient();
+  const message = useGlobalMessage();
   const [claimingType, setClaimingType] = useState("");
-  const [notice, setNotice] = useState("");
-  const [copyNotice, setCopyNotice] = useState("");
   const [lastClaimInfo, setLastClaimInfo] = useState(null);
   const [ledgerPage, setLedgerPage] = useState(1);
 
@@ -250,6 +304,14 @@ export default function MyPage() {
   const referralInfoQuery = useQuery({
     queryKey: ["nete", "referral-info", wallet.currentAddress],
     queryFn: () => getReferralInfo(wallet.currentAddress),
+    enabled: Boolean(wallet.currentAddress),
+    staleTime: 15_000,
+    retry: 1,
+  });
+
+  const personalPerformanceQuery = useQuery({
+    queryKey: ["nete", "personal-performance", wallet.currentAddress],
+    queryFn: () => getPersonalPerformance(wallet.currentAddress),
     enabled: Boolean(wallet.currentAddress),
     staleTime: 15_000,
     retry: 1,
@@ -291,12 +353,6 @@ export default function MyPage() {
     setLedgerPage(1);
   }, [wallet.currentAddress]);
 
-  useEffect(() => {
-    if (!notice) return undefined;
-    const timer = window.setTimeout(() => setNotice(""), 3000);
-    return () => window.clearTimeout(timer);
-  }, [notice]);
-
   const rawLedgerRows = useMemo(
     () => toItems(incomeLedgerQuery.data).filter((row) => !isEmptyLedgerRow(row)),
     [incomeLedgerQuery.data],
@@ -327,6 +383,7 @@ export default function MyPage() {
 
   const overview = incomeOverviewQuery.data || {};
   const referral = referralInfoQuery.data || {};
+  const personalPerformance = personalPerformanceQuery.data || {};
   const performanceLegs = performanceLegsQuery.data || {};
   const balances = balancesQuery.data || {};
   const network = networkDataQuery.data || {};
@@ -340,10 +397,15 @@ export default function MyPage() {
       ?? referral.parent
       ?? referral.parent_address,
   );
-  const ownPerformance = toBigIntSafe(referral.own_perf);
-  const teamPerformance = toBigIntSafe(performanceLegs.team_perf);
-  const zonePerformance = toBigIntSafe(performanceLegs.small_leg_perf);
-  const totalDividend = toBigIntSafe(overview.dividend_income_total) + toBigIntSafe(overview.v9_income_total);
+  const ownMinerPerformance = pickBigInt([referral, personalPerformance], ["own_miner_perf", "miner_perf"]);
+  const ownSeedPerformance = pickBigInt([referral, personalPerformance], ["own_seed_perf", "presale_perf", "seed_perf"]);
+  const ownTotalCandidate = pickBigIntCandidate([referral, personalPerformance], ["own_perf"]);
+  const ownTotalPerformance = ownTotalCandidate.found ? ownTotalCandidate.value : ownMinerPerformance + ownSeedPerformance;
+  const teamPerformance = pickBigInt([referral, performanceLegs], ["team_perf"]);
+  const teamBigLegPerformance = pickBigInt([referral, performanceLegs], ["team_big_leg_perf", "big_leg_perf"]);
+  const teamSmallLegPerformance = pickBigInt([referral, performanceLegs], ["team_small_leg_perf", "small_leg_perf"]);
+  const directPerformance = pickBigInt([referral], ["direct_perf"]);
+  const totalDividend = toBigIntSafe(overview.accel_income_total) + toBigIntSafe(overview.dividend_income_total) + toBigIntSafe(overview.v9_income_total);
   const profitPoolBalance = useMemo(
     () => (miningData.positions || []).reduce((sum, position) => sum + (position.profit || 0n), 0n),
     [miningData.positions],
@@ -365,12 +427,21 @@ export default function MyPage() {
         { label: t("modules.my.summary.profitPool"), value: formatTokenAmount(profitPoolBalance, 18, 4), unit: "NETE", asset: true },
       ],
       [
-        { label: t("modules.my.summary.ownPerformance"), value: formatTokenAmount(ownPerformance, 18, 2), unit: "NETE" },
-        { label: t("modules.my.summary.team"), value: formatTokenAmount(teamPerformance, 18, 2), unit: "NETE" },
-        { label: t("modules.my.summary.zonePerformance"), value: formatTokenAmount(zonePerformance, 18, 2), unit: "NETE" },
+        { label: t("modules.my.summary.ownMinerPerformance"), value: formatTokenAmount(ownMinerPerformance, 18, 2), unit: "NETE" },
+        { label: t("modules.my.summary.ownSeedPerformance"), value: formatTokenAmount(ownSeedPerformance, 18, 2), unit: "NETE" },
+        { label: t("modules.my.summary.ownTotalPerformance"), value: formatTokenAmount(ownTotalPerformance, 18, 2), unit: "NETE" },
+      ],
+      [
+        { label: t("modules.my.summary.teamPerformance"), value: formatTokenAmount(teamPerformance, 18, 2), unit: "NETE" },
+        { label: t("modules.my.summary.teamBigLegPerformance"), value: formatTokenAmount(teamBigLegPerformance, 18, 2), unit: "NETE" },
+        { label: t("modules.my.summary.teamSmallLegPerformance"), value: formatTokenAmount(teamSmallLegPerformance, 18, 2), unit: "NETE" },
+      ],
+      [
+        { label: t("modules.my.summary.directPerformance"), value: formatTokenAmount(directPerformance, 18, 2), unit: "NETE" },
+        { label: t("modules.my.summary.totalDividend"), value: formatTokenAmount(totalDividend, 18, 4), unit: "NETE" },
       ],
     ];
-  }, [balances.neteBalance, miningData.repurchaseBalance, ownPerformance, profitPoolBalance, teamPerformance, t, zonePerformance]);
+  }, [balances.neteBalance, directPerformance, miningData.repurchaseBalance, ownMinerPerformance, ownSeedPerformance, ownTotalPerformance, profitPoolBalance, t, teamBigLegPerformance, teamPerformance, teamSmallLegPerformance, totalDividend]);
 
   const claimRows = useMemo(() => [
     { key: "referral", label: t("modules.my.summary.referral"), amount: overview.pending_referral ?? 0n, labelKey: "modules.my.claimActions.referral" },
@@ -378,15 +449,15 @@ export default function MyPage() {
     { key: "v9", label: t("modules.my.summary.v9"), amount: overview.pending_v9 ?? 0n, labelKey: "modules.my.claimActions.v9" },
   ].map((row) => ({ ...row, claimable: toBigIntSafe(row.amount) > 0n })), [overview.pending_dividend, overview.pending_referral, overview.pending_v9, t]);
 
-  const loading = incomeOverviewQuery.isLoading || referralInfoQuery.isLoading || performanceLegsQuery.isLoading || balancesQuery.isLoading || miningDataQuery.isLoading;
+  const loading = incomeOverviewQuery.isLoading || referralInfoQuery.isLoading || personalPerformanceQuery.isLoading || performanceLegsQuery.isLoading || balancesQuery.isLoading || miningDataQuery.isLoading;
 
   const copyInviteLink = async () => {
     if (!wallet.currentAddress || inviteLink === "--") return;
     try {
       const copied = await copyText(inviteLink);
-      setCopyNotice(copied ? t("modules.my.messages.copied") : inviteLink);
+      message[copied ? "success" : "info"](copied ? t("modules.my.messages.copied") : inviteLink);
     } catch {
-      setCopyNotice(inviteLink);
+      message.info(inviteLink);
     }
   };
 
@@ -395,14 +466,12 @@ export default function MyPage() {
     if (!target?.claimable) return;
 
     if (!wallet.isConnected) {
-      setNotice(t("modules.my.messages.connectWallet"));
+      message.warning(t("modules.my.messages.connectWallet"));
       return;
     }
 
     try {
       setClaimingType(type);
-      setNotice("");
-      setCopyNotice("");
       await wallet.ensureCorrectChain();
 
       const claimMessage = await getClaimMessage(type, { user: wallet.currentAddress });
@@ -412,7 +481,7 @@ export default function MyPage() {
         amount: claimMessage.amount,
         deadline: Number(claimMessage.deadline || 0),
       });
-      setNotice(t("modules.my.messages.success", { hash: tx.hash }));
+      message.success(t("modules.my.messages.success", { hash: tx.hash }));
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["nete", "income-overview", wallet.currentAddress] }),
@@ -420,12 +489,7 @@ export default function MyPage() {
         queryClient.invalidateQueries({ queryKey: ["nete", "network-data", wallet.currentAddress] }),
       ]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : t("modules.my.messages.failed");
-      if (message.includes("claim signature disabled")) {
-        setNotice(t("modules.my.messages.disabled"));
-      } else {
-        setNotice(getWalletErrorMessage(error, t, "modules.my.messages.failed"));
-      }
+      message.error(getClaimErrorMessage(error, t));
     } finally {
       setClaimingType("");
     }
@@ -463,7 +527,6 @@ export default function MyPage() {
           {t("modules.my.share")}
         </button>
       </section>
-      {copyNotice ? <p className="my-account-note my-account-note--flush" aria-live="polite">{copyNotice}</p> : null}
 
       <section className="my-account-panel">
         <div className="my-section-head">
@@ -474,7 +537,7 @@ export default function MyPage() {
         {loading ? <LoadingState className="module-loading-card" /> : (
           <div className="my-metric-board">
             {assetRows.map((row, rowIndex) => (
-              <div className="my-metric-row" key={rowIndex}>
+              <div className={row.length === 2 ? "my-metric-row my-metric-row--two" : "my-metric-row"} key={rowIndex}>
                 {row.map((item) => (
                   <article className={item.asset ? "my-metric-card my-metric-card--asset" : "my-metric-card"} key={item.label}>
                     <span className="my-account-label">{item.label}</span>
@@ -486,11 +549,6 @@ export default function MyPage() {
                 ))}
               </div>
             ))}
-
-            <article className="my-dividend-card">
-              <span className="my-account-label">{t("modules.my.summary.totalDividend")}</span>
-              <strong>{formatTokenAmount(totalDividend, 18, 4)} NETE</strong>
-            </article>
           </div>
         )}
       </section>
@@ -523,7 +581,6 @@ export default function MyPage() {
             {t("modules.my.lastClaim", { type: lastClaimInfo.type, amount: formatTokenAmount(lastClaimInfo.amount ?? 0n, 18, 4), deadline: formatUnixTime(lastClaimInfo.deadline) })}
           </p>
         ) : null}
-        {notice ? <p className="my-account-note">{notice}</p> : null}
       </section>
 
       <section className="my-account-panel my-history-panel">

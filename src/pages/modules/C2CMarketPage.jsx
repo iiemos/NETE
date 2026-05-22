@@ -1,11 +1,12 @@
 import { Icon } from "@iconify/react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatUnits } from "viem";
 import C2CPageFrame from "../../components/c2c/C2CPageFrame";
+import { useGlobalMessage } from "../../components/common/GlobalMessage";
 import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { getMySellOrders, getMyTakenOrders, getOrderByShortNo, getPublicOrders, getRuntimeConfig } from "../../services/neteApi";
@@ -31,6 +32,7 @@ const marketTabs = [
 ];
 
 const ONE_18 = 10n ** 18n;
+const ORDER_INDEX_RETRY_DELAYS = [500, 1000, 1500, 2000];
 
 function toItems(payload) {
   if (Array.isArray(payload)) return payload;
@@ -80,7 +82,7 @@ function isOrderOpen(status) {
 }
 
 function getOrderDisplayNo(order) {
-  return order?.shortOrderNo || order?.orderNo || order?.orderId || "--";
+  return order?.shortOrderNo || "--";
 }
 
 function normalizeOrder(raw) {
@@ -129,10 +131,43 @@ function mergeOrders(primary, fallback) {
   });
 }
 
+function wait(milliseconds) {
+  return new Promise((resolve) => window.setTimeout(resolve, milliseconds));
+}
+
+function findOrderById(payload, orderId) {
+  const value = String(orderId || "").trim();
+  if (!value) return null;
+  return toItems(payload).find((order) => {
+    const currentId = String(order?.order_id ?? order?.orderId ?? order?.id ?? "").trim();
+    const shortOrderNo = String(order?.short_order_no ?? order?.shortOrderNo ?? "").trim();
+    return currentId === value && shortOrderNo;
+  }) || null;
+}
+
+async function waitForBackendOrder(user, orderId) {
+  const value = String(orderId || "").trim();
+  if (!user || !value) return null;
+
+  for (let index = 0; index <= ORDER_INDEX_RETRY_DELAYS.length; index += 1) {
+    const order = await getMySellOrders(user, { page: 1, pageSize: 80 })
+      .then((orders) => findOrderById(orders, value))
+      .catch(() => null);
+    if (order) return order;
+
+    if (index < ORDER_INDEX_RETRY_DELAYS.length) {
+      await wait(ORDER_INDEX_RETRY_DELAYS[index]);
+    }
+  }
+
+  return null;
+}
+
 export default function C2CMarketPage() {
   const { i18n, t } = useTranslation();
   const wallet = useWalletConnector();
   const queryClient = useQueryClient();
+  const message = useGlobalMessage();
   const [searchParams, setSearchParams] = useSearchParams();
   const view = searchParams.get("view");
   const activeView = view === "mine" ? "mine" : "market";
@@ -143,8 +178,6 @@ export default function C2CMarketPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sellQuantity, setSellQuantity] = useState("");
   const [sellPrice, setSellPrice] = useState("");
-  const [optimisticOrders, setOptimisticOrders] = useState([]);
-  const [toastMessage, setToastMessage] = useState("");
   const [actionKey, setActionKey] = useState("");
 
   const runtimeConfigQuery = useQuery({
@@ -204,21 +237,15 @@ export default function C2CMarketPage() {
 
   const publicOrders = useMemo(
     () => mergeOrders(
-      [
-        ...optimisticOrders,
-        ...(shortOrderQuery.data ? [normalizeOrder(shortOrderQuery.data)] : []),
-      ],
+      shortOrderQuery.data ? [normalizeOrder(shortOrderQuery.data)] : [],
       toItems(publicOrdersQuery.data).map(normalizeOrder),
     ),
-    [optimisticOrders, publicOrdersQuery.data, shortOrderQuery.data],
+    [publicOrdersQuery.data, shortOrderQuery.data],
   );
 
   const mySellOrders = useMemo(
-    () => mergeOrders(
-      optimisticOrders.filter((item) => toLower(item.seller) === toLower(wallet.currentAddress)),
-      toItems(mySellOrdersQuery.data).map(normalizeOrder),
-    ),
-    [mySellOrdersQuery.data, optimisticOrders, wallet.currentAddress],
+    () => toItems(mySellOrdersQuery.data).map(normalizeOrder),
+    [mySellOrdersQuery.data],
   );
 
   const myTakenOrders = useMemo(
@@ -276,12 +303,6 @@ export default function C2CMarketPage() {
       .slice(0, 80);
   }, [mySellOrders, myTakenOrders, t]);
 
-  useEffect(() => {
-    if (!toastMessage) return undefined;
-    const timer = window.setTimeout(() => setToastMessage(""), 3000);
-    return () => window.clearTimeout(timer);
-  }, [toastMessage]);
-
   const switchTab = (next) => {
     if (next === "market") {
       setSearchParams({});
@@ -300,9 +321,9 @@ export default function C2CMarketPage() {
 
     try {
       const copied = await copyText(orderNo);
-      setToastMessage(copied ? t("modules.c2cMarket.messages.orderCopied") : orderNo);
+      message[copied ? "success" : "info"](copied ? t("modules.c2cMarket.messages.orderCopied") : orderNo);
     } catch {
-      setToastMessage(orderNo);
+      message.info(orderNo);
     }
   };
 
@@ -316,12 +337,12 @@ export default function C2CMarketPage() {
 
   const handlePurchase = async (order) => {
     if (!wallet.isConnected) {
-      setToastMessage(t("modules.c2cMarket.messages.connectWallet"));
+      message.warning(t("modules.c2cMarket.messages.connectWallet"));
       return;
     }
     if (!order?.orderId) return;
     if (toLower(order.seller) === toLower(wallet.currentAddress)) {
-      setToastMessage(t("modules.c2cMarket.messages.ownOrder"));
+      message.warning(t("modules.c2cMarket.messages.ownOrder"));
       return;
     }
 
@@ -334,10 +355,10 @@ export default function C2CMarketPage() {
       }
       const tx = await fillOrder(wallet.currentAddress, order.orderId);
       await refreshOrders();
-      setToastMessage(t("modules.c2cMarket.messages.buySuccess", { hash: tx.hash }));
+      message.success(t("modules.c2cMarket.messages.buySuccess", { hash: tx.hash }));
       switchTab("mine");
     } catch (error) {
-      setToastMessage(getWalletErrorMessage(error, t, "modules.c2cMarket.messages.buyFailed"));
+      message.error(getWalletErrorMessage(error, t, "modules.c2cMarket.messages.buyFailed"));
     } finally {
       setActionKey("");
     }
@@ -345,7 +366,7 @@ export default function C2CMarketPage() {
 
   const handleCancelOrder = async (order) => {
     if (!wallet.isConnected || !order?.orderId) {
-      setToastMessage(t("modules.c2cMarket.messages.connectWallet"));
+      message.warning(t("modules.c2cMarket.messages.connectWallet"));
       return;
     }
 
@@ -353,11 +374,10 @@ export default function C2CMarketPage() {
       setActionKey(`cancel-${order.orderId}`);
       await wallet.ensureCorrectChain();
       const tx = await cancelSellOrder(wallet.currentAddress, order.orderId);
-      setOptimisticOrders((prev) => prev.filter((item) => item.orderId !== order.orderId));
       await refreshOrders();
-      setToastMessage(t("modules.c2cMarket.messages.cancelSuccess", { hash: tx.hash }));
+      message.success(t("modules.c2cMarket.messages.cancelSuccess", { hash: tx.hash }));
     } catch (error) {
-      setToastMessage(getWalletErrorMessage(error, t, "modules.c2cMarket.messages.cancelFailed"));
+      message.error(getWalletErrorMessage(error, t, "modules.c2cMarket.messages.cancelFailed"));
     } finally {
       setActionKey("");
     }
@@ -367,7 +387,7 @@ export default function C2CMarketPage() {
     event.preventDefault();
 
     if (!wallet.isConnected) {
-      setToastMessage(t("modules.c2cMarket.messages.connectWallet"));
+      message.warning(t("modules.c2cMarket.messages.connectWallet"));
       return;
     }
 
@@ -378,25 +398,25 @@ export default function C2CMarketPage() {
       neteAmount = parseTokenInput(sellQuantity || "0");
       pricePerNete = parseTokenInput(sellPrice || "0");
     } catch {
-      setToastMessage(t("modules.c2cMarket.messages.invalidInput"));
+      message.warning(t("modules.c2cMarket.messages.invalidInput"));
       return;
     }
 
     if (neteAmount <= 0n) {
-      setToastMessage(t("modules.c2cMarket.messages.invalidSellQuantity"));
+      message.warning(t("modules.c2cMarket.messages.invalidSellQuantity"));
       return;
     }
     if (pricePerNete <= 0n) {
-      setToastMessage(t("modules.c2cMarket.messages.invalidSellPrice"));
+      message.warning(t("modules.c2cMarket.messages.invalidSellPrice"));
       return;
     }
 
     if (guideMinPrice > 0n && pricePerNete < guideMinPrice) {
-      setToastMessage(t("modules.c2cMarket.messages.priceTooLow", { price: formatTokenAmount(guideMinPrice, 18, 6) }));
+      message.warning(t("modules.c2cMarket.messages.priceTooLow", { price: formatTokenAmount(guideMinPrice, 18, 6) }));
       return;
     }
     if (guideMaxPrice > 0n && pricePerNete > guideMaxPrice) {
-      setToastMessage(t("modules.c2cMarket.messages.priceTooHigh", { price: formatTokenAmount(guideMaxPrice, 18, 6) }));
+      message.warning(t("modules.c2cMarket.messages.priceTooHigh", { price: formatTokenAmount(guideMaxPrice, 18, 6) }));
       return;
     }
 
@@ -408,27 +428,15 @@ export default function C2CMarketPage() {
         await approveNeteToMarket(wallet.currentAddress, neteAmount);
       }
       const tx = await createSellOrder(wallet.currentAddress, neteAmount, pricePerNete);
-      const shortOrderNo = tx.shortOrderNo || formatOrderNo(tx.orderNo);
-      const optimisticOrder = normalizeOrder({
-        order_id: tx.orderId || "",
-        short_order_no: shortOrderNo,
-        order_no: tx.orderNo || tx.hash,
-        seller: tx.seller || wallet.currentAddress,
-        nete_amount: tx.neteAmount,
-        price_usdt: tx.pricePerNete,
-        total_usdt: tx.totalUsdt,
-        status: "Open",
-        created_at: Math.floor(Date.now() / 1000),
-      });
+      await waitForBackendOrder(wallet.currentAddress, tx.orderId);
       setSellQuantity("");
       setSellPrice("");
       setIsModalOpen(false);
-      setOptimisticOrders((prev) => mergeOrders([optimisticOrder], prev));
       await refreshOrders();
       switchTab("mine");
-      setToastMessage(t("modules.c2cMarket.messages.listingSuccess", { hash: tx.hash }));
+      message.success(t("modules.c2cMarket.messages.listingSuccess", { hash: tx.hash }));
     } catch (error) {
-      setToastMessage(getWalletErrorMessage(error, t, "modules.c2cMarket.messages.listingFailed"));
+      message.error(getWalletErrorMessage(error, t, "modules.c2cMarket.messages.listingFailed"));
     } finally {
       setActionKey("");
     }
@@ -767,8 +775,6 @@ export default function C2CMarketPage() {
           </div>
         </div>
       ), portalRoot) : null}
-
-      <div className={toastMessage ? "c2c-toast is-show" : "c2c-toast"}>{toastMessage}</div>
     </C2CPageFrame>
   );
 }

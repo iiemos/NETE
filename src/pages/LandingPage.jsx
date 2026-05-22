@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import { NavLink } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import GlobalHeader from "../components/common/GlobalHeader";
+import { useGlobalMessage } from "../components/common/GlobalMessage";
 import FeaturesSection from "../components/landing/FeaturesSection";
 import FooterSection from "../components/landing/FooterSection";
 import HeroSection from "../components/landing/HeroSection";
@@ -81,6 +82,7 @@ function AnnouncementBar({ items, t }) {
 
 export default function LandingPage() {
   const { i18n, t } = useTranslation();
+  const message = useGlobalMessage();
   const modelMechanisms = t("landing.project.modelMechanisms", { returnObjects: true });
   const roadmapItems = t("landing.project.roadmapItems", { returnObjects: true });
   const contractItems = t("landing.project.contractItems", { returnObjects: true });
@@ -97,14 +99,10 @@ export default function LandingPage() {
     document.title = "NETE";
 
     const scrollTopBtn = document.getElementById("scroll-top-btn");
-    const toast = document.getElementById("toast");
-    const toastMsg = document.getElementById("toast-msg");
 
-    if (!scrollTopBtn || !toast || !toastMsg) {
+    if (!scrollTopBtn) {
       return undefined;
     }
-
-    let toastTimer;
 
     const handleScroll = () => {
       scrollTopBtn.classList.toggle("is-visible", window.scrollY > 400);
@@ -117,22 +115,13 @@ export default function LandingPage() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     scrollTopBtn.addEventListener("click", handleScrollTopClick);
 
-    const showToast = (message, duration = 3000) => {
-      clearTimeout(toastTimer);
-      toastMsg.textContent = message;
-      toast.classList.add("is-visible");
-      toastTimer = window.setTimeout(() => {
-        toast.classList.remove("is-visible");
-      }, duration);
-    };
-
     const getStartedBtn = document.getElementById("get-started-btn");
     const launchBtn = document.getElementById("launch-btn");
     const ctaPrimaryBtn = document.getElementById("cta-primary-btn");
 
-    const handleGetStarted = () => showToast(t("landing.toast.core"));
-    const handleLaunch = () => showToast(t("landing.toast.launch"));
-    const handleCreateWallet = () => showToast(t("landing.toast.wallet"));
+    const handleGetStarted = () => message.info(t("landing.toast.core"));
+    const handleLaunch = () => message.info(t("landing.toast.launch"));
+    const handleCreateWallet = () => message.info(t("landing.toast.wallet"));
 
     getStartedBtn?.addEventListener("click", handleGetStarted);
     launchBtn?.addEventListener("click", handleLaunch);
@@ -140,8 +129,6 @@ export default function LandingPage() {
     handleScroll();
 
     return () => {
-      clearTimeout(toastTimer);
-
       window.removeEventListener("scroll", handleScroll);
       scrollTopBtn.removeEventListener("click", handleScrollTopClick);
 
@@ -149,7 +136,7 @@ export default function LandingPage() {
       launchBtn?.removeEventListener("click", handleLaunch);
       ctaPrimaryBtn?.removeEventListener("click", handleCreateWallet);
     };
-  }, [t]);
+  }, [message, t]);
 
   return (
     <>
@@ -230,7 +217,7 @@ export default function LandingPage() {
               <span className="section__eyebrow" aria-hidden="true">
                 {t("landing.team.eyebrow")}
               </span>
-              <h2 className="section__title" id="team-heading">
+              <h2 className="section__title landing-title-lines" id="team-heading">
                 {t("landing.team.title")}
               </h2>
               <p className="section__desc">
@@ -257,7 +244,7 @@ export default function LandingPage() {
           <div className="cta-section__bg" aria-hidden="true"></div>
           <div className="container">
             <div className="cta-section__inner">
-              <h2 className="cta-section__title" id="cta-heading">
+              <h2 className="cta-section__title landing-title-lines" id="cta-heading">
                 {t("landing.cta.title")}
               </h2>
               <p className="cta-section__subtitle">
@@ -303,11 +290,6 @@ export default function LandingPage() {
       <button className="scroll-top" id="scroll-top-btn" aria-label="Scroll back to top">
         <Icon className="scroll-top__icon" icon="mdi:arrow-up" aria-hidden="true" />
       </button>
-
-      <div className="toast" id="toast" role="status" aria-live="polite" aria-atomic="true">
-        <span className="toast__dot" aria-hidden="true"></span>
-        <span id="toast-msg">{t("landing.toast.default")}</span>
-      </div>
     </>
   );
 }

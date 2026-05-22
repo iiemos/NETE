@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { formatUnits } from "viem";
 import LoadingState from "../../components/common/LoadingState";
+import { useGlobalMessage } from "../../components/common/GlobalMessage";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { getPresaleRecords } from "../../services/neteApi";
 import { approveUsdtToCore, buySeed, readCoreSeedInfo, readUsdtCoreAllowance, readUserBalances, readUserMiningData } from "../../services/neteContracts";
@@ -15,9 +16,9 @@ export default function BuySeedPage() {
   const { t } = useTranslation();
   const wallet = useWalletConnector();
   const queryClient = useQueryClient();
+  const globalMessage = useGlobalMessage();
   const [quantityInput, setQuantityInput] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [txMessage, setTxMessage] = useState("");
 
   const seedInfoQuery = useQuery({
     queryKey: ["nete", "seed-info"],
@@ -98,15 +99,8 @@ export default function BuySeedPage() {
       ? t("modules.seed.confirm")
       : t("modules.seed.saleClosed");
 
-  useEffect(() => {
-    if (!txMessage) return undefined;
-    const timer = window.setTimeout(() => setTxMessage(""), 3000);
-    return () => window.clearTimeout(timer);
-  }, [txMessage]);
-
   const clearForm = () => {
     setQuantityInput("");
-    setTxMessage("");
   };
 
   const handleBuySeed = async () => {
@@ -114,7 +108,6 @@ export default function BuySeedPage() {
 
     try {
       setSubmitting(true);
-      setTxMessage("");
       await wallet.ensureCorrectChain();
 
       const account = wallet.currentAddress;
@@ -124,7 +117,7 @@ export default function BuySeedPage() {
       }
       const result = await buySeed(account, estimatedUsdt);
 
-      setTxMessage(t("modules.seed.messages.success", { hash: result.hash }));
+      globalMessage.success(t("modules.seed.messages.success", { hash: result.hash }));
       setQuantityInput("");
 
       await Promise.all([
@@ -135,10 +128,10 @@ export default function BuySeedPage() {
       ]);
     } catch (error) {
       const rawMessage = error instanceof Error ? error.message : "";
-      const message = rawMessage.includes("SeedSaleClosed") || rawMessage.includes("0xc038c35b")
+      const messageText = rawMessage.includes("SeedSaleClosed") || rawMessage.includes("0xc038c35b")
         ? t("modules.seed.messages.saleClosed")
         : getWalletErrorMessage(error, t, "modules.seed.messages.failed");
-      setTxMessage(message);
+      globalMessage.error(messageText);
     } finally {
       setSubmitting(false);
     }
@@ -300,11 +293,6 @@ export default function BuySeedPage() {
           )}
         </section>
       </div>
-      {txMessage ? (
-        <div className="seed-toast is-show" role="status" aria-live="polite">
-          {txMessage}
-        </div>
-      ) : null}
     </section>
   );
 }

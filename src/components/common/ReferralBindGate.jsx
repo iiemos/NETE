@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@iconify/react";
+import { useGlobalMessage } from "./GlobalMessage";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
 import { getReferralInfo } from "../../services/neteApi";
 import { bindReferrer, readNetworkReferrer } from "../../services/neteContracts";
@@ -35,9 +36,9 @@ export default function ReferralBindGate() {
   const wallet = useWalletConnector();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const message = useGlobalMessage();
   const [referrerInput, setReferrerInput] = useState("");
   const [binding, setBinding] = useState(false);
-  const [bindNotice, setBindNotice] = useState("");
   const [bindModalDismissed, setBindModalDismissed] = useState(false);
   const [boundWalletAddress, setBoundWalletAddress] = useState("");
 
@@ -81,15 +82,8 @@ export default function ReferralBindGate() {
 
   useEffect(() => {
     setBindModalDismissed(false);
-    setBindNotice("");
     setBoundWalletAddress("");
   }, [wallet.currentAddress]);
-
-  useEffect(() => {
-    if (!bindNotice) return undefined;
-    const timer = window.setTimeout(() => setBindNotice(""), 3000);
-    return () => window.clearTimeout(timer);
-  }, [bindNotice]);
 
   useEffect(() => {
     if (!bindModalDismissed || !wallet.isConnected || referrerLoading || referrerError || locallyBound || !referrerMissing) {
@@ -104,26 +98,26 @@ export default function ReferralBindGate() {
     const referrer = referrerInput.trim();
 
     if (!isValidAddress(referrer)) {
-      setBindNotice(t("modules.team.messages.invalidAddress"));
+      message.warning(t("modules.team.messages.invalidAddress"));
       return;
     }
     if (!hasReferrer(referrer)) {
-      setBindNotice(t("modules.team.messages.zeroAddress"));
+      message.warning(t("modules.team.messages.zeroAddress"));
       return;
     }
     if (referrer.toLowerCase() === String(wallet.currentAddress || "").toLowerCase()) {
-      setBindNotice(t("modules.team.messages.selfAddress"));
+      message.warning(t("modules.team.messages.selfAddress"));
       return;
     }
 
     try {
       setBinding(true);
-      setBindNotice("");
       await wallet.ensureCorrectChain();
-      await bindReferrer(wallet.currentAddress, referrer);
+      const tx = await bindReferrer(wallet.currentAddress, referrer);
       setBoundWalletAddress(wallet.currentAddress || "");
       setReferrerInput("");
       setBindModalDismissed(false);
+      message.success(t("modules.team.messages.success", { hash: tx.hash }));
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["nete", "referral-info", wallet.currentAddress] }),
         queryClient.invalidateQueries({ queryKey: ["nete", "network-referrer", wallet.currentAddress] }),
@@ -132,7 +126,7 @@ export default function ReferralBindGate() {
     } catch (error) {
       if (isAlreadyBoundError(error)) {
         setBoundWalletAddress(wallet.currentAddress || "");
-        setBindNotice(t("modules.team.messages.alreadyBound"));
+        message.info(t("modules.team.messages.alreadyBound"));
         await Promise.all([
           queryClient.invalidateQueries({ queryKey: ["nete", "referral-info", wallet.currentAddress] }),
           queryClient.invalidateQueries({ queryKey: ["nete", "network-referrer", wallet.currentAddress] }),
@@ -140,7 +134,7 @@ export default function ReferralBindGate() {
         ]);
         return;
       }
-      setBindNotice(getBindErrorMessage(error, t));
+      message.error(getBindErrorMessage(error, t));
     } finally {
       setBinding(false);
     }
@@ -178,7 +172,6 @@ export default function ReferralBindGate() {
             {binding ? t("modules.team.submitting") : t("modules.team.bind")}
           </button>
         </div>
-        {bindNotice ? <p className="mt-3 break-all text-xs leading-5 text-white/70">{bindNotice}</p> : null}
       </article>
     </div>
   );

@@ -746,17 +746,11 @@ button {
   animation: spin 0.8s linear infinite;
 }
 
-.wallet-modal__empty,
-.wallet-modal__error {
+.wallet-modal__empty {
   margin-top: 14px;
   color: rgba(255, 255, 255, 0.68);
   font-size: 0.8rem;
   line-height: 1.6;
-}
-
-.wallet-modal__error {
-  color: #ffb4b4;
-  word-break: break-word;
 }
 
 @keyframes spin {
@@ -938,7 +932,7 @@ button {
 .hero__video {
   display: block;
   width: auto;
-  max-width: 100%;
+  max-width: 120%;
   height: auto;
   max-height: min(58svh, 560px);
   margin-inline: auto;
@@ -1468,6 +1462,11 @@ button {
   line-height: 1.1;
   letter-spacing: -0.02em;
   margin-bottom: var(--space-5);
+}
+
+.landing-title-lines {
+  white-space: pre-line;
+  /* text-align: left; */
 }
 
 .section__desc {
@@ -2774,36 +2773,107 @@ button {
   transform: translateY(-3px);
 }
 
-/* Toast notification (Fixed Positioning, Z-Index) */
-.toast {
+.global-message-viewport {
   position: fixed;
-  bottom: var(--space-8);
+  top: 76px;
   left: 50%;
-  transform: translateX(-50%) translateY(100px);
-  z-index: var(--z-toast);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-4) var(--space-6);
-  display: flex;
+  z-index: 900;
+  display: grid;
+  width: min(520px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  gap: 10px;
+  pointer-events: none;
+}
+
+.global-message {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-3);
-  font-size: var(--text-sm);
-  box-shadow: var(--shadow-card);
-  transition: transform var(--dur-slow) var(--ease-out-expo);
-  white-space: nowrap;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(10, 16, 12, 0.94);
+  color: #fff;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(16px);
+  pointer-events: auto;
+  animation: global-message-enter 180ms ease-out;
 }
 
-.toast.is-visible {
-  transform: translateX(-50%) translateY(0);
+.global-message__icon {
+  width: 22px;
+  height: 22px;
 }
 
-.toast__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--color-acid);
-  flex-shrink: 0;
+.global-message__body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.global-message__body strong,
+.global-message__body span {
+  overflow-wrap: anywhere;
+}
+
+.global-message__body strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.global-message__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.76);
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.global-message__close:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.global-message--success .global-message__icon {
+  color: #caff00;
+}
+
+.global-message--error .global-message__icon {
+  color: #ff5f70;
+}
+
+.global-message--warning .global-message__icon {
+  color: #ffd166;
+}
+
+.global-message--info .global-message__icon {
+  color: #73d2ff;
+}
+
+@keyframes global-message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .global-message-viewport {
+    top: 68px;
+  }
 }
 
 /* Glow orbs (decorative, Stacking Context) */

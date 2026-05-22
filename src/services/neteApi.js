@@ -23,6 +23,26 @@ function toApiUrl(path, query) {
   return NETE_API_BASE.startsWith("http") ? url.toString() : `${url.pathname}${url.search}`;
 }
 
+function toBigIntValue(value) {
+  if (typeof value === "bigint") return value;
+  if (value === undefined || value === null || value === "") return 0n;
+  try {
+    return BigInt(String(value));
+  } catch {
+    return 0n;
+  }
+}
+
+function toUnixSeconds(value) {
+  const numeric = Number(value);
+  if (Number.isFinite(numeric) && numeric > 0) {
+    return numeric > 1_000_000_000_000 ? Math.floor(numeric / 1000) : Math.floor(numeric);
+  }
+
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? Math.floor(parsed / 1000) : 0;
+}
+
 async function request(path, { method = "GET", query, body } = {}) {
   const response = await fetch(toApiUrl(path, query), {
     method,
@@ -118,6 +138,28 @@ export async function getPresaleRecords(user, { page = 1, pageSize = 20 } = {}) 
   return request(path, {
     query: { page, page_size: pageSize },
   });
+}
+
+export async function getCheckInRecords(user, { page = 1, pageSize = 500 } = {}) {
+  const data = await request("/v1/checkin/records", {
+    query: { user, page, page_size: pageSize },
+  });
+  const items = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+
+  return items
+    .map((item, index) => {
+      const transactionHash = String(item.tx_hash ?? item.txHash ?? item.transactionHash ?? "");
+      const logIndex = item.log_index ?? item.logIndex ?? index;
+
+      return {
+        id: `${transactionHash || "checkin"}-${logIndex}`,
+        amount: toBigIntValue(item.amount),
+        checkinAt: toUnixSeconds(item.checkin_at ?? item.checkinAt ?? item.created_at ?? item.createdAt),
+        transactionHash,
+      };
+    })
+    .filter((item) => item.checkinAt > 0)
+    .sort((a, b) => b.checkinAt - a.checkinAt);
 }
 
 export async function getIncomeOverview(user) {

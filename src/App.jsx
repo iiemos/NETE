@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppShell from "./components/common/AppShell";
+import { GlobalMessageProvider } from "./components/common/GlobalMessage";
 import ReferralBindGate from "./components/common/ReferralBindGate";
 import BuySeedPage from "./pages/modules/BuySeedPage";
 import C2CMarketPage from "./pages/modules/C2CMarketPage";
@@ -10,7 +11,7 @@ import LandingPage from "./pages/LandingPage";
 
 export default function App() {
   return (
-    <>
+    <GlobalMessageProvider>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/c2c" element={<Navigate to="/c2c/market" replace />} />
@@ -31,6 +32,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ReferralBindGate />
-    </>
+    </GlobalMessageProvider>
   );
 }

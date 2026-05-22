@@ -161,7 +161,7 @@ const resources = {
         },
         team: {
           eyebrow: "// Technical Team",
-          title: "技术基因，2018年我们就已站在浪潮之巅",
+          title: "技术基因\n2018年我们就已站在浪潮之巅",
           desc: "EEA 联盟成员，自主研发 VIA Protocol 与 Nete 平台，以全栈区块链技术能力支撑生态长期运行。",
           items: [
             { title: "自主研发", desc: "核心协议、业务合约与前端交互统一围绕链上透明规则构建。", tag: "VIA Protocol｜Nete 平台" },
@@ -180,7 +180,7 @@ const resources = {
           ],
         },
         cta: {
-          title: "NETE基金会 | 不是管理者，是守护者",
+          title: "NETE基金会\n不是管理者，是守护者",
           subtitle: "NETE Foundation不隶属于任何单一商业实体，它以独立、透明、非营利为原则，致力于：",
           foundationItems: [
             "维护NETE生态的长期健康发展",
