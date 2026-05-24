@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useGlobalMessage } from "../../components/common/GlobalMessage";
 import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
-import { getClaimMessage, getIncomeLedger, getIncomeOverview, getPerformanceLegs, getPersonalPerformance, getReferralInfo } from "../../services/neteApi";
+import { getAccelRewardLedger, getClaimMessage, getIncomeLedger, getIncomeOverview, getPerformanceLegs, getPersonalPerformance, getReferralInfo } from "../../services/neteApi";
 import { claimWithSignature, readNetworkUserData, readUserBalances, readUserMiningData } from "../../services/neteContracts";
 import { copyText } from "../../utils/clipboard";
 import { formatTokenAmount, formatUnixTime, shortAddress } from "../../utils/formatters";
@@ -149,6 +149,10 @@ function getLedgerAmount(row) {
 }
 
 function getLedgerType(row, t) {
+  if (row?.ledgerSource === "dynamic") {
+    return t("modules.my.ledgerTypes.dynamicRelease");
+  }
+
   const type = String(row?.type ?? row?.biz_type ?? row?.category ?? row?.event_type ?? row?.reward_type ?? "").trim();
   const normalizedType = type.toLowerCase();
 
@@ -222,6 +226,13 @@ function getMinerAmountFromPrincipal(value) {
 }
 
 function getLedgerMinerTag(row, t) {
+  if (row?.ledgerSource === "dynamic") {
+    const positionId = row?.position_id ?? row?.positionId;
+    return positionId !== undefined && positionId !== null && positionId !== ""
+      ? { label: t("modules.my.positionMiner", { id: positionId }), tone: "miner" }
+      : null;
+  }
+
   if (!row?.position_id && !row?.positionId && row?.tier === undefined && row?.tier_index === undefined && row?.tierIndex === undefined && row?.principal === undefined && row?.principalWei === undefined) {
     return null;
   }
@@ -248,18 +259,28 @@ function normalizeLedgerRow(row, index, t) {
   const signedText = amountBigInt < 0n ? "-" : "+";
   const amountText = `${signedText}${formatTokenAmount(amountBigInt < 0n ? -amountBigInt : amountBigInt, 18, 6)}`;
   const minerTag = getLedgerMinerTag(row, t);
-  const mergedMinerType = minerTag && isMinerLedger(row)
-    ? t(minerTag.tone === "airdrop" ? "modules.my.airdropMinerIncome" : "modules.my.minerIncomeWithModel", { model: minerTag.label })
-    : "";
+  const ledgerType = getLedgerType(row, t);
+  const isMinerIncome = Boolean(minerTag && isMinerLedger(row));
 
   return {
     id: `${row?.id ?? row?.tx_hash ?? row?.txHash ?? "row"}-${index}`,
     createdAtText: getLedgerTimeText(row),
-    type: mergedMinerType || getLedgerType(row, t),
-    typeTone: mergedMinerType ? "miner" : "",
+    title: isMinerIncome ? minerTag.label : ledgerType,
+    subtitle: isMinerIncome ? ledgerType : t("modules.my.ledgerTitle"),
+    typeTone: isMinerIncome ? "miner" : "",
     amountText,
     balanceText: formatTokenAmount(row?.balance ?? row?.remain ?? 0n, 18, 6),
     txHash: String(row?.tx_hash ?? row?.txHash ?? row?.tx ?? "--"),
+  };
+}
+
+function buildMergedLedgerPayload(incomePayload, accelPayload) {
+  const incomeRows = toItems(incomePayload).map((row) => ({ ...row, ledgerSource: "static" }));
+  const accelRows = toItems(accelPayload).map((row) => ({ ...row, ledgerSource: "dynamic" }));
+
+  return {
+    items: [...incomeRows, ...accelRows],
+    total: toTotalCount(incomePayload) + toTotalCount(accelPayload),
   };
 }
 
@@ -295,7 +316,15 @@ export default function MyPage() {
 
   const incomeLedgerQuery = useQuery({
     queryKey: ["nete", "income-ledger", wallet.currentAddress, ledgerPage],
-    queryFn: () => getIncomeLedger(wallet.currentAddress, { page: ledgerPage, pageSize: LEDGER_PAGE_SIZE }),
+    queryFn: async () => {
+      const pageSize = ledgerPage * LEDGER_PAGE_SIZE;
+      const [incomePayload, accelPayload] = await Promise.all([
+        getIncomeLedger(wallet.currentAddress, { page: 1, pageSize }),
+        getAccelRewardLedger(wallet.currentAddress, { page: 1, pageSize }),
+      ]);
+
+      return buildMergedLedgerPayload(incomePayload, accelPayload);
+    },
     enabled: Boolean(wallet.currentAddress),
     staleTime: 10_000,
     retry: 1,
@@ -354,7 +383,9 @@ export default function MyPage() {
   }, [wallet.currentAddress]);
 
   const rawLedgerRows = useMemo(
-    () => toItems(incomeLedgerQuery.data).filter((row) => !isEmptyLedgerRow(row)),
+    () => toItems(incomeLedgerQuery.data)
+      .filter((row) => !isEmptyLedgerRow(row))
+      .sort((a, b) => getLedgerTimeValue(b) - getLedgerTimeValue(a)),
     [incomeLedgerQuery.data],
   );
   const ledgerTotalCount = toTotalCount(incomeLedgerQuery.data);
@@ -606,12 +637,13 @@ export default function MyPage() {
               {ledgerRows.map((row) => (
                 <div className="my-detail-row" key={row.id}>
                   <div className="my-detail-row__info">
-                    <div className="my-detail-row__badges">
-                      <span className={row.typeTone ? `my-type-badge my-type-badge--${row.typeTone}` : "my-type-badge"}>{row.type}</span>
-                    </div>
+                    <span className={row.typeTone ? `my-detail-row__title my-detail-row__title--${row.typeTone}` : "my-detail-row__title"}>{row.title}</span>
+                    <span className="my-detail-row__subtitle">{row.subtitle}</span>
+                  </div>
+                  <div className="my-detail-row__meta">
+                    <strong className={row.amountText.startsWith("-") ? "is-negative" : ""}>{row.amountText}</strong>
                     <time>{row.createdAtText}</time>
                   </div>
-                  <strong className={row.amountText.startsWith("-") ? "is-negative" : ""}>{row.amountText}</strong>
                 </div>
               ))}
             </div>
