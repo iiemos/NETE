@@ -9,6 +9,9 @@
 
 - 新增 `GET /v1/dividend/ledger`、`GET /v1/v9/pool-ledger`
 - `referral/info` 增加 `team_count`（团队人数，伞下不含本人）
+- `income/ledger` **合并**矿机流水与签单领取（referral/dividend/v9），统一按 `occurred_at` 排序
+- `income/claims` 的 dividend 记录增加 `user_level`；referral 记录增加 `position_id`/`tier`
+- `accel/reward-ledger` 增加 `tier`/`principal`/`is_airdrop`；新增 `GET /v1/miners/positions`
 - `income/overview`、`performance/legs`、`referral/downlines` 增加 `effective_direct_count`、`max_depth` 等
 - 领导人等级 **仅按小区矿机业绩** 定级；加速日结公式统一为 **本金 × 层比例 ÷ 周期天数**
 
@@ -558,9 +561,9 @@
 | 页面/模块 | 接口 | 说明 |
 |-----------|------|------|
 | 收益总览 | `GET /v1/income/overview` | 加速/分红/V9 可领与累计、等级、有效直推 |
-| 矿机领取流水 | `GET /v1/income/ledger` | 每次 `claimReward` 明细 |
-| 签名领取记录 | `GET /v1/income/claims` | 推荐/分红/V9 签名单状态 |
-| 加速入账明细 | `GET /v1/accel/reward-ledger` | 上链后写入哪台矿机 |
+| **收益明细（统一）** | `GET /v1/income/ledger` | 矿机 claimReward + referral/dividend/v9 签单领取，**按时间统一排序** |
+| 签单状态查询 | `GET /v1/income/claims` | 仅用于 pending/expired 等**领取流程**状态，不再用于明细列表 |
+| 加速入账明细 | `GET /v1/accel/reward-ledger` | 上链后写入哪台矿机（调试/补充，明细页优先用 ledger） |
 | **等级分红日结** | `GET /v1/dividend/ledger` | 按 UTC 日 V1~V9 应得拆分 |
 | **V9 池注入** | `GET /v1/v9/pool-ledger` | 全网购矿 1% 注入流水 |
 | V9 用户领取 | `GET /v1/income/claims?reward_type=v9` | 个人 V9 领取 |
@@ -613,11 +616,78 @@
 | `miner_*` | 矿机收益统计（与链上 `positionProfit` 不同口径） |
 
 
+#### `GET /v1/income/ledger`（统一收益明细）
+
+
+**请求**：`GET /v1/income/ledger?user=<address>&page=1&page_size=20`
+
+
+可选筛选：
+
+
+| 参数 | 说明 |
+|------|------|
+| `kind` | `miner` / `referral` / `dividend` / `v9` |
+| `status` | 签单状态（`pending`/`confirmed`/`expired` 等）；默认含矿机 confirmed + 全部签单 |
+| `epoch` | UTC 日 epoch_day 过滤 |
+
+
+**响应**：`items[]` 按 `occurred_at` 降序（矿机 claimReward 与签单领取合并为一条时间线）。
+
+
+```json
+{
+  "items": [
+    {
+      "kind": "dividend",
+      "occurred_at": 1779590991,
+      "user": "0xcf29...",
+      "amount": "947757589285714285",
+      "tx_hash": "0x5d1f...",
+       "status": "confirmed",
+      "epoch_day": 20597,
+      "user_level": 2
+    },
+    {
+      "kind": "referral",
+      "occurred_at": 1779547030,
+      "amount": "120000000000000000000",
+      "status": "confirmed",
+      "position_id": 27,
+      "tier": 0,
+      "principal": "100000000000000000000",
+      "is_airdrop": true
+    },
+    {
+      "kind": "miner",
+      "occurred_at": 1779500000,
+      "amount": "5000000000000000000",
+      "status": "confirmed",
+      "position_id": 1,
+      "tier": 5,
+      "gross_reward": "5000000000000000000",
+      "profit_net": "4000000000000000000"
+    }
+  ],
+  "total": 3,
+  "page": 1,
+  "page_size": 20
+}
+```
+
+
+| `kind` | 含义 | 主要字段 |
+|--------|------|----------|
+| `miner` | 链上 `claimReward` 矿机收益 | `gross_reward`/`profit_*`/`accel_income` |
+| `referral` | 加速奖励签单领取 | `position_id`/`tier`（入账矿机型号） |
+| `dividend` | 等级分红签单领取 | `user_level`（领取当日 V 等级） |
+| `v9` | V9 池签单领取 | `amount`/`tx_hash`/`status` |
+
+
+**前端迁移**：原先分别请求 `income/ledger` + `income/claims` 再客户端合并排序的，改为**只调本接口**。
+
+
 其它列表接口：
-
-
-- 流水：`GET /v1/income/ledger?user=<address>&page=1&page_size=20`
-- 领取记录：`GET /v1/income/claims?user=<address>&page=1&page_size=20`
 - 加速分配明细：`GET /v1/accel/reward-ledger?user=<address>&page=1&page_size=20`（见 **6.4.2**）
 - 等级分红日结明细：`GET /v1/dividend/ledger?user=<address>&page=1&page_size=20`（见 **6.4.3**）
 - V9 奖池注入明细：`GET /v1/v9/pool-ledger?page=1&page_size=20`（见 **6.4.4**）
@@ -632,11 +702,47 @@
 - 打开 overview 或再次签单时会自动 `expire` 超过 10 分钟未上链的 pending 签单（无需单独后台任务，但可选加定时清理以保持 DB 状态一致）。
 
 
-领取记录筛选参数（可选）：
+领取记录筛选参数（可选，**仅 `/v1/income/claims` 签单状态查询**）：
 
 
 - `reward_type`: `referral | dividend | v9`
 - `status`: `pending | submitted | confirmed | expired`
+
+
+**`dividend` 类型领取记录** 会附带 `user_level`（领取对应 UTC 日的 V1~V9 等级）。**`referral` 类型** 在已上链时会附带 `position_id`、`tier`、`principal`（加速入账矿机型号）。
+
+
+### 6.4.1.1 矿机仓位列表（`/v1/miners/positions`）
+
+
+`GET /v1/miners/positions?user=<address>`
+
+
+返回该用户全部矿机仓位（含 `tier` 档位、`principal` 本金、`state` 状态），用于将 `position_id=27` 映射为具体型号。
+
+
+```json
+{
+  "items": [
+    {
+      "position_id": 27,
+      "owner": "0xcf29...",
+      "tier": 1,
+      "principal": "100000000000000000000",
+      "start_at": 1779500000,
+      "end_at": 0,
+      "total_return": "...",
+      "gross_claimed": "...",
+      "current_period": 1,
+      "state": "Running",
+      "is_airdrop": true
+    }
+  ]
+}
+```
+
+
+档位与型号对照见 **5.3** `tierIndex` 表；`tier=0` 为空投矿机。
 
 
 ### 6.4.2 加速分配明细（`/v1/accel/reward-ledger`）
@@ -669,6 +775,9 @@ GET /v1/accel/reward-ledger?user=0x...&page=1&page_size=20
     {
       "user": "0xabc...",
       "position_id": 3,
+      "tier": 5,
+      "principal": "1000000000000000000000",
+      "is_airdrop": false,
       "amount": "10000000000000000000",
       "tx_hash": "0x...",
       "log_index": 12,
@@ -692,6 +801,9 @@ TypeScript：`ApiListResponse<AccelRewardLedgerRow>`
 | 字段 | 说明 |
 |------|------|
 | `position_id` | **本次**入账的目标矿机 ID（领取瞬间 Running 最高档付费矿机，非空投） |
+| `tier` | 矿机档位 index（0=空投，1~10=付费档位，对应合约 `tierIndex`；前端可映射为型号/本金） |
+| `principal` | 矿机本金（18 位精度 NETE） |
+| `is_airdrop` | 是否空投矿机 |
 | `amount` | 本次写入该矿机 `accelClaimed` 的金额（18 位精度字符串） |
 | `tx_hash` | 用户调用 `NeteNetwork.claimWithSignature`（推荐奖励）的交易哈希 |
 | `log_index` | 事件在交易内的 log 索引 |
@@ -712,7 +824,7 @@ TypeScript：`ApiListResponse<AccelRewardLedgerRow>`
 **前端展示建议**
 
 
-- 列表列：`时间` / `矿机 ID` / `档位`（链上 `getPosition(position_id).tierIndex` 或本地矿机缓存） / `加速金额` / `Tx`
+- 列表列：`时间` / `矿机 ID` / `档位 tier` / `加速金额` / `Tx`（`tier`+`principal` 已由本接口返回，无需再查链）
 - 若单次领取导致矿机顶满周期，可在该条明细旁提示「本周期已结束，请复投」
 - 待领但未领取的部分**不会**出现在本接口，只在 overview 的 `referral_pool_balance` 中体现
 
@@ -1448,6 +1560,37 @@ export type IncomeOverview = {
 };
 
 
+export type IncomeDetailRow = {
+  /** miner | referral | dividend | v9 */
+  kind: "miner" | "referral" | "dividend" | "v9" | string;
+  /** 排序时间戳（Unix 秒） */
+  occurred_at: number;
+  user: string;
+  /** 主金额（18 位精度） */
+  amount: string;
+  tx_hash: string;
+  status: string;
+  epoch_day: number;
+  position_id?: number;
+  tier?: number;
+  principal?: string;
+  is_airdrop?: boolean;
+  gross_reward?: string;
+  principal_part?: string;
+  profit_part?: string;
+  profit_gross?: string;
+  profit_fee?: string;
+  profit_net?: string;
+  accel_income?: string;
+  claim_id?: string;
+  nonce?: number;
+  user_level?: number;
+  created_at?: number;
+  claimed_at?: number;
+};
+
+
+/** @deprecated 请使用 IncomeDetailRow（统一收益明细） */
 export type IncomeLedgerRow = {
   /** 用户地址 */
   user: string;
@@ -1512,6 +1655,12 @@ export type AccelRewardLedgerRow = {
    * 对应领取瞬间 Running 最高档付费矿机；历史记录不会因后续矿机状态变化而改写。
    */
   position_id: number;
+  /** 矿机档位 index（0=空投，1~10=付费档位） */
+  tier: number;
+  /** 矿机本金（18 位精度） */
+  principal: string;
+  /** 是否空投矿机 */
+  is_airdrop: boolean;
   /** 本次写入该矿机 accelClaimed 的金额（18 位精度整数字符串，单位 NETE） */
   amount: string;
   /** 用户 claimWithSignature（推荐奖励）的交易哈希 */
@@ -1546,6 +1695,16 @@ export type ClaimRecordRow = {
   created_at: number;
   /** 确认领取时间（Unix 秒，未确认时可能为0） */
   claimed_at: number;
+  /** 领取当日等级（仅 dividend 时有值） */
+  user_level?: number;
+  /** 加速入账矿机 ID（仅 referral 且已上链时有值） */
+  position_id?: number;
+  /** 矿机档位 index */
+  tier?: number;
+  /** 矿机本金（18 位精度） */
+  principal?: string;
+  /** 是否空投矿机 */
+  is_airdrop?: boolean;
 };
 
 
@@ -1572,7 +1731,8 @@ export type RecycleRunOnceResult = {
 - `GET /v1/performance/personal?user=...` -> `PersonalPerformance`
 - `GET /v1/performance/legs?user=...` -> `LegPerformance`
 - `GET /v1/income/overview?user=...` -> `IncomeOverview`（见 6.4）
-- `GET /v1/income/ledger?user=...` -> `ApiListResponse<IncomeLedgerRow>`
+- `GET /v1/income/ledger?user=...` -> `ApiListResponse<IncomeDetailRow>`（统一收益明细，见 6.4）
+- `GET /v1/miners/positions?user=...` -> `{ items: PositionView[] }`
 - `GET /v1/income/claims?user=...` -> `ApiListResponse<ClaimRecordRow>`
 - `GET /v1/dividend/ledger?user=...` -> `ApiListResponse<DividendLedgerRow>`（等级分红日结，见 6.4.3）
 - `GET /v1/v9/pool-ledger` -> `ApiListResponse<V9PoolLedgerRow>`（V9 池注入，见 6.4.4）

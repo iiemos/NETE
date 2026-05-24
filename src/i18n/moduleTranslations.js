@@ -499,6 +499,7 @@ export const moduleTranslations = {
       lastClaim: "最近一次领取：{{type}} · 金额 {{amount}} NETE · 截止时间 {{deadline}}",
       ledgerTitle: "收益流水",
       recentCount: "最近 {{count}} 条",
+      miner: "矿机",
       minerModel: "{{amount}}型",
       positionMiner: "矿机 #{{id}}",
       airdropMiner: "空投矿机",
@@ -512,7 +513,7 @@ export const moduleTranslations = {
       claimTime: "领取时间",
       ledgerTypes: {
         minerIncome: "静态释放",
-        dynamicRelease: "动态释放",
+        dynamicRelease: "加速收益",
         income: "收益",
       },
       pagination: {
@@ -1116,6 +1117,7 @@ export const moduleTranslations = {
       lastClaim: "Last claim: {{type}} · Amount {{amount}} NETE · Deadline {{deadline}}",
       ledgerTitle: "Income Ledger",
       recentCount: "Recent {{count}}",
+      miner: "Miner",
       minerModel: "{{amount}} Model",
       positionMiner: "Miner #{{id}}",
       airdropMiner: "Airdrop Miner",
@@ -1129,7 +1131,7 @@ export const moduleTranslations = {
       claimTime: "Claim Time",
       ledgerTypes: {
         minerIncome: "Static Release",
-        dynamicRelease: "Dynamic Release",
+        dynamicRelease: "Acceleration Income",
         income: "Income",
       },
       pagination: {
@@ -1323,6 +1325,7 @@ moduleTranslations["zh-TW"] = mergeTranslations(moduleTranslations.zh, {
     pendingRewards: "獎勵中心",
     unbound: "未綁定",
     detailTitle: "收益明細",
+    miner: "礦機",
     minerModel: "{{amount}}型",
     positionMiner: "礦機 #{{id}}",
     airdropMiner: "空投礦機",
@@ -1331,7 +1334,7 @@ moduleTranslations["zh-TW"] = mergeTranslations(moduleTranslations.zh, {
     claimTime: "領取時間",
     ledgerTypes: {
       minerIncome: "靜態釋放",
-      dynamicRelease: "動態釋放",
+      dynamicRelease: "加速收益",
       income: "收益",
     },
     pagination: {
@@ -1476,6 +1479,7 @@ moduleTranslations.ja = mergeTranslations(moduleTranslations.en, {
     pendingRewards: "報酬センター",
     unbound: "未連携",
     detailTitle: "収益明細",
+    miner: "マイナー",
     minerModel: "{{amount}}型",
     positionMiner: "マイナー #{{id}}",
     airdropMiner: "エアドロップマイナー",
@@ -1484,7 +1488,7 @@ moduleTranslations.ja = mergeTranslations(moduleTranslations.en, {
     claimTime: "受取時間",
     ledgerTypes: {
       minerIncome: "静的リリース",
-      dynamicRelease: "動的リリース",
+      dynamicRelease: "加速収益",
       income: "収益",
     },
     pagination: {
@@ -1629,6 +1633,7 @@ moduleTranslations.ko = mergeTranslations(moduleTranslations.en, {
     pendingRewards: "보상 센터",
     unbound: "미연결",
     detailTitle: "수익 상세",
+    miner: "마이너",
     minerModel: "{{amount}}형",
     positionMiner: "마이너 #{{id}}",
     airdropMiner: "에어드롭 마이너",
@@ -1637,7 +1642,7 @@ moduleTranslations.ko = mergeTranslations(moduleTranslations.en, {
     claimTime: "수령 시간",
     ledgerTypes: {
       minerIncome: "정적 릴리스",
-      dynamicRelease: "동적 릴리스",
+      dynamicRelease: "가속 수익",
       income: "수익",
     },
     pagination: {

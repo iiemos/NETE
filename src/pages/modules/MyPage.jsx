@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useGlobalMessage } from "../../components/common/GlobalMessage";
 import LoadingState from "../../components/common/LoadingState";
 import { useWalletConnector } from "../../hooks/useWalletConnector";
-import { getAccelRewardLedger, getClaimMessage, getIncomeLedger, getIncomeOverview, getPerformanceLegs, getPersonalPerformance, getReferralInfo } from "../../services/neteApi";
+import { getClaimMessage, getIncomeLedger, getIncomeOverview, getPerformanceLegs, getPersonalPerformance, getReferralInfo } from "../../services/neteApi";
 import { claimWithSignature, readNetworkUserData, readUserBalances, readUserMiningData } from "../../services/neteContracts";
 import { copyText } from "../../utils/clipboard";
 import { formatTokenAmount, formatUnixTime, shortAddress } from "../../utils/formatters";
@@ -148,16 +148,30 @@ function getLedgerAmount(row) {
     + toBigIntSafe(row?.accel_income ?? row?.accelIncome);
 }
 
+function getLedgerKind(row) {
+  return String(row?.kind ?? row?.ledger_kind ?? row?.ledgerKind ?? row?.reward_type ?? row?.rewardType ?? "").trim().toLowerCase();
+}
+
 function getLedgerType(row, t) {
-  if (row?.ledgerSource === "dynamic") {
+  const kind = getLedgerKind(row);
+  if (kind === "miner") {
+    return t("modules.my.ledgerTypes.minerIncome");
+  }
+  if (kind === "referral" || kind === "accel" || kind === "acceleration") {
     return t("modules.my.ledgerTypes.dynamicRelease");
   }
+  if (kind === "dividend") return t("modules.my.summary.dividend");
+  if (kind === "v9") return t("modules.my.summary.v9");
 
   const type = String(row?.type ?? row?.biz_type ?? row?.category ?? row?.event_type ?? row?.reward_type ?? "").trim();
   const normalizedType = type.toLowerCase();
 
-  if (["矿机收益", "mining_income", "miner_income", "miner reward", "miner rewards"].includes(normalizedType)) {
+  if (["矿机收益", "mining_income", "miner_income", "miner reward", "miner rewards", "miner"].includes(normalizedType)) {
     return t("modules.my.ledgerTypes.minerIncome");
+  }
+
+  if (["referral", "accel", "acceleration", "dynamic_release"].includes(normalizedType)) {
+    return t("modules.my.ledgerTypes.dynamicRelease");
   }
 
   if (["收益", "income", "profit", "reward", "rewards"].includes(normalizedType)) {
@@ -170,9 +184,25 @@ function getLedgerType(row, t) {
 }
 
 function isMinerLedger(row) {
+  const kind = getLedgerKind(row);
+  if (kind) return kind === "miner";
+
   const type = String(row?.type ?? row?.biz_type ?? row?.category ?? row?.event_type ?? row?.reward_type ?? "").trim().toLowerCase();
   return ["矿机收益", "mining_income", "miner_income", "miner reward", "miner rewards"].includes(type)
     || Boolean(row?.position_id ?? row?.positionId);
+}
+
+function shouldUseMinerTitle(row) {
+  const kind = getLedgerKind(row);
+  if (kind) return kind === "miner" || kind === "referral" || kind === "accel" || kind === "acceleration";
+  return isMinerLedger(row);
+}
+
+function getLedgerFallbackMinerTitle(row, t) {
+  const positionId = row?.position_id ?? row?.positionId ?? row?.target_position_id ?? row?.targetPositionId;
+  return positionId !== undefined && positionId !== null && positionId !== ""
+    ? t("modules.my.positionMiner", { id: positionId })
+    : t("modules.my.miner");
 }
 
 function formatBeijingTime(seconds) {
@@ -185,6 +215,8 @@ function formatBeijingTime(seconds) {
 
 function getLedgerTimeValue(row) {
   const candidates = [
+    row?.occurred_at,
+    row?.occurredAt,
     row?.claimed_at,
     row?.claimedAt,
     row?.created_at,
@@ -226,28 +258,29 @@ function getMinerAmountFromPrincipal(value) {
 }
 
 function getLedgerMinerTag(row, t) {
-  if (row?.ledgerSource === "dynamic") {
-    const positionId = row?.position_id ?? row?.positionId;
-    return positionId !== undefined && positionId !== null && positionId !== ""
-      ? { label: t("modules.my.positionMiner", { id: positionId }), tone: "miner" }
-      : null;
-  }
-
-  if (!row?.position_id && !row?.positionId && row?.tier === undefined && row?.tier_index === undefined && row?.tierIndex === undefined && row?.principal === undefined && row?.principalWei === undefined) {
+  if (!shouldUseMinerTitle(row)
+    && !row?.position_id
+    && !row?.positionId
+    && row?.tier === undefined
+    && row?.tier_index === undefined
+    && row?.tierIndex === undefined
+    && row?.principal === undefined
+    && row?.principalWei === undefined) {
     return null;
   }
+
+  const namedModel = String(row?.miner_model ?? row?.minerModel ?? row?.model_name ?? row?.modelName ?? row?.model ?? row?.miner_type ?? row?.minerType ?? row?.tier_name ?? row?.tierName ?? row?.miner_title ?? row?.minerTitle ?? row?.machine_model ?? row?.machineModel ?? row?.machine_type ?? row?.machineType ?? "").trim();
+  if (namedModel) return { label: namedModel, tone: "default" };
 
   if (isAirdropLedger(row)) {
     return { label: t("modules.my.airdropMiner"), tone: "airdrop" };
   }
 
-  const namedModel = String(row?.miner_model ?? row?.minerModel ?? row?.model_name ?? row?.modelName ?? "").trim();
-  if (namedModel) return { label: namedModel, tone: "default" };
-
-  const amountText = getMinerAmountFromPrincipal(row?.principal ?? row?.principalWei)
+  const amountText = getMinerAmountFromPrincipal(row?.principal ?? row?.principalWei ?? row?.miner_principal ?? row?.minerPrincipal)
     || TIER_AMOUNT_MAP[Number(row?.tier ?? row?.tier_index ?? row?.tierIndex)];
 
-  if (!amountText) return null;
+  if (!amountText) return { label: getLedgerFallbackMinerTitle(row, t), tone: "miner" };
+
   return {
     label: t("modules.my.minerModel", { amount: amountText }),
     tone: getMinerToneByAmount(amountText),
@@ -260,27 +293,17 @@ function normalizeLedgerRow(row, index, t) {
   const amountText = `${signedText}${formatTokenAmount(amountBigInt < 0n ? -amountBigInt : amountBigInt, 18, 6)}`;
   const minerTag = getLedgerMinerTag(row, t);
   const ledgerType = getLedgerType(row, t);
-  const isMinerIncome = Boolean(minerTag && isMinerLedger(row));
+  const hasMinerTitle = Boolean(minerTag && shouldUseMinerTitle(row));
 
   return {
     id: `${row?.id ?? row?.tx_hash ?? row?.txHash ?? "row"}-${index}`,
     createdAtText: getLedgerTimeText(row),
-    title: isMinerIncome ? minerTag.label : ledgerType,
-    subtitle: isMinerIncome ? ledgerType : t("modules.my.ledgerTitle"),
-    typeTone: isMinerIncome ? "miner" : "",
+    title: hasMinerTitle ? minerTag.label : ledgerType,
+    subtitle: hasMinerTitle ? ledgerType : t("modules.my.ledgerTitle"),
+    typeTone: hasMinerTitle ? "miner" : "",
     amountText,
     balanceText: formatTokenAmount(row?.balance ?? row?.remain ?? 0n, 18, 6),
     txHash: String(row?.tx_hash ?? row?.txHash ?? row?.tx ?? "--"),
-  };
-}
-
-function buildMergedLedgerPayload(incomePayload, accelPayload) {
-  const incomeRows = toItems(incomePayload).map((row) => ({ ...row, ledgerSource: "static" }));
-  const accelRows = toItems(accelPayload).map((row) => ({ ...row, ledgerSource: "dynamic" }));
-
-  return {
-    items: [...incomeRows, ...accelRows],
-    total: toTotalCount(incomePayload) + toTotalCount(accelPayload),
   };
 }
 
@@ -316,15 +339,7 @@ export default function MyPage() {
 
   const incomeLedgerQuery = useQuery({
     queryKey: ["nete", "income-ledger", wallet.currentAddress, ledgerPage],
-    queryFn: async () => {
-      const pageSize = ledgerPage * LEDGER_PAGE_SIZE;
-      const [incomePayload, accelPayload] = await Promise.all([
-        getIncomeLedger(wallet.currentAddress, { page: 1, pageSize }),
-        getAccelRewardLedger(wallet.currentAddress, { page: 1, pageSize }),
-      ]);
-
-      return buildMergedLedgerPayload(incomePayload, accelPayload);
-    },
+    queryFn: () => getIncomeLedger(wallet.currentAddress, { page: ledgerPage, pageSize: LEDGER_PAGE_SIZE }),
     enabled: Boolean(wallet.currentAddress),
     staleTime: 10_000,
     retry: 1,
@@ -384,8 +399,7 @@ export default function MyPage() {
 
   const rawLedgerRows = useMemo(
     () => toItems(incomeLedgerQuery.data)
-      .filter((row) => !isEmptyLedgerRow(row))
-      .sort((a, b) => getLedgerTimeValue(b) - getLedgerTimeValue(a)),
+      .filter((row) => !isEmptyLedgerRow(row)),
     [incomeLedgerQuery.data],
   );
   const ledgerTotalCount = toTotalCount(incomeLedgerQuery.data);

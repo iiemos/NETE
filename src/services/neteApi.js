@@ -172,12 +172,6 @@ export async function getIncomeLedger(user, { page = 1, pageSize = 20 } = {}) {
   });
 }
 
-export async function getAccelRewardLedger(user, { page = 1, pageSize = 20 } = {}) {
-  return request("/v1/accel/reward-ledger", {
-    query: { user, page, page_size: pageSize },
-  });
-}
-
 export async function getClaimMessage(type, payload) {
   if (!["referral", "dividend", "v9"].includes(type)) {
     throw new Error("Invalid claim type");
