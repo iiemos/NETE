@@ -4,6 +4,15 @@
 本文档面向前端工程，按业务流程说明如何接入链上合约与后端服务。
 
 
+**近期更新摘要**
+
+
+- 新增 `GET /v1/dividend/ledger`、`GET /v1/v9/pool-ledger`
+- `referral/info` 增加 `team_count`（团队人数，伞下不含本人）
+- `income/overview`、`performance/legs`、`referral/downlines` 增加 `effective_direct_count`、`max_depth` 等
+- 领导人等级 **仅按小区矿机业绩** 定级；加速日结公式统一为 **本金 × 层比例 ÷ 周期天数**
+
+
 ## 1. 架构与职责
 
 
@@ -86,6 +95,42 @@
 ## 5. 推荐关系流程
 
 
+### 5.0 关键口径（前端必读）
+
+
+| 概念 | 定义 | 主要接口字段 |
+|------|------|----------------|
+| **绑定直推** | 已 `bindReferrer` 的第一层下级 | `direct_count` |
+| **有效直推** | 直推中至少激活过 **1 台付费矿机**（`isAirdrop=false`） | `effective_direct_count` |
+| **团队人数** | 伞下所有层级下级地址数（**不含本人**） | `team_count` |
+| **可享加速层数** | 由有效直推数决定：1~7 人 → 1~7 层（5%）；≥8 人 → 20 层（8~20 层 1%） | `max_depth` |
+| **领导人等级 V1~V9** | 仅看 **小区矿机业绩** `small_leg_miner_perf`（种子业绩不参与定级） | `user_level` |
+| **加速日结** | `Σ(下级每台在运行付费矿机本金 × 层比例 ÷ 档位周期天数)`，UTC 日结 | `referral_pool_balance` |
+| **加速可领** | `min(待领池, Running 最高档付费矿机剩余 headroom)`，**不进钱包** | `pending_referral` |
+
+
+有效直推判定（与后端一致）：该直推地址在 `miner_positions` 中存在 `is_airdrop=0` 的记录。
+
+
+**领导人等级阈值（小区矿机业绩 NETE）**
+
+
+| 等级 | 小区矿机业绩 ≥ |
+|------|----------------|
+| V1 | 10,000 |
+| V2 | 30,000 |
+| V3 | 100,000 |
+| V4 | 350,000 |
+| V5 | 1,100,000 |
+| V6 | 3,600,000 |
+| V7 | 15,000,000 |
+| V8 | 50,000,000 |
+| V9 | 达 V8 且 2 条直推线均为 V8+ |
+
+
+---
+
+
 ### 5.1 绑定推荐人（链上）
 
 
@@ -124,8 +169,9 @@
 返回：
 
 
-- `referrer`, `direct_count`, `max_depth`
+- `referrer`, `direct_count`（绑定直推数）, `effective_direct_count`（有效直推购矿数）, `team_count`（团队人数，伞下全员不含本人）, `max_depth`（按有效直推解锁层数）
 - `own_perf`, `subtree_perf`, `small_leg_perf`, `user_level`
+- **定级口径**：`user_level` 仅看 `small_leg_miner_perf`（小区矿机业绩）；`small_leg_perf` 与矿机小区一致；种子业绩不计入定级
 - `team_perf`（团队总业绩，不含本人）
 - `team_big_leg_perf`, `team_small_leg_perf`（团队大区/小区业绩）
 - `own_miner_perf`, `own_seed_perf`（`own_seed_perf` 为预售业绩）
@@ -141,8 +187,9 @@
 
 - `subtree_*` 为全子树口径（包含本人）
 - `team_perf = subtree_perf - own_perf`（不含本人，仅团队下级）
-- `team_small_leg_perf = small_leg_perf`
-- `team_big_leg_perf = team_perf - team_small_leg_perf`
+- **定级与小区展示**：`small_leg_perf` = `small_leg_miner_perf`（仅矿机腿，不含种子腿）
+- `team_small_leg_perf` = `small_leg_miner_perf`（团队小区矿机业绩）
+- `team_big_leg_perf = team_perf - team_small_leg_perf`（团队口径仍含矿机+种子合计）
 - `team_miner_total_perf = subtree_miner_perf - own_miner_perf`
 - `team_miner_small_leg_perf = small_leg_miner_perf`
 - `team_miner_big_leg_perf = team_miner_total_perf - team_miner_small_leg_perf`
@@ -159,12 +206,31 @@
 `GET /v1/referral/downlines?user=<address>`
 
 
-返回：
+**响应示例**
 
 
-- `user`
-- `downlines`（第一层直推地址列表）
-- `total`（直推数量）
+```json
+{
+  "user": "0xabc...",
+  "direct_count": 2,
+  "effective_direct_count": 1,
+  "total": 2,
+  "downlines": ["0x111...", "0x222..."],
+  "entries": [
+    { "user": "0x111...", "effective": true },
+    { "user": "0x222...", "effective": false }
+  ]
+}
+```
+
+
+| 字段 | 说明 |
+|------|------|
+| `direct_count` | 绑定直推总数（= `total`） |
+| `effective_direct_count` | 有效直推数（已购付费矿机） |
+| `downlines` | 直推地址列表（兼容旧版，仅字符串） |
+| `entries` | 直推明细；`effective=true` 表示有效直推 |
+| `total` | 直推人数 |
 
 
 ### 5.3 个人业绩接口（服务端）
@@ -188,21 +254,40 @@
 `GET /v1/performance/legs?user=<address>`
 
 
-返回：
+**响应示例**
 
 
-- `team_perf`（团队业绩）
-- `big_leg_perf`（大区业绩）
-- `small_leg_perf`（小区业绩）
-- `user_level`
+```json
+{
+  "user": "0xabc...",
+  "team_perf": "33390000000000000000000",
+  "big_leg_perf": "29570000000000000000000",
+  "small_leg_perf": "3820000000000000000000",
+  "small_leg_miner_perf": "3820000000000000000000",
+  "user_level": 2,
+  "direct_count": 2,
+  "effective_direct_count": 1,
+  "max_depth": 1
+}
+```
+
+
+| 字段 | 说明 |
+|------|------|
+| `team_perf` | 团队总业绩（不含本人） |
+| `big_leg_perf` | 大区业绩 |
+| `small_leg_perf` | 小区业绩（**矿机口径**，用于定级展示） |
+| `small_leg_miner_perf` | 与 `small_leg_perf` 相同 |
+| `user_level` | V0~V9，由小区矿机业绩阈值决定 |
+| `direct_count` / `effective_direct_count` / `max_depth` | 同 `referral/info` |
 
 
 口径说明（后端中心化计算）：
 
 
-- `team_perf = subtree_perf - own_perf`（不含本人，仅团队下级）
+- `team_perf = subtree_perf - own_perf`（不含本人；`subtree` 含矿机+种子）
 - `big_leg_perf = team_perf - small_leg_perf`
-- `small_leg_perf` 与 `user_level` 均以后端索引重算结果为准
+- **`user_level` 仅由 `small_leg_miner_perf`（直推各腿矿机 subtree 的大区/小区差）决定**
 
 
 ---
@@ -447,10 +532,12 @@
 加速收益与矿机封顶规则（重要）：
 
 
-- 加速收益会自动分配到“用户当前运行中、等级最高的付费矿机”（非空投）。
-- 加速收益会计入矿机周期封顶判断：`grossClaimed + accelClaimed >= totalReturn` 时进入 `PendingRepurchase`。
-- 因此高层级加速较高时，矿机可能早于自然周期日结束，需要手动复投进入下一轮。
-- 后端会记录 `AccelRewardAdded` 明细到 `accel_reward_ledger`（用户、矿机ID、金额、tx/log、块高、时间），用于对账与排查。
+- 加速收益会自动分配到“用户当前 **Running** 状态中、等级最高的付费矿机”（非空投；已到期未复投的高档矿机不参与）。
+- **领取时不转 NETE 到钱包**，仅增加目标矿机 `accelClaimed`（链上 `addAccelReward` → `AccelRewardAdded` 事件）。
+- 单次领取金额 = `min(待领加速余额, 目标矿机剩余封顶空间)`；剩余部分继续留在待领池，复投开新周期后再领。
+- 剩余封顶空间 = `totalReturn - grossClaimed - accelClaimed`；领满后矿机进入 `PendingRepurchase`。
+- 链上 `addAccelReward` 会校验超额并 revert；签名接口返回 `target_position_id` / `accel_headroom` 供前端展示。
+- 后端记录 `AccelRewardAdded` 到 `accel_reward_ledger`（矿机 ID、金额、tx），用于收益明细。
 
 
 周期递增与封顶规则（Paid 矿机）：
@@ -465,10 +552,75 @@
 ### 6.4 前端收益读取（服务端）
 
 
-- 总览：`GET /v1/income/overview?user=<address>`
+#### 接口速查
+
+
+| 页面/模块 | 接口 | 说明 |
+|-----------|------|------|
+| 收益总览 | `GET /v1/income/overview` | 加速/分红/V9 可领与累计、等级、有效直推 |
+| 矿机领取流水 | `GET /v1/income/ledger` | 每次 `claimReward` 明细 |
+| 签名领取记录 | `GET /v1/income/claims` | 推荐/分红/V9 签名单状态 |
+| 加速入账明细 | `GET /v1/accel/reward-ledger` | 上链后写入哪台矿机 |
+| **等级分红日结** | `GET /v1/dividend/ledger` | 按 UTC 日 V1~V9 应得拆分 |
+| **V9 池注入** | `GET /v1/v9/pool-ledger` | 全网购矿 1% 注入流水 |
+| V9 用户领取 | `GET /v1/income/claims?reward_type=v9` | 个人 V9 领取 |
+
+
+#### `GET /v1/income/overview`（收益总览）
+
+
+**请求**：`GET /v1/income/overview?user=<address>`
+
+
+**响应示例**
+
+
+```json
+{
+  "user": "0xabc...",
+  "user_level": 2,
+  "direct_count": 2,
+  "effective_direct_count": 1,
+  "max_depth": 1,
+  "miner_income_total": "51042130248316498316488",
+  "miner_profit_gross_total": "10552958531144781144783",
+  "miner_profit_fee_total": "0",
+  "miner_profit_net_total": "10552958531144781144783",
+  "accel_income_total": "18739285714285714285",
+  "referral_pool_balance": "18739285714285714285",
+  "pending_referral": "18739285714285714285",
+  "accel_target_position_id": 4,
+  "accel_headroom": "11893777777777777777778",
+  "dividend_income_total": "0",
+  "pending_dividend": "0",
+  "v9_income_total": "0",
+  "pending_v9": "0"
+}
+```
+
+
+| 字段 | 前端展示建议 |
+|------|----------------|
+| `user_level` | 领导人等级 V0~V9 |
+| `direct_count` / `effective_direct_count` / `max_depth` | 推广页：绑定直推 / 有效直推 / 可享层数 |
+| `referral_pool_balance` | **加速待领池**（已日结、未领取） |
+| `pending_referral` | **本周期可领加速**（领取按钮用此值） |
+| `accel_target_position_id` | 领取后加速入账的矿机 ID |
+| `accel_headroom` | 目标矿机剩余加速空间；池子 > 可领时提示「部分待复投后领取」 |
+| `accel_income_total` | 加速累计（通常 ≈ 池子 + 已领加速） |
+| `pending_dividend` / `dividend_income_total` | 分红可领 / 已领 |
+| `pending_v9` / `v9_income_total` | V9 可领 / 已领 |
+| `miner_*` | 矿机收益统计（与链上 `positionProfit` 不同口径） |
+
+
+其它列表接口：
+
+
 - 流水：`GET /v1/income/ledger?user=<address>&page=1&page_size=20`
 - 领取记录：`GET /v1/income/claims?user=<address>&page=1&page_size=20`
-- 加速分配明细：`GET /v1/accel/reward-ledger?user=<address>&page=1&page_size=20`
+- 加速分配明细：`GET /v1/accel/reward-ledger?user=<address>&page=1&page_size=20`（见 **6.4.2**）
+- 等级分红日结明细：`GET /v1/dividend/ledger?user=<address>&page=1&page_size=20`（见 **6.4.3**）
+- V9 奖池注入明细：`GET /v1/v9/pool-ledger?page=1&page_size=20`（见 **6.4.4**）
 
 
 口径提示：
@@ -476,6 +628,8 @@
 
 - 服务端收益接口主要用于统计展示（累计口径）。
 - 当前“可提取收益/可用于支付的收益池余额”应以链上 `positionProfit` 实时值为准。
+- **加速待领 vs 本周期可领**：`referral_pool_balance` 是待领池总额；`pending_referral` 是 `min(池子, 矿机 headroom)`。池子 > 0 但可领 = 0 时，常见原因：① 10 分钟内签单冻结中；② 无 Running 付费矿机；③ 矿机周期已顶满需复投。
+- 打开 overview 或再次签单时会自动 `expire` 超过 10 分钟未上链的 pending 签单（无需单独后台任务，但可选加定时清理以保持 DB 状态一致）。
 
 
 领取记录筛选参数（可选）：
@@ -483,6 +637,199 @@
 
 - `reward_type`: `referral | dividend | v9`
 - `status`: `pending | submitted | confirmed | expired`
+
+
+### 6.4.2 加速分配明细（`/v1/accel/reward-ledger`）
+
+
+用途：展示「推荐奖励领取后，实际给哪台矿机加速了多少」——对应链上 `AccelRewardAdded(user, positionId, amount)` 事件。
+
+
+**请求**
+
+
+```
+GET /v1/accel/reward-ledger?user=0x...&page=1&page_size=20
+```
+
+
+| 参数 | 必填 | 说明 |
+|------|------|------|
+| `user` | 是 | 用户地址（EVM） |
+| `page` | 否 | 页码，默认 `1` |
+| `page_size` | 否 | 每页条数，默认 `20` |
+
+
+**响应**
+
+
+```json
+{
+  "items": [
+    {
+      "user": "0xabc...",
+      "position_id": 3,
+      "amount": "10000000000000000000",
+      "tx_hash": "0x...",
+      "log_index": 12,
+      "block_number": 12345678,
+      "created_at": 1716500000
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "page_size": 20
+}
+```
+
+
+TypeScript：`ApiListResponse<AccelRewardLedgerRow>`
+
+
+**字段说明**
+
+
+| 字段 | 说明 |
+|------|------|
+| `position_id` | **本次**入账的目标矿机 ID（领取瞬间 Running 最高档付费矿机，非空投） |
+| `amount` | 本次写入该矿机 `accelClaimed` 的金额（18 位精度字符串） |
+| `tx_hash` | 用户调用 `NeteNetwork.claimWithSignature`（推荐奖励）的交易哈希 |
+| `log_index` | 事件在交易内的 log 索引 |
+| `block_number` | 区块高度 |
+| `created_at` | 区块时间（Unix 秒） |
+
+
+**与其它接口的关系**
+
+
+| 接口 | 区别 |
+|------|------|
+| `GET /v1/income/overview` | `referral_pool_balance` = 待领池总额；`pending_referral` = 本周期可领（已按矿机 headroom 截断） |
+| `POST /v1/referral/claim-message` | 签名返回 `target_position_id` / `accel_headroom`，表示**即将**入账的目标矿机 |
+| 本接口 | **已上链**的分配记录；一条领取 tx 通常对应一条明细（金额 = 实际入账额，≤ 签名 `amount`） |
+
+
+**前端展示建议**
+
+
+- 列表列：`时间` / `矿机 ID` / `档位`（链上 `getPosition(position_id).tierIndex` 或本地矿机缓存） / `加速金额` / `Tx`
+- 若单次领取导致矿机顶满周期，可在该条明细旁提示「本周期已结束，请复投」
+- 待领但未领取的部分**不会**出现在本接口，只在 overview 的 `referral_pool_balance` 中体现
+
+
+### 6.4.3 等级分红日结明细（`/v1/dividend/ledger`）
+
+
+按 UTC 日展示该用户 V1~V9 分红应得拆分（链下日结；**领取前**可查每日应得，**领取后**查 `income/claims`）。
+
+
+**请求**
+
+
+```
+GET /v1/dividend/ledger?user=0x...&page=1&page_size=20
+```
+
+
+**响应示例**
+
+
+```json
+{
+  "items": [
+    {
+      "user": "0xabc...",
+      "epoch_day": 20596,
+      "user_level": 2,
+      "equal_part": "800000000000000000000",
+      "weighted_part": "315008928571428571428",
+      "total_part": "1115008928571428571",
+      "created_at": 1779523200,
+      "updated_at": 1779523200
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "page_size": 20
+}
+```
+
+
+| 字段 | 说明 |
+|------|------|
+| `epoch_day` | UTC 结算日（`timestamp / 86400`） |
+| `user_level` | 当日用于分红的等级（V0 无分红） |
+| `equal_part` | 等级均分池（手续费池 50% 中按 V1~V9 档位拆分） |
+| `weighted_part` | 加权业绩池（按当日新增业绩权重） |
+| `total_part` | 当日应得合计（18 位精度 wei 字符串） |
+
+
+前端列表建议：`日期` / `等级` / `均分` / `加权` / `合计`。
+
+
+与 `income/overview`：`pending_dividend` = 各日 `total_part` 累加 − 已确认领取 − 冻结签名。
+
+
+### 6.4.4 V9 奖池明细
+
+
+#### 全网注入流水 `GET /v1/v9/pool-ledger`
+
+
+购矿金额 1% 注入 V9 奖池的链上事件索引（**不按用户**）。
+
+
+**请求**：`GET /v1/v9/pool-ledger?page=1&page_size=20`（无需 `user`）
+
+
+**响应示例**
+
+
+```json
+{
+  "items": [
+    {
+      "epoch_day": 20596,
+      "injected": "500000000000000000000",
+      "total_balance": "12000000000000000000000",
+      "tx_hash": "0x...",
+      "block_number": 12345678,
+      "created_at": 1779523200
+    }
+  ],
+  "total": 10,
+  "page": 1,
+  "page_size": 20
+}
+```
+
+
+| 字段 | 说明 |
+|------|------|
+| `epoch_day` | UTC 日 |
+| `injected` | 本条注入 NETE |
+| `total_balance` | 注入后 V9 池余额 |
+| `tx_hash` / `block_number` | 链上来源 |
+
+
+#### 用户 V9 领取
+
+
+| 用途 | 接口 |
+|------|------|
+| 可领金额 | `income/overview` → `pending_v9` |
+| 已领累计 | `v9_income_total` |
+| 签名单 / 上链记录 | `GET /v1/income/claims?user=...&reward_type=v9` |
+
+
+V9 可领计算：池子总额 ÷ 当前全网 V9 人数 − 该用户已领（详见服务端 `calc_user_v9_claimable`）。
+
+
+**示例场景**
+
+
+- 待领池 20，矿机剩余 headroom 10 → 用户领取 10 → 本接口新增 1 条：`position_id=目标矿机, amount=10`；overview 中 `referral_pool_balance` 仍剩 10
+- 500 档已到期、100 档 Running → 领取后 `position_id` 为 100 档矿机 ID，而非 500 档
 
 
 ---
@@ -689,11 +1036,22 @@ RESTful 路由（统一风格）：
 - 同一 `user + rewardType` 存在活跃签名单时，接口会返回同一单（单飞）。
 
 
+**推荐（加速）奖励额外规则**：
+
+
+- **不进钱包**：链上领取只调用 `NeteCore.addAccelReward`，把金额记入 **Running 最高档付费矿机** 的 `accelClaimed`，用于加速回本/周期封顶；**无 NETE 转账**。
+- 可领上限 = `min(referral_pool_balance, 目标矿机 headroom)`；超额部分留在待领池，复投后再领。
+- 无 Running 付费矿机或 headroom = 0 时，接口报错，前端应引导复投或激活矿机。
+- 签名响应含 `target_position_id`、`accel_headroom`（仅 `reward_type=0`）；上链成功后可在 `GET /v1/accel/reward-ledger` 查到对应 `position_id` + `amount` 明细。
+
+
 加速（推荐）奖励结算说明：
 
 
-- 服务端已内置后台任务，按配置的每日固定 UTC 时间点执行（默认 `00:00`），结算 `D-1` 及历史未结算日的加速奖励。
-- 管理接口 `POST /v1/rewards/accel/settle` 仍可用于手动补结算/排查，但日常前端无需主动调用。
+- **日结公式（定版）**：`每日加速 = 被推荐人矿机本金 × 层比例 ÷ 档位周期天数`（1~7 层 5%，8~20 层 1%）；同一 UTC 日多台在运行付费矿机按台相加；按 `(upline, from_user, depth)` 合并一条。
+- **层比例**：深度 1~7 → 5%；8~20 → 1%。**可享层数** = `max_depth`（由 `effective_direct_count` 决定）。
+- **预估当日加速**（前端展示用）：对有效直推及其下级在运行矿机，按上式逐台求和；勿用「直推本金 ×5%」一次性估算。
+- 服务端 UTC 日结（默认 `00:00`）结算 `D-1`；管理接口 `POST /v1/rewards/accel/settle?epoch_day=` 可补算/重算（覆盖该日已有行）。
 
 
 ### 8.2 前端提交链上领取
@@ -846,7 +1204,7 @@ export type ClaimRequest = {
   user: string;
   /**
    * 可选领取金额（18位精度整数字符串）
-   * - 不传：默认 available（= 可领取总额 - 已确认领取 - 冻结中金额）
+   * - 不传：默认 available（推荐奖励 = min(待领池, 矿机 headroom)；其它类型 = 可领总额 - 已确认 - 冻结）
    * - 传值：必须 <= available
    */
   amount?: string;
@@ -870,6 +1228,10 @@ export type ClaimMessage = {
   reward_type: 0 | 1 | 2; // 0=Referral, 1=Dividend, 2=V9Pool
   /** EIP-712 签名 */
   signature: string;
+  /** 推荐奖励：本次加速入账的目标矿机 ID（仅 reward_type=0） */
+  target_position_id?: number;
+  /** 推荐奖励：签名时目标矿机剩余封顶空间（18位精度，仅 reward_type=0） */
+  accel_headroom?: string;
 };
 
 
@@ -952,10 +1314,14 @@ export type ReferralInfo = {
   user: string;
   /** 推荐人地址（未绑定可能为空） */
   referrer: string;
-  /** 直推人数 */
+  /** 绑定直推人数 */
   direct_count: number;
-  /** 最大奖励层级深度 */
+  /** 有效直推人数（至少 1 台付费矿机） */
+  effective_direct_count: number;
+  /** 可享加速层数（由 effective_direct_count 决定） */
   max_depth: number;
+  /** 团队人数（伞下所有层级，不含本人） */
+  team_count: number;
   /** 个人业绩（18位精度） */
   own_perf: string;
   /** 个人矿机业绩（18位精度） */
@@ -968,13 +1334,13 @@ export type ReferralInfo = {
   subtree_miner_perf: string;
   /** 团队预售业绩（18位精度，字段名历史沿用 seed） */
   subtree_seed_perf: string;
-  /** 小区业绩（18位精度） */
+  /** 小区业绩（18位精度，= small_leg_miner_perf，定级依据） */
   small_leg_perf: string;
-  /** 小区矿机业绩（18位精度） */
+  /** 小区矿机业绩（18位精度，定级仅看此字段） */
   small_leg_miner_perf: string;
-  /** 小区预售业绩（18位精度，字段名历史沿用 seed） */
+  /** 小区预售业绩（18位精度，仅展示，不参与定级） */
   small_leg_seed_perf: string;
-  /** 用户等级（V0~V9） */
+  /** 用户等级（V0~V9，由 small_leg_miner_perf 阈值决定） */
   user_level: number;
   /** 团队业绩（18位精度，不含本人） */
   team_perf: string;
@@ -1015,25 +1381,44 @@ export type PersonalPerformance = {
 };
 
 
-export type LegPerformance = {
-  /** 当前用户地址 */
+export type DownlineEntry = {
   user: string;
-  /** 团队业绩（18位精度，不含本人） */
+  /** 是否有效直推（已购付费矿机） */
+  effective: boolean;
+};
+
+
+export type DownlinesResponse = {
+  user: string;
+  direct_count: number;
+  effective_direct_count: number;
+  total: number;
+  /** 兼容旧版，仅地址 */
+  downlines: string[];
+  entries: DownlineEntry[];
+};
+
+
+export type LegPerformance = {
+  user: string;
   team_perf: string;
-  /** 大区业绩（18位精度） */
   big_leg_perf: string;
-  /** 小区业绩（18位精度） */
+  /** 小区矿机业绩（定级展示） */
   small_leg_perf: string;
-  /** 用户等级（V0~V9） */
+  small_leg_miner_perf: string;
   user_level: number;
+  direct_count: number;
+  effective_direct_count: number;
+  max_depth: number;
 };
 
 
 export type IncomeOverview = {
-  /** 用户地址 */
   user: string;
-  /** 用户等级（V0~V9） */
   user_level: number;
+  direct_count: number;
+  effective_direct_count: number;
+  max_depth: number;
   /** 矿机累计收益 */
   miner_income_total: string;
   /** 矿机利润累计毛额（claim拆分出来的利润，不含扣费） */
@@ -1048,8 +1433,14 @@ export type IncomeOverview = {
   dividend_income_total: string;
   /** V9累计已领取 */
   v9_income_total: string;
-  /** 推荐当前可领取 */
+  /** 加速待领池总额（未按矿机封顶截断） */
+  referral_pool_balance: string;
+  /** 本周期可领加速 = min(referral_pool_balance, accel_headroom) */
   pending_referral: string;
+  /** 当前加速目标矿机 ID（Running 最高档付费矿机） */
+  accel_target_position_id?: number;
+  /** 目标矿机剩余封顶空间 */
+  accel_headroom?: string;
   /** 分红当前可领取 */
   pending_dividend: string;
   /** V9当前可领取 */
@@ -1091,20 +1482,45 @@ export type IncomeLedgerRow = {
 };
 
 
-export type AccelRewardLedgerRow = {
-  /** 用户地址 */
+export type DividendLedgerRow = {
   user: string;
-  /** 接收加速收益的矿机ID（当前用户运行中的最高档位矿机） */
-  position_id: number;
-  /** 本次加速分配金额（18位精度） */
-  amount: string;
-  /** 对应链上交易哈希 */
+  epoch_day: number;
+  user_level: number;
+  equal_part: string;
+  weighted_part: string;
+  total_part: string;
+  created_at: number;
+  updated_at: number;
+};
+
+
+export type V9PoolLedgerRow = {
+  epoch_day: number;
+  injected: string;
+  total_balance: string;
   tx_hash: string;
-  /** 事件日志索引 */
-  log_index: number;
-  /** 区块高度 */
   block_number: number;
-  /** 记录时间（Unix 秒） */
+  created_at: number;
+};
+
+
+export type AccelRewardLedgerRow = {
+  /** 用户地址（小写 0x 前缀） */
+  user: string;
+  /**
+   * 本次加速入账的目标矿机 ID（链上 AccelRewardAdded.positionId）。
+   * 对应领取瞬间 Running 最高档付费矿机；历史记录不会因后续矿机状态变化而改写。
+   */
+  position_id: number;
+  /** 本次写入该矿机 accelClaimed 的金额（18 位精度整数字符串，单位 NETE） */
+  amount: string;
+  /** 用户 claimWithSignature（推荐奖励）的交易哈希 */
+  tx_hash: string;
+  /** AccelRewardAdded 事件在交易内的 log 索引 */
+  log_index: number;
+  /** 事件所在区块高度 */
+  block_number: number;
+  /** 区块时间戳（Unix 秒） */
   created_at: number;
 };
 
@@ -1152,13 +1568,15 @@ export type RecycleRunOnceResult = {
 - `GET /v1/orders/:order_id` -> `OrderView`
 - `GET /v1/orders/by-short/:short_no` -> `OrderView`
 - `GET /v1/referral/info?user=...` -> `ReferralInfo | null`
-- `GET /v1/referral/downlines?user=...` -> `{ user, downlines, total }`
+- `GET /v1/referral/downlines?user=...` -> `DownlinesResponse`（见 5.2.1）
 - `GET /v1/performance/personal?user=...` -> `PersonalPerformance`
 - `GET /v1/performance/legs?user=...` -> `LegPerformance`
-- `GET /v1/income/overview?user=...` -> `IncomeOverview`
+- `GET /v1/income/overview?user=...` -> `IncomeOverview`（见 6.4）
 - `GET /v1/income/ledger?user=...` -> `ApiListResponse<IncomeLedgerRow>`
 - `GET /v1/income/claims?user=...` -> `ApiListResponse<ClaimRecordRow>`
-- `GET /v1/accel/reward-ledger?user=...` -> `ApiListResponse<AccelRewardLedgerRow>`
+- `GET /v1/dividend/ledger?user=...` -> `ApiListResponse<DividendLedgerRow>`（等级分红日结，见 6.4.3）
+- `GET /v1/v9/pool-ledger` -> `ApiListResponse<V9PoolLedgerRow>`（V9 池注入，见 6.4.4）
+- `GET /v1/accel/reward-ledger?user=...` -> `ApiListResponse<AccelRewardLedgerRow>`（加速入账矿机明细，见 6.4.2）
 - `POST /v1/referral/claim-message` -> `ClaimMessage`
 - `POST /v1/dividend/claim-message` -> `ClaimMessage`
 - `POST /v1/v9/claim-message` -> `ClaimMessage`

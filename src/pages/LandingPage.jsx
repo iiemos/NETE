@@ -29,6 +29,12 @@ function getActiveAnnouncements(language) {
     .filter(Boolean);
 }
 
+function renderLandingTitleLines(value) {
+  return String(value || "").split("\n").map((line, index) => (
+    <span className="landing-title-line" key={`${line}-${index}`}>{line}</span>
+  ));
+}
+
 function AnnouncementBar({ items, t }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedNotice, setSelectedNotice] = useState(null);
@@ -218,7 +224,7 @@ export default function LandingPage() {
                 {t("landing.team.eyebrow")}
               </span>
               <h2 className="section__title landing-title-lines" id="team-heading">
-                {t("landing.team.title")}
+                {renderLandingTitleLines(t("landing.team.title"))}
               </h2>
               <p className="section__desc">
                 {t("landing.team.desc")}
@@ -245,7 +251,7 @@ export default function LandingPage() {
           <div className="container">
             <div className="cta-section__inner">
               <h2 className="cta-section__title landing-title-lines" id="cta-heading">
-                {t("landing.cta.title")}
+                {renderLandingTitleLines(t("landing.cta.title"))}
               </h2>
               <p className="cta-section__subtitle">
                 {t("landing.cta.subtitle")}

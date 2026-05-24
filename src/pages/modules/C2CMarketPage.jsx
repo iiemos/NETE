@@ -452,14 +452,20 @@ export default function C2CMarketPage() {
             <p className="c2c-eyebrow">NETE C2C</p>
             <h1>{t("modules.c2cMarket.heroTitle")}</h1>
           </div>
-          <ul>
-            {t("modules.c2cMarket.heroRules", { returnObjects: true }).map((rule, index) => (
-              <li key={rule}>
-                <span>{String(index + 1).padStart(2, "0")}</span>
-                <p>{rule}</p>
-              </li>
-            ))}
-          </ul>
+          <details className="c2c-market-rules">
+            <summary className="c2c-guide-summary">
+              <h2>{t("modules.c2cMarket.rulesTitle")}</h2>
+              <Icon icon="mdi:chevron-down" aria-hidden="true" />
+            </summary>
+            <ul>
+              {t("modules.c2cMarket.heroRules", { returnObjects: true }).map((rule, index) => (
+                <li key={rule}>
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <p>{rule}</p>
+                </li>
+              ))}
+            </ul>
+          </details>
         </section>
 
         <div className="c2c-market-tabs" role="tablist" aria-label={t("modules.c2cMarket.ariaTabs")}>

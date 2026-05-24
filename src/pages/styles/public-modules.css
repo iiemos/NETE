@@ -151,116 +151,176 @@
 }
 
 .team-income-card {
-  padding: 18px;
+  padding: 14px 10px 16px;
+  background: rgba(12, 18, 15, 0.92);
 }
 
 .team-tabs {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  width: min(100%, 360px);
-  margin: 0 auto 16px;
+  width: min(100%, 390px);
+  height: 46px;
+  margin: 0 auto 14px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.18);
+  background: #090e0b;
+}
+
+.team-tabs::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 0;
+  width: 50%;
+  border-radius: 999px 0 0 999px;
+  background: var(--module-accent);
+  transition: transform 0.2s ease, border-radius 0.2s ease;
+}
+
+.team-tabs[data-active="seed"]::before {
+  transform: translateX(100%);
+  border-radius: 0 999px 999px 0;
 }
 
 .team-tabs button {
+  position: relative;
+  z-index: 1;
   min-height: 44px;
   border: 0;
   background: transparent;
-  color: rgba(255, 255, 255, 0.86);
+  color: #d8ded8;
   font-size: 14px;
   font-weight: 850;
+  transition: color 0.2s ease;
 }
 
 .team-tabs button.is-active {
-  background: var(--module-accent);
   color: #10150e;
 }
 
 .team-performance-list {
-  width: 100%;
-  min-width: 0;
-  font-size: 11px;
-}
-
-.team-performance-row {
   display: grid;
-  grid-template-columns: minmax(96px, 1.05fr) minmax(56px, 0.58fr) minmax(92px, 1fr) minmax(92px, 1fr);
+  gap: 10px;
+}
+
+.team-performance-node-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+    #121915;
+  box-shadow:
+    0 10px 26px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.team-performance-card-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  column-gap: 6px;
-  min-width: 360px;
-  padding: 11px 10px;
-  border-top: 1px solid var(--module-line);
+  min-height: 38px;
+  padding: 0 12px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.045);
 }
 
-.team-performance-head {
-  border-top: 0;
-  background: rgba(255, 255, 255, 0.035);
-  color: rgba(255, 255, 255, 0.62);
+.team-node-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d7dfd8;
+  font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
 }
 
-.team-performance-body .team-performance-row:first-child {
-  border-top: 1px solid var(--module-line);
-}
-
-.team-performance-cell {
+.team-node-address {
   min-width: 0;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.86);
+  color: #c9d1cb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.team-performance-head .team-performance-cell {
-  color: inherit;
-  white-space: normal;
+.team-performance-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px 12px 12px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent);
 }
 
-.team-performance-header-label {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  line-height: 1.2;
-  vertical-align: top;
+.team-performance-card-stat {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-width: 0;
+  min-height: 46px;
+  gap: 3px;
+  border-radius: 7px;
+  background: #151d18;
 }
 
-.team-performance-header-unit {
-  font-size: 10px;
-  line-height: 1;
-  opacity: 0.82;
-}
-
-.team-performance-cell:first-child {
-  text-align: left;
-}
-
-.team-performance-cell:nth-child(2) {
+.team-performance-card-label {
+  color: #87928b;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.1;
   text-align: center;
 }
 
-.team-performance-cell:nth-child(3) {
-  text-align: right;
-}
-
-.team-performance-cell:last-child {
-  text-align: right;
-}
-
-.team-address-cell {
+.team-performance-card-value {
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  color: #ecf2ed;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.team-performance-card-value.is-green {
+  color: #69d58b;
+  text-shadow: 0 0 12px rgba(105, 213, 139, 0.16);
 }
 
 .team-performance-state {
   padding: 12px 10px;
-  border-top: 1px solid var(--module-line);
 }
 
-.team-income-card .module-table-wrap {
-  overflow-x: auto;
+@media (max-width: 360px) {
+  .team-income-card {
+    padding-inline: 8px;
+  }
+
+  .team-performance-card-head {
+    padding-inline: 10px;
+  }
+
+  .team-performance-card-stats {
+    gap: 6px;
+    padding-inline: 10px;
+  }
+
+  .team-performance-card-label {
+    font-size: 10px;
+  }
+
+  .team-performance-card-value {
+    font-size: 14px;
+  }
 }
 
 .my-account-page {
@@ -540,6 +600,19 @@
   color: var(--module-accent);
   font-size: 22px;
   font-weight: 950;
+  line-height: 1.1;
+}
+
+.my-reward-summary {
+  padding: 16px 14px 0;
+}
+
+.my-reward-summary .my-metric-card {
+  min-height: 86px;
+}
+
+.my-reward-total-card strong {
+  font-size: 16px;
   line-height: 1.1;
 }
 

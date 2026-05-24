@@ -90,19 +90,6 @@ function getMemberAddress(member) {
   return member?.address ?? member?.user ?? member?.wallet ?? member?.account ?? "";
 }
 
-function renderPerformanceHeaderLabel(label) {
-  const text = String(label || "");
-  const match = text.match(/^(.*?)([（(]NETE[）)])$/);
-  if (!match) return text;
-
-  return (
-    <span className="team-performance-header-label">
-      <span>{match[1]}</span>
-      <span className="team-performance-header-unit">{match[2]}</span>
-    </span>
-  );
-}
-
 function getFallbackDirects(source, type) {
   if (type === "seed") {
     return toItems(source.seed_directs ?? source.seed_direct_members ?? source.presale_directs ?? source.presale_direct_members);
@@ -161,7 +148,7 @@ export default function MyTeamPage() {
 
   const referralInfo = referralInfoQuery.data || {};
   const performanceLegs = performanceLegsQuery.data || {};
-  const directCount = Number(referralInfo.direct_count ?? 0);
+  const teamCount = Number(referralInfo.team_count ?? 0);
   const maxDepth = Number(referralInfo.max_depth ?? 0);
   const currentLevel = performanceLegs.user_level ?? referralInfo.user_level ?? networkDataQuery.data?.userLevel ?? 0;
 
@@ -223,18 +210,16 @@ export default function MyTeamPage() {
   const currentLayers = useMemo(() => t("modules.team.layers", { count: maxDepth }), [maxDepth, t]);
 
   const currentPerformanceFields = performanceFieldMap[activePerformance];
-  const bigLegStatsLabelKey = activePerformance === "seed"
-    ? "modules.team.stats.seedBigLegPerformance"
-    : "modules.team.stats.minerBigLegPerformance";
-  const smallLegStatsLabelKey = activePerformance === "seed"
-    ? "modules.team.stats.seedZonePerformance"
-    : "modules.team.stats.minerZonePerformance";
-  const teamPerformanceCandidate = pickBigIntCandidate(referralInfo, currentPerformanceFields.team);
-  const smallLegPerformanceCandidate = pickBigIntCandidate(referralInfo, currentPerformanceFields.small);
+  const memberCountLabelKey = activePerformance === "seed" ? "modules.team.seedCount" : "modules.team.directCount";
+  const statsPerformanceFields = performanceFieldMap.miner;
+  const bigLegStatsLabelKey = "modules.team.stats.minerBigLegPerformance";
+  const smallLegStatsLabelKey = "modules.team.stats.minerZonePerformance";
+  const teamPerformanceCandidate = pickBigIntCandidate(referralInfo, statsPerformanceFields.team);
+  const smallLegPerformanceCandidate = pickBigIntCandidate(referralInfo, statsPerformanceFields.small);
   const teamPerformance = teamPerformanceCandidate.found ? teamPerformanceCandidate.value : pickBigInt(performanceLegs, ["team_perf"]);
   const smallLegPerformance = smallLegPerformanceCandidate.found ? smallLegPerformanceCandidate.value : pickBigInt(performanceLegs, ["small_leg_perf"]);
   const fallbackBigLegPerformance = pickBigInt(performanceLegs, ["big_leg_perf"]);
-  const bigLegPerformanceCandidate = pickBigIntCandidate(referralInfo, currentPerformanceFields.big);
+  const bigLegPerformanceCandidate = pickBigIntCandidate(referralInfo, statsPerformanceFields.big);
   const bigLegPerformance = bigLegPerformanceCandidate.found
     ? bigLegPerformanceCandidate.value
     : teamPerformance > smallLegPerformance
@@ -264,16 +249,32 @@ export default function MyTeamPage() {
       const address = getMemberAddress(member);
       const performanceSource = directPerformanceMap.get(String(address).toLowerCase()) || member;
       const directCount = Number(pickField(performanceSource, ["direct_count", "directCount"]) ?? 0);
+      const seedCount = pickBigInt(performanceSource, ["own_seed_perf"]);
+      const memberCountValue = activePerformance === "seed" ? formatTokenAmount(seedCount, 18, 1) : directCount;
       const directPerformance = pickBigInt(performanceSource, currentPerformanceFields.direct);
       const memberTeamPerformance = pickBigInt(performanceSource, currentPerformanceFields.team);
 
       return (
-        <div className="team-performance-row" key={`${activePerformance}-${address || "direct"}-${index}`}>
-          <span className="team-performance-cell team-address-cell font-mono text-xs text-[#caff00]" title={address || undefined}>{address ? shortAddress(address, 4, 4) : "--"}</span>
-          <span className="team-performance-cell">{directCount}</span>
-          <span className="team-performance-cell">{formatTokenAmount(directPerformance, 18, 1)}</span>
-          <span className="team-performance-cell">{formatTokenAmount(memberTeamPerformance, 18, 1)}</span>
-        </div>
+        <article className="team-performance-node-card" key={`${activePerformance}-${address || "direct"}-${index}`} role="listitem">
+          <header className="team-performance-card-head">
+            <span className="team-node-tag">{t("modules.team.nodeTag")}</span>
+            <span className="team-node-address" title={address || undefined}>{address ? shortAddress(address, 4, 4) : "--"}</span>
+          </header>
+          <div className="team-performance-card-stats">
+            <div className="team-performance-card-stat">
+              <span className="team-performance-card-label">{t(memberCountLabelKey)}</span>
+              <span className="team-performance-card-value">{memberCountValue}</span>
+            </div>
+            <div className="team-performance-card-stat">
+              <span className="team-performance-card-label">{t("modules.team.directPerformance")}</span>
+              <span className="team-performance-card-value is-green">{formatTokenAmount(directPerformance, 18, 1)}</span>
+            </div>
+            <div className="team-performance-card-stat">
+              <span className="team-performance-card-label">{t("modules.team.teamPerformance")}</span>
+              <span className="team-performance-card-value is-green">{formatTokenAmount(memberTeamPerformance, 18, 1)}</span>
+            </div>
+          </div>
+        </article>
       );
     });
   };
@@ -300,7 +301,7 @@ export default function MyTeamPage() {
         <article className="module-stat-card p-4">
           <div className="text-xs uppercase tracking-[0.12em] text-white/55">{t("modules.team.stats.directs")}</div>
           <div className="mt-2 font-display text-base font-bold text-[#caff00] md:text-lg">
-            {teamLoading ? <LoadingState compact /> : directCount}
+            {teamLoading ? <LoadingState compact /> : teamCount}
           </div>
         </article>
         <article className="module-stat-card p-4">
@@ -324,7 +325,7 @@ export default function MyTeamPage() {
       </div>
 
       <article className="module-card team-income-card">
-        <div className="team-tabs" role="tablist" aria-label={t("modules.team.performanceTabLabel")}>
+        <div className="team-tabs" role="tablist" aria-label={t("modules.team.performanceTabLabel")} data-active={activePerformance}>
           {performanceTabs.map((tab) => (
             <button
               key={tab.key}
@@ -342,16 +343,8 @@ export default function MyTeamPage() {
           ))}
         </div>
 
-        <div className="module-table-wrap">
-          <div className="team-performance-list" role="table">
-            <div className="team-performance-row team-performance-head" role="row">
-              <span className="team-performance-cell" role="columnheader">{t("modules.team.address")}</span>
-              <span className="team-performance-cell" role="columnheader">{t("modules.team.directCount")}</span>
-              <span className="team-performance-cell" role="columnheader">{renderPerformanceHeaderLabel(t("modules.team.directPerformance"))}</span>
-              <span className="team-performance-cell" role="columnheader">{renderPerformanceHeaderLabel(t("modules.team.teamPerformance"))}</span>
-            </div>
-            <div className="team-performance-body" role="rowgroup">{renderPerformanceRows()}</div>
-          </div>
+        <div className="team-performance-list" role="list">
+          {renderPerformanceRows()}
         </div>
         {showPerformancePagination ? (
           <div className="my-detail-pagination team-performance-pagination" aria-label={t("modules.team.pagination.label")}>

@@ -1437,7 +1437,7 @@ button {
 }
 
 .section__header {
-  text-align: center;
+  /* text-align: center; */
   max-width: 700px;
   margin-inline: auto;
   margin-bottom: var(--space-16);
@@ -1460,13 +1460,21 @@ button {
   font-size: var(--landing-section-title-size);
   font-weight: 900;
   line-height: 1.1;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   margin-bottom: var(--space-5);
 }
 
 .landing-title-lines {
-  white-space: pre-line;
-  /* text-align: left; */
+  white-space: normal;
+}
+
+.landing-title-line {
+  display: block;
+}
+
+.landing-title-line + .landing-title-line {
+  font-size: 0.88em;
+  line-height: 1.16;
 }
 
 .section__desc {
@@ -1825,7 +1833,7 @@ button {
   font-family: var(--font-display);
   font-size: var(--landing-section-title-size);
   font-weight: 900;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   margin-bottom: var(--space-5);
   line-height: 1.1;
   text-align: left;

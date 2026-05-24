@@ -18,9 +18,9 @@ export default function FeaturesSection() {
       <div className="section__header">
         <span className="section__eyebrow" aria-hidden="true">{t("landing.features.eyebrow")}</span>
         
-        <h2 className="section__title" id="features-heading">
+        <h2 className="section__title landing-title-lines" id="features-heading">
           {t("landing.features.title").split("\n").map((line, index) => (
-            <span key={`${line}-${index}`}>{index > 0 ? <br /> : null}{line}</span>
+            <span className="landing-title-line" key={`${line}-${index}`}>{line}</span>
           ))}
         </h2>
         <p className="section__desc">

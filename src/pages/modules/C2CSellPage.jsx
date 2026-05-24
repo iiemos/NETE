@@ -142,8 +142,11 @@ export default function C2CSellPage() {
         </div>
       </article>
 
-      <section className="c2c-guide c2c-surface">
-        <h2>{t("modules.c2cQuick.sellGuideTitle")}</h2>
+      <details className="c2c-guide c2c-surface">
+        <summary className="c2c-guide-summary">
+          <h2>{t("modules.c2cQuick.sellGuideTitle")}</h2>
+          <Icon icon="mdi:chevron-down" aria-hidden="true" />
+        </summary>
         <div className="c2c-guide-grid">
           {guideSteps.map((item) => (
             <article key={item.title} className="c2c-guide-card">
@@ -155,7 +158,7 @@ export default function C2CSellPage() {
             </article>
           ))}
         </div>
-      </section>
+      </details>
     </C2CPageFrame>
   );
 }

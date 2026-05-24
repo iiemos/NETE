@@ -356,7 +356,7 @@ const resources = {
         },
         team: {
           eyebrow: "// Technical Team",
-          title: "Technical DNA, ahead of the wave since 2018",
+          title: "Technical DNA\nAhead of the Wave Since 2018",
           desc: "As an EEA alliance member, the team independently develops VIA Protocol and the Nete platform, supporting long-term ecosystem operations with full-stack blockchain capabilities.",
           items: [
             { title: "Independent R&D", desc: "Core protocol, business contracts, and frontend flows are built around transparent on-chain rules.", tag: "VIA Protocol | Nete Platform" },
@@ -375,7 +375,7 @@ const resources = {
           ],
         },
         cta: {
-          title: "NETE Foundation | Not a manager, but a guardian",
+          title: "NETE Foundation\nNot a Manager, but a Guardian",
           subtitle: "NETE Foundation is not affiliated with any single commercial entity. It is independent, transparent, and non-profit, committed to:",
           foundationItems: [
             "Maintaining the long-term health of the NETE ecosystem",
@@ -498,7 +498,7 @@ resources["zh-TW"] = {
         ],
       },
       team: {
-        title: "技術基因，2018年我們就已站在浪潮之巔",
+        title: "技術基因\n2018年我們就已站在浪潮之巔",
         desc: "EEA 聯盟成員，自主研發 VIA Protocol 與 Nete 平台，以全棧區塊鏈技術能力支撐生態長期運行。",
         items: [
           { title: "自主研發", desc: "核心協議、業務合約與前端交互統一圍繞鏈上透明規則構建。", tag: "VIA Protocol｜Nete 平台" },
@@ -506,7 +506,7 @@ resources["zh-TW"] = {
         ],
       },
       cta: {
-        title: "NETE基金會 | 不是管理者，是守護者",
+        title: "NETE基金會\n不是管理者，是守護者",
         subtitle: "NETE Foundation不隸屬於任何單一商業實體，它以獨立、透明、非營利為原則，致力於：",
         foundationItems: [
           "維護NETE生態的長期健康發展",
@@ -604,7 +604,7 @@ resources.ja = {
       },
       team: {
         eyebrow: "// 技術チーム",
-        title: "技術的DNA、2018年から波の先端へ",
+        title: "技術的DNA\n2018年から波の先端へ",
         desc: "EEAメンバーとして、VIA ProtocolとNeteプラットフォームを独自開発し、長期運用を支えます。",
         items: [
           { title: "独自開発", desc: "プロトコル、業務コントラクト、UIを透明なオンチェーンルールに沿って構築。", tag: "VIA Protocol｜Nete" },
@@ -612,7 +612,7 @@ resources.ja = {
         ],
       },
       cta: {
-        title: "NETE Foundation | 管理者ではなく守護者",
+        title: "NETE Foundation\n管理者ではなく守護者",
         subtitle: "NETE Foundationは単一の商業主体に属さず、独立・透明・非営利を原則とします。",
         foundationItems: [
           "NETEエコシステムの長期的な健全性を維持",
@@ -710,7 +710,7 @@ resources.ko = {
       },
       team: {
         eyebrow: "// 기술 팀",
-        title: "기술 DNA, 2018년부터 흐름의 최전선에",
+        title: "기술 DNA\n2018년부터 흐름의 최전선에",
         desc: "EEA 멤버로서 VIA Protocol과 Nete 플랫폼을 자체 개발하고 장기 생태계 운영을 지원합니다.",
         items: [
           { title: "자체 개발", desc: "프로토콜, 비즈니스 컨트랙트, UI를 투명한 온체인 규칙 중심으로 구축합니다.", tag: "VIA Protocol｜Nete" },
@@ -718,7 +718,7 @@ resources.ko = {
         ],
       },
       cta: {
-        title: "NETE Foundation | 관리자가 아닌 수호자",
+        title: "NETE Foundation\n관리자가 아닌 수호자",
         subtitle: "NETE Foundation은 단일 상업 주체에 속하지 않으며 독립성, 투명성, 비영리를 원칙으로 합니다.",
         foundationItems: [
           "NETE 생태계의 장기적 건강성 유지",

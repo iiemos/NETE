@@ -422,26 +422,27 @@ export default function MyPage() {
 
     return [
       [
-        { label: t("modules.my.summary.nete"), value: formatTokenAmount(neteBalance, 18, 4), unit: "NETE", asset: true },
-        { label: t("modules.my.summary.principalPool"), value: formatTokenAmount(principalPool, 18, 4), unit: "NETE", asset: true },
-        { label: t("modules.my.summary.profitPool"), value: formatTokenAmount(profitPoolBalance, 18, 4), unit: "NETE", asset: true },
+        { label: t("modules.my.summary.nete"), value: formatTokenAmount(neteBalance, 18, 4), asset: true },
+        { label: t("modules.my.summary.principalPool"), value: formatTokenAmount(principalPool, 18, 4), asset: true },
+        { label: t("modules.my.summary.profitPool"), value: formatTokenAmount(profitPoolBalance, 18, 4), asset: true },
       ],
       [
-        { label: t("modules.my.summary.ownMinerPerformance"), value: formatTokenAmount(ownMinerPerformance, 18, 2), unit: "NETE" },
-        { label: t("modules.my.summary.ownSeedPerformance"), value: formatTokenAmount(ownSeedPerformance, 18, 2), unit: "NETE" },
-        { label: t("modules.my.summary.ownTotalPerformance"), value: formatTokenAmount(ownTotalPerformance, 18, 2), unit: "NETE" },
+        { label: t("modules.my.summary.ownMinerPerformance"), value: formatTokenAmount(ownMinerPerformance, 18, 2) },
+        { label: t("modules.my.summary.ownSeedPerformance"), value: formatTokenAmount(ownSeedPerformance, 18, 2) },
+        { label: t("modules.my.summary.ownTotalPerformance"), value: formatTokenAmount(ownTotalPerformance, 18, 2) },
       ],
       [
-        { label: t("modules.my.summary.teamPerformance"), value: formatTokenAmount(teamPerformance, 18, 2), unit: "NETE" },
-        { label: t("modules.my.summary.teamBigLegPerformance"), value: formatTokenAmount(teamBigLegPerformance, 18, 2), unit: "NETE" },
-        { label: t("modules.my.summary.teamSmallLegPerformance"), value: formatTokenAmount(teamSmallLegPerformance, 18, 2), unit: "NETE" },
+        { label: t("modules.my.summary.teamPerformance"), value: formatTokenAmount(teamPerformance, 18, 2) },
+        { label: t("modules.my.summary.teamBigLegPerformance"), value: formatTokenAmount(teamBigLegPerformance, 18, 2) },
+        { label: t("modules.my.summary.teamSmallLegPerformance"), value: formatTokenAmount(teamSmallLegPerformance, 18, 2) },
       ],
       [
-        { label: t("modules.my.summary.directPerformance"), value: formatTokenAmount(directPerformance, 18, 2), unit: "NETE" },
-        { label: t("modules.my.summary.totalDividend"), value: formatTokenAmount(totalDividend, 18, 4), unit: "NETE" },
+        { label: t("modules.my.summary.directPerformance"), value: formatTokenAmount(directPerformance, 18, 2) },
+        { label: t("modules.my.summary.totalDividend"), value: formatTokenAmount(totalDividend, 18, 4) },
       ],
     ];
   }, [balances.neteBalance, directPerformance, miningData.repurchaseBalance, ownMinerPerformance, ownSeedPerformance, ownTotalPerformance, profitPoolBalance, t, teamBigLegPerformance, teamPerformance, teamSmallLegPerformance, totalDividend]);
+  const visibleAssetRows = assetRows.slice(0, 1);
 
   const claimRows = useMemo(() => [
     { key: "referral", label: t("modules.my.summary.referral"), amount: overview.pending_referral ?? 0n, labelKey: "modules.my.claimActions.referral" },
@@ -449,7 +450,7 @@ export default function MyPage() {
     { key: "v9", label: t("modules.my.summary.v9"), amount: overview.pending_v9 ?? 0n, labelKey: "modules.my.claimActions.v9" },
   ].map((row) => ({ ...row, claimable: toBigIntSafe(row.amount) > 0n })), [overview.pending_dividend, overview.pending_referral, overview.pending_v9, t]);
 
-  const loading = incomeOverviewQuery.isLoading || referralInfoQuery.isLoading || personalPerformanceQuery.isLoading || performanceLegsQuery.isLoading || balancesQuery.isLoading || miningDataQuery.isLoading;
+  const assetOverviewLoading = balancesQuery.isLoading || miningDataQuery.isLoading;
 
   const copyInviteLink = async () => {
     if (!wallet.currentAddress || inviteLink === "--") return;
@@ -534,17 +535,14 @@ export default function MyPage() {
           <span>{t("modules.my.assetTag")}</span>
         </div>
 
-        {loading ? <LoadingState className="module-loading-card" /> : (
+        {assetOverviewLoading ? <LoadingState className="module-loading-card" /> : (
           <div className="my-metric-board">
-            {assetRows.map((row, rowIndex) => (
+            {visibleAssetRows.map((row, rowIndex) => (
               <div className={row.length === 2 ? "my-metric-row my-metric-row--two" : "my-metric-row"} key={rowIndex}>
                 {row.map((item) => (
                   <article className={item.asset ? "my-metric-card my-metric-card--asset" : "my-metric-card"} key={item.label}>
                     <span className="my-account-label">{item.label}</span>
-                    <strong>
-                      {item.value}
-                      <small>{item.unit}</small>
-                    </strong>
+                    <strong>{item.value}</strong>
                   </article>
                 ))}
               </div>
@@ -557,6 +555,13 @@ export default function MyPage() {
         <div className="my-section-head">
           <h2>{t("modules.my.pendingRewards")}</h2>
           <span>{t("modules.my.rewardCount", { count: claimRows.length })}</span>
+        </div>
+
+        <div className="my-reward-summary">
+          <article className="my-metric-card my-reward-total-card">
+            <span className="my-account-label">{t("modules.my.summary.totalReward")}</span>
+            <strong>{formatTokenAmount(totalDividend, 18, 4)}</strong>
+          </article>
         </div>
 
         <div className="my-claim-list">
