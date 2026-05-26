@@ -249,12 +249,13 @@ function getMinerAmountFromPrincipal(value) {
   if (value === null || value === undefined || value === "") return "";
   const text = String(value).trim();
   if (!text) return "";
-  if (text.includes(".")) return text.replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+  const normalizedText = text.replace(/,/g, "");
+  if (normalizedText.includes(".")) return normalizedText.replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
 
-  const principal = toBigIntSafe(value);
+  const principal = toBigIntSafe(normalizedText);
   if (principal <= 0n) return "";
-  if (principal < 10n ** 12n) return text;
-  return formatTokenAmount(principal, 18, 0);
+  if (principal < 10n ** 12n) return normalizedText;
+  return formatTokenAmount(principal, 18, 0).replace(/,/g, "");
 }
 
 function getLedgerMinerTag(row, t) {
@@ -270,7 +271,7 @@ function getLedgerMinerTag(row, t) {
   }
 
   const namedModel = String(row?.miner_model ?? row?.minerModel ?? row?.model_name ?? row?.modelName ?? row?.model ?? row?.miner_type ?? row?.minerType ?? row?.tier_name ?? row?.tierName ?? row?.miner_title ?? row?.minerTitle ?? row?.machine_model ?? row?.machineModel ?? row?.machine_type ?? row?.machineType ?? "").trim();
-  if (namedModel) return { label: namedModel, tone: "default" };
+  if (namedModel) return { label: namedModel.replace(/(\d),(?=\d{3}(\D|$))/g, "$1"), tone: "default" };
 
   if (isAirdropLedger(row)) {
     return { label: t("modules.my.airdropMiner"), tone: "airdrop" };
@@ -294,12 +295,13 @@ function normalizeLedgerRow(row, index, t) {
   const minerTag = getLedgerMinerTag(row, t);
   const ledgerType = getLedgerType(row, t);
   const hasMinerTitle = Boolean(minerTag && shouldUseMinerTitle(row));
+  const subtitle = getLedgerKind(row) === "dividend" ? t("modules.my.ledgerTypes.dividendIncome") : t("modules.my.ledgerTitle");
 
   return {
     id: `${row?.id ?? row?.tx_hash ?? row?.txHash ?? "row"}-${index}`,
     createdAtText: getLedgerTimeText(row),
     title: hasMinerTitle ? minerTag.label : ledgerType,
-    subtitle: hasMinerTitle ? ledgerType : t("modules.my.ledgerTitle"),
+    subtitle: hasMinerTitle ? ledgerType : subtitle,
     typeTone: hasMinerTitle ? "miner" : "",
     amountText,
     balanceText: formatTokenAmount(row?.balance ?? row?.remain ?? 0n, 18, 6),

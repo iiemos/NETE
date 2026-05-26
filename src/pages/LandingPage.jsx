@@ -121,15 +121,12 @@ export default function LandingPage() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     scrollTopBtn.addEventListener("click", handleScrollTopClick);
 
-    const getStartedBtn = document.getElementById("get-started-btn");
     const launchBtn = document.getElementById("launch-btn");
     const ctaPrimaryBtn = document.getElementById("cta-primary-btn");
 
-    const handleGetStarted = () => message.info(t("landing.toast.core"));
     const handleLaunch = () => message.info(t("landing.toast.launch"));
     const handleCreateWallet = () => message.info(t("landing.toast.wallet"));
 
-    getStartedBtn?.addEventListener("click", handleGetStarted);
     launchBtn?.addEventListener("click", handleLaunch);
     ctaPrimaryBtn?.addEventListener("click", handleCreateWallet);
     handleScroll();
@@ -138,7 +135,6 @@ export default function LandingPage() {
       window.removeEventListener("scroll", handleScroll);
       scrollTopBtn.removeEventListener("click", handleScrollTopClick);
 
-      getStartedBtn?.removeEventListener("click", handleGetStarted);
       launchBtn?.removeEventListener("click", handleLaunch);
       ctaPrimaryBtn?.removeEventListener("click", handleCreateWallet);
     };

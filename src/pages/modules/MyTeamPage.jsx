@@ -15,7 +15,7 @@ const PERFORMANCE_PAGE_SIZE = 10;
 
 const performanceFieldMap = {
   miner: {
-    direct: ["direct_miner_perf"],
+    direct: ["own_miner_perf"],
     team: ["team_miner_total_perf"],
     big: ["team_miner_big_leg_perf", "big_leg_miner_perf", "miner_big_leg_perf", "big_leg_perf"],
     small: ["team_miner_small_leg_perf", "small_leg_miner_perf", "miner_small_leg_perf", "small_leg_perf"],
@@ -210,7 +210,7 @@ export default function MyTeamPage() {
   const currentLayers = useMemo(() => t("modules.team.layers", { count: maxDepth }), [maxDepth, t]);
 
   const currentPerformanceFields = performanceFieldMap[activePerformance];
-  const memberCountLabelKey = activePerformance === "seed" ? "modules.team.seedCount" : "modules.team.directCount";
+  const memberCountLabelKey = activePerformance === "seed" ? "modules.team.personalSeedPerformance" : "modules.team.directCount";
   const statsPerformanceFields = performanceFieldMap.miner;
   const bigLegStatsLabelKey = "modules.team.stats.minerBigLegPerformance";
   const smallLegStatsLabelKey = "modules.team.stats.minerZonePerformance";
@@ -249,8 +249,8 @@ export default function MyTeamPage() {
       const address = getMemberAddress(member);
       const performanceSource = directPerformanceMap.get(String(address).toLowerCase()) || member;
       const directCount = Number(pickField(performanceSource, ["direct_count", "directCount"]) ?? 0);
-      const seedCount = pickBigInt(performanceSource, ["own_seed_perf"]);
-      const memberCountValue = activePerformance === "seed" ? formatTokenAmount(seedCount, 18, 1) : directCount;
+      const ownSeedPerformance = pickBigInt(performanceSource, ["own_seed_perf"]);
+      const memberCountValue = activePerformance === "seed" ? formatTokenAmount(ownSeedPerformance, 18, 1) : directCount;
       const directPerformance = pickBigInt(performanceSource, currentPerformanceFields.direct);
       const memberTeamPerformance = pickBigInt(performanceSource, currentPerformanceFields.team);
 
@@ -260,15 +260,17 @@ export default function MyTeamPage() {
             <span className="team-node-tag">{t("modules.team.nodeTag")}</span>
             <span className="team-node-address" title={address || undefined}>{address ? shortAddress(address, 4, 4) : "--"}</span>
           </header>
-          <div className="team-performance-card-stats">
+          <div className={activePerformance === "seed" ? "team-performance-card-stats team-performance-card-stats--two" : "team-performance-card-stats"}>
             <div className="team-performance-card-stat">
               <span className="team-performance-card-label">{t(memberCountLabelKey)}</span>
               <span className="team-performance-card-value">{memberCountValue}</span>
             </div>
-            <div className="team-performance-card-stat">
-              <span className="team-performance-card-label">{t("modules.team.directPerformance")}</span>
-              <span className="team-performance-card-value is-green">{formatTokenAmount(directPerformance, 18, 1)}</span>
-            </div>
+            {activePerformance === "miner" ? (
+              <div className="team-performance-card-stat">
+                <span className="team-performance-card-label">{t("modules.team.personalPerformance")}</span>
+                <span className="team-performance-card-value is-green">{formatTokenAmount(directPerformance, 18, 1)}</span>
+              </div>
+            ) : null}
             <div className="team-performance-card-stat">
               <span className="team-performance-card-label">{t("modules.team.teamPerformance")}</span>
               <span className="team-performance-card-value is-green">{formatTokenAmount(memberTeamPerformance, 18, 1)}</span>

@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react";
 import { useTranslation } from "react-i18next";
+import { NavLink } from "react-router-dom";
 import homeVideo from "../../assets/images/home.mp4";
 
 export default function HeroSection() {
@@ -32,14 +33,14 @@ export default function HeroSection() {
             <p className="hero__subtitle">{t("landing.hero.subtitle")}</p>
 
             <div className="hero__actions">
-              <button className="btn btn--primary btn--sm" id="get-started-btn">
+              <NavLink className="btn btn--primary btn--sm" to="/finance/buy-seed">
                 {t("landing.hero.primary")}
                 <Icon className="hero__action-icon" icon="mdi:arrow-right" aria-hidden="true" />
-              </button>
-              <button className="btn btn--ghost btn--sm">
+              </NavLink>
+              <NavLink className="btn btn--ghost btn--sm" to="/mining">
                 {t("landing.hero.secondary")}
                 <Icon className="hero__action-icon" icon="mdi:arrow-right" aria-hidden="true" />
-              </button>
+              </NavLink>
             </div>
           </div>
 

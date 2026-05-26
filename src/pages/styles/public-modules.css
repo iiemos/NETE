@@ -260,6 +260,10 @@
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.018), transparent);
 }
 
+.team-performance-card-stats--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .team-performance-card-stat {
   display: grid;
   align-content: center;
@@ -612,8 +616,12 @@
 }
 
 .my-reward-total-card strong {
-  font-size: 16px;
+  font-size: 26px;
   line-height: 1.1;
+}
+
+.my-reward-total-card .my-account-label {
+  font-size: 13px;
 }
 
 .my-claim-list {
@@ -2439,6 +2447,40 @@
 .mining-plan-item {
   padding: 16px;
   background: rgba(255, 255, 255, 0.025);
+}
+
+.mining-portfolio-item {
+  border-width: 2px;
+  border-color: rgba(91, 235, 188, 0.44);
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 0 0 1px rgba(91, 235, 188, 0.1);
+}
+
+.mining-portfolio-item--starter {
+  border-color: rgba(118, 245, 196, 0.62);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(118, 245, 196, 0.16);
+}
+
+.mining-portfolio-item--classic {
+  border-color: rgba(125, 167, 255, 0.58);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(125, 167, 255, 0.16);
+}
+
+.mining-portfolio-item--hot {
+  border-color: rgba(255, 211, 110, 0.62);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(255, 211, 110, 0.16);
+}
+
+.mining-portfolio-item--advanced {
+  border-color: rgba(91, 235, 188, 0.68);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(91, 235, 188, 0.18);
+}
+
+.mining-portfolio-item--airdrop {
+  border-color: rgba(202, 255, 0, 0.62);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28), 0 0 0 1px rgba(202, 255, 0, 0.16);
 }
 
 .mining-portfolio-item__top {

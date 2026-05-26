@@ -1010,7 +1010,7 @@ export default function MiningPage() {
                   </article>
                 ) : (
                   portfolioRows.map((machine) => (
-                    <article key={machine.positionId} className="mining-portfolio-item">
+                    <article key={machine.positionId} className={`mining-portfolio-item mining-portfolio-item--${machine.isAirdrop ? "airdrop" : machine.modelSuffixTone}`}>
                       <div className="mining-portfolio-item__top">
                         <div>
                           <div className="mining-portfolio-item__title">
@@ -1385,15 +1385,15 @@ export default function MiningPage() {
               <div className="grid grid-cols-3 gap-2 text-xs max-[520px]:grid-cols-1">
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                   <span className="text-white/55">{t("modules.mining.modal.principalBalance")}</span>
-                  <strong className="mt-1 block text-white">{formatTokenAmount(principalPoolBalance, 18, 4)} NETE</strong>
+                  <strong className="mt-1 block text-white">{formatTokenAmount(principalPoolBalance, 18, 4)}</strong>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                   <span className="text-white/55">{t("modules.mining.modal.profitBalance")}</span>
-                  <strong className="mt-1 block text-white">{formatTokenAmount(profitPoolBalance, 18, 4)} NETE</strong>
+                  <strong className="mt-1 block text-white">{formatTokenAmount(profitPoolBalance, 18, 4)}</strong>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                   <span className="text-white/55">{t("modules.mining.modal.chainBalance")}</span>
-                  <strong className="mt-1 block text-white">{formatTokenAmount(chainNeteBalance, 18, 4)} NETE</strong>
+                  <strong className="mt-1 block text-white">{formatTokenAmount(chainNeteBalance, 18, 4)}</strong>
                 </div>
               </div>
             </section>
@@ -1521,15 +1521,15 @@ export default function MiningPage() {
               <div className="grid grid-cols-3 gap-2 text-xs max-[520px]:grid-cols-1">
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                   <span className="text-white/55">{t("modules.mining.modal.principalBalance")}</span>
-                  <strong className="mt-1 block text-white">{formatTokenAmount(principalPoolBalance, 18, 4)} NETE</strong>
+                  <strong className="mt-1 block text-white">{formatTokenAmount(principalPoolBalance, 18, 4)}</strong>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                   <span className="text-white/55">{t("modules.mining.modal.profitBalance")}</span>
-                  <strong className="mt-1 block text-white">{formatTokenAmount(profitPoolBalance, 18, 4)} NETE</strong>
+                  <strong className="mt-1 block text-white">{formatTokenAmount(profitPoolBalance, 18, 4)}</strong>
                 </div>
                 <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                   <span className="text-white/55">{t("modules.mining.modal.chainBalance")}</span>
-                  <strong className="mt-1 block text-white">{formatTokenAmount(chainNeteBalance, 18, 4)} NETE</strong>
+                  <strong className="mt-1 block text-white">{formatTokenAmount(chainNeteBalance, 18, 4)}</strong>
                 </div>
               </div>
             </section>
