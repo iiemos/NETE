@@ -11,6 +11,7 @@ import { formatTokenAmount, formatUnixTime, parseTokenInput, shortAddress } from
 import { getWalletErrorMessage } from "../../utils/walletErrors";
 
 const ONE_18 = 10n ** 18n;
+const MIN_SEED_BUY = 30n * ONE_18;
 
 export default function BuySeedPage() {
   const { t } = useTranslation();
@@ -63,7 +64,7 @@ export default function BuySeedPage() {
   const seedRemaining = seedInfoQuery.data?.seedRemaining ?? 0n;
   const seedPoolInit = seedInfoQuery.data?.seedPoolInit ?? 0n;
   const seedSold = seedInfoQuery.data?.seedSold ?? 0n;
-  const minSeedBuy = seedInfoQuery.data?.minSeedBuy ?? 30n * ONE_18;
+  const minSeedBuy = MIN_SEED_BUY;
   const presaleActive = Boolean(seedInfoQuery.data?.presaleActive);
   const usdtBalance = balanceQuery.data?.usdtBalance ?? 0n;
   const principalPoolBalance = miningDataQuery.data?.repurchaseBalance ?? 0n;

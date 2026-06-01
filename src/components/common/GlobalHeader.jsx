@@ -203,6 +203,13 @@ export default function GlobalHeader() {
     setLanguageMenuOpen(false);
   };
 
+  const handleNavClick = (event, item) => {
+    if (item.key !== "c2c") return;
+    event.preventDefault();
+    setMenuOpen(false);
+    message.info(t("nav.c2cUnavailable"));
+  };
+
   const handleWalletAction = async () => {
     try {
       if (!wallet.isConnected) {
@@ -247,7 +254,7 @@ export default function GlobalHeader() {
             <ul className="nav__links" role="list">
               {navItems.map((item) => (
                 <li key={item.to}>
-                  <NavLink to={item.to} className={({ isActive }) => desktopNavClassName(isActive)} end={item.to === "/"}>
+                  <NavLink to={item.to} className={({ isActive }) => desktopNavClassName(isActive)} end={item.to === "/"} onClick={(event) => handleNavClick(event, item)}>
                     {t(`nav.${item.key}`)}
                   </NavLink>
                 </li>
@@ -335,7 +342,18 @@ export default function GlobalHeader() {
         <ul role="list">
           {navItems.map((item) => (
             <li key={`mobile-${item.to}`}>
-              <NavLink to={item.to} className={({ isActive }) => mobileNavClassName(isActive)} end={item.to === "/"} onClick={() => setMenuOpen(false)}>
+              <NavLink
+                to={item.to}
+                className={({ isActive }) => mobileNavClassName(isActive)}
+                end={item.to === "/"}
+                onClick={(event) => {
+                  if (item.key === "c2c") {
+                    handleNavClick(event, item);
+                    return;
+                  }
+                  setMenuOpen(false);
+                }}
+              >
                 {t(`nav.${item.key}`)}
               </NavLink>
             </li>

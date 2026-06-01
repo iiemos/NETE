@@ -7,7 +7,6 @@ import { useGlobalMessage } from "../components/common/GlobalMessage";
 import FeaturesSection from "../components/landing/FeaturesSection";
 import FooterSection from "../components/landing/FooterSection";
 import HeroSection from "../components/landing/HeroSection";
-import announcementsData from "../data/announcements.json";
 
 function normalizeAnnouncementLanguage(language) {
   const value = String(language || "").toLowerCase();
@@ -18,8 +17,8 @@ function normalizeAnnouncementLanguage(language) {
   return "zh-CN";
 }
 
-function getActiveAnnouncements(language) {
-  return (announcementsData.announcements || [])
+function getActiveAnnouncements(data, language) {
+  return (data?.announcements || [])
     .filter((item) => item.status === "active")
     .sort((a, b) => Number(a.sort || 0) - Number(b.sort || 0))
     .map((item) => {
@@ -96,10 +95,41 @@ export default function LandingPage() {
   const bridgeItems = t("landing.bridge.items", { returnObjects: true });
   const foundationItems = t("landing.cta.foundationItems", { returnObjects: true });
   const announcementLanguage = normalizeAnnouncementLanguage(i18n.resolvedLanguage || i18n.language);
-  const announcements = useMemo(() => getActiveAnnouncements(announcementLanguage), [announcementLanguage]);
+  const [announcementsData, setAnnouncementsData] = useState({ announcements: [] });
+  const announcements = useMemo(() => getActiveAnnouncements(announcementsData, announcementLanguage), [announcementsData, announcementLanguage]);
   const teamItems = Array.isArray(teamSectionItems) ? teamSectionItems : [];
   const flowItems = Array.isArray(bridgeItems) ? bridgeItems : [];
   const ctaItems = Array.isArray(foundationItems) ? foundationItems : [];
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function loadAnnouncements() {
+      try {
+        const response = await fetch("/announcements.json", {
+          cache: "no-cache",
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to load announcements: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!controller.signal.aborted) {
+          setAnnouncementsData(Array.isArray(data?.announcements) ? data : { announcements: [] });
+        }
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          setAnnouncementsData({ announcements: [] });
+        }
+      }
+    }
+
+    loadAnnouncements();
+
+    return () => controller.abort();
+  }, []);
 
   useEffect(() => {
     document.title = "NETE";

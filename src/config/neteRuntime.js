@@ -6,7 +6,7 @@ const SUPPORTED_CHAINS = {
 };
 
 function normalizeBasePath(path) {
-  if (!path) return "https://neteapi.taolila.xyz/nete2";
+  if (!path) return "https://api.neteminer.com";
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path.endsWith("/") ? path.slice(0, -1) : path;
   }
@@ -19,12 +19,12 @@ function normalizeAddress(value) {
   return value.trim();
 }
 
-const configuredChainId = Number(import.meta.env.VITE_NETE_CHAIN_ID || bscTestnet.id);
+const configuredChainId = Number(import.meta.env.VITE_NETE_CHAIN_ID || bsc.id);
 
-export const NETE_CHAIN = SUPPORTED_CHAINS[configuredChainId] ?? bscTestnet;
+export const NETE_CHAIN = SUPPORTED_CHAINS[configuredChainId] ?? bsc;
 export const NETE_CHAIN_ID = NETE_CHAIN.id;
 
-export const NETE_API_BASE = normalizeBasePath(import.meta.env.VITE_NETE_API_BASE || "https://neteapi.taolila.xyz/nete2");
+export const NETE_API_BASE = normalizeBasePath(import.meta.env.VITE_NETE_API_BASE || "https://api.neteminer.com");
 
 export const NETE_CONTRACTS = {
   neteToken: normalizeAddress(import.meta.env.VITE_NETE_TOKEN_ADDRESS),

@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppShell from "./components/common/AppShell";
+import DappSignatureGate from "./components/common/DappSignatureGate";
 import { GlobalMessageProvider } from "./components/common/GlobalMessage";
 import ReferralBindGate from "./components/common/ReferralBindGate";
 import BuySeedPage from "./pages/modules/BuySeedPage";
@@ -31,6 +32,7 @@ export default function App() {
         <Route path="/landing" element={<Navigate to="/" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <DappSignatureGate />
       <ReferralBindGate />
     </GlobalMessageProvider>
   );
