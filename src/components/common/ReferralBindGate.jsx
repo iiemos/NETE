@@ -11,10 +11,15 @@ import { isValidAddress } from "../../utils/formatters";
 import { getWalletErrorMessage } from "../../utils/walletErrors";
 
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const ROOT_INVITER_ADDRESS = "0x7ADBc9A8E16bee4C8b7425BDb66f974Fed4C9222";
 
 function hasReferrer(value) {
   const referrer = String(value || "").toLowerCase();
   return Boolean(referrer) && referrer !== ZERO_ADDRESS;
+}
+
+function isRootInviter(address) {
+  return String(address || "").toLowerCase() === ROOT_INVITER_ADDRESS.toLowerCase();
 }
 
 function isAlreadyBoundError(error) {
@@ -73,11 +78,13 @@ export default function ReferralBindGate() {
   const referrerLoading = referralInfoQuery.isLoading || networkReferrerQuery.isLoading;
   const referrerError = referralInfoQuery.isError && networkReferrerQuery.isError;
   const referrerMissing = !hasReferrer(networkReferrerQuery.data) && !hasReferrer(referralInfoQuery.data?.referrer);
+  const rootInviter = isRootInviter(wallet.currentAddress);
   const shouldShowBindModal = wallet.isConnected
     && !referrerLoading
     && !referrerError
     && !bindModalDismissed
     && !locallyBound
+    && !rootInviter
     && referrerMissing;
 
   useEffect(() => {
@@ -86,13 +93,13 @@ export default function ReferralBindGate() {
   }, [wallet.currentAddress]);
 
   useEffect(() => {
-    if (!bindModalDismissed || !wallet.isConnected || referrerLoading || referrerError || locallyBound || !referrerMissing) {
+    if (!bindModalDismissed || !wallet.isConnected || referrerLoading || referrerError || locallyBound || rootInviter || !referrerMissing) {
       return undefined;
     }
 
     const timer = window.setTimeout(() => setBindModalDismissed(false), 1800);
     return () => window.clearTimeout(timer);
-  }, [bindModalDismissed, locallyBound, referrerError, referrerLoading, referrerMissing, wallet.isConnected]);
+  }, [bindModalDismissed, locallyBound, referrerError, referrerLoading, referrerMissing, rootInviter, wallet.isConnected]);
 
   const handleBindReferrer = async () => {
     const referrer = referrerInput.trim();

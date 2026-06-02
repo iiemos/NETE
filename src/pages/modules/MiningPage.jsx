@@ -58,6 +58,7 @@ const POSITION_STATES = {
 };
 const AIRDROP_PRINCIPAL = 100n * 10n ** 18n;
 const MIN_VISIBLE_NETE_WEI = 5n * 10n ** 13n;
+const DEFAULT_MAX_OPEN_TIER_INDEX = 7;
 const REPURCHASE_READY_STATES = new Set([POSITION_STATES.pendingRepurchase, POSITION_STATES.ended]);
 const CHECKIN_TIME_ZONE = "Asia/Shanghai";
 const CHECKIN_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
@@ -179,6 +180,12 @@ function getAutoWalletShortfall(requiredWei, principalWei, profitWei) {
   if (requiredWei <= 0n) return 0n;
   const afterPrincipal = requiredWei > principalWei ? requiredWei - principalWei : 0n;
   return afterPrincipal > profitWei ? afterPrincipal - profitWei : 0n;
+}
+
+function getMaxOpenTierIndex(config) {
+  const rawValue = config?.maxOpenTierIndex ?? config?.max_open_tier_index ?? DEFAULT_MAX_OPEN_TIER_INDEX;
+  const value = Number(rawValue);
+  return Number.isFinite(value) && value >= 0 ? value : DEFAULT_MAX_OPEN_TIER_INDEX;
 }
 
 export default function MiningPage() {
@@ -407,6 +414,7 @@ export default function MiningPage() {
   const lastCheckinAt = Number(miningDataQuery.data?.lastCheckinAt || 0n);
   const lastCheckinAtText = formatCheckInTime(lastCheckinAt);
   const checkInRecords = checkInRecordsQuery.data || [];
+  const maxOpenTierIndex = getMaxOpenTierIndex(runtimeConfigQuery.data);
   const cumulativeCheckInReward = useMemo(
     () => {
       const total = checkInRecords.reduce((sum, item) => sum + (item.amount || 0n), 0n);
@@ -445,9 +453,13 @@ export default function MiningPage() {
     };
   }, [checkInRecords, checkinCalendarMonth, lastCheckinAt]);
   const airdropHidden = hasAirdropMiner || airdropNftClaimed;
+  const openMachineModels = useMemo(
+    () => machineModels.filter((model) => Number(model.tierIndex) <= maxOpenTierIndex),
+    [machineModels, maxOpenTierIndex],
+  );
   const visibleMachineModels = useMemo(
-    () => machineModels.filter((model) => !model.isAirdrop || !airdropHidden),
-    [airdropHidden, machineModels],
+    () => openMachineModels.filter((model) => !model.isAirdrop || !airdropHidden),
+    [airdropHidden, openMachineModels],
   );
   const projectedCost = useMemo(() => {
     if (!selectedModel || !isAmountValid) return 0;
@@ -1322,7 +1334,7 @@ export default function MiningPage() {
                 {modelPickerOpen ? (
                   <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-white/15 bg-[#1a1a22] shadow-[0_16px_50px_rgba(0,0,0,0.55)]">
                     <div className="max-h-56 overflow-y-auto py-1.5" role="listbox" aria-label={t("modules.mining.modal.picker")}>
-                      {machineModels.filter((model) => !model.isAirdrop).map((model) => {
+                      {openMachineModels.filter((model) => !model.isAirdrop).map((model) => {
                         const active = selectedModel.tierIndex === model.tierIndex;
                         return (
                           <button

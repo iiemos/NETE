@@ -4,7 +4,7 @@ import { coinbaseWallet, injected, walletConnect } from "wagmi/connectors";
 import { NETE_CHAIN } from "../config/neteRuntime";
 
 const chains = NETE_CHAIN.id === bsc.id ? [bsc, bscTestnet] : [bscTestnet, bsc];
-const bscRpcUrl = import.meta.env.VITE_BSC_RPC_URL;
+const bscRpcUrl = import.meta.env.VITE_BSC_RPC_URL || "https://lingering-red-shard.bsc.quiknode.pro/be546097a87e94aefe6cc7a5672f3128438f9bf0/";
 const bscTestnetRpcUrl = import.meta.env.VITE_BSC_TESTNET_RPC_URL;
 const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
 const appName = "NETE";
