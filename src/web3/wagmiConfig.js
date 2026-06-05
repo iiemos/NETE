@@ -15,9 +15,30 @@ const metadata = {
   icons: [],
 };
 
+function isTokenPocketRuntime() {
+  if (typeof window === "undefined") return false;
+
+  const userAgent = window.navigator?.userAgent?.toLowerCase() || "";
+  const ethereum = window.ethereum;
+  const providers = [
+    ethereum,
+    ...(Array.isArray(ethereum?.providers) ? ethereum.providers : []),
+  ].filter(Boolean);
+
+  return userAgent.includes("tokenpocket")
+    || Boolean(window.tokenpocket || window.tp)
+    || providers.some((provider) => provider.isTokenPocket || provider.isTokenPocketEthereum || provider.isTp);
+}
+
+const injectedConnectors = isTokenPocketRuntime()
+  ? [injected({ shimDisconnect: true, unstable_shimAsyncInject: 1000 })]
+  : [
+      injected({ target: "metaMask", shimDisconnect: true, unstable_shimAsyncInject: 1000 }),
+      injected({ shimDisconnect: true, unstable_shimAsyncInject: 1000 }),
+    ];
+
 const connectors = [
-  injected({ target: "metaMask", shimDisconnect: true, unstable_shimAsyncInject: 1000 }),
-  injected({ shimDisconnect: true }),
+  ...injectedConnectors,
   coinbaseWallet({ appName }),
   ...(walletConnectProjectId
     ? [walletConnect({ projectId: walletConnectProjectId, metadata, showQrModal: true })]

@@ -223,6 +223,32 @@ export default function MiningPage() {
     retry: 1,
   });
 
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const setVisualHeight = () => {
+      const viewport = window.visualViewport;
+      const height = viewport?.height || window.innerHeight;
+      if (height) {
+        document.documentElement.style.setProperty("--nete-visual-height", `${height}px`);
+      }
+      document.documentElement.style.setProperty("--nete-visual-top", `${Math.max(0, viewport?.offsetTop || 0)}px`);
+    };
+
+    setVisualHeight();
+    window.addEventListener("resize", setVisualHeight);
+    window.addEventListener("orientationchange", setVisualHeight);
+    window.visualViewport?.addEventListener("resize", setVisualHeight);
+    window.visualViewport?.addEventListener("scroll", setVisualHeight);
+
+    return () => {
+      window.removeEventListener("resize", setVisualHeight);
+      window.removeEventListener("orientationchange", setVisualHeight);
+      window.visualViewport?.removeEventListener("resize", setVisualHeight);
+      window.visualViewport?.removeEventListener("scroll", setVisualHeight);
+    };
+  }, []);
+
   const miningDataQuery = useQuery({
     queryKey: ["nete", "mining", wallet.currentAddress],
     queryFn: () => readUserMiningData(wallet.currentAddress),
@@ -1249,11 +1275,11 @@ export default function MiningPage() {
                   <Icon icon="solar:alt-arrow-down-outline" aria-hidden="true" />
                 </summary>
                 <div className="mining-rule-card__body">
-                  <p>{t("modules.mining.rules.synthesized")}：{airdropMachineStatus.synthesized ? t("modules.mining.statuses.synthesized") : t("modules.mining.statuses.notSynthesized")}</p>
-                  <p>{t("modules.mining.rules.permanent")}：{airdropMachineStatus.permanent ? t("modules.mining.statuses.permanent") : t("modules.mining.statuses.notPermanent")}</p>
-                  <p>{t("modules.mining.rules.validityLeft")}：{t("modules.mining.units.days", { count: airdropMachineStatus.validityLeftDays })}</p>
-                  <p>{t("modules.mining.rules.produced")}：{airdropMachineStatus.produced}</p>
-                  <p>{t("modules.mining.rules.giftRule")}：{airdropMachineStatus.triggerGiftRule}</p>
+                  <ul>
+                    {t("modules.mining.rules.airdropRules", { returnObjects: true }).map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
                 </div>
               </details>
 
@@ -1297,20 +1323,20 @@ export default function MiningPage() {
       ) : null}
 
       {selectedModel && portalRoot ? createPortal((
-        <div className="fixed inset-0 z-[520] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" onClick={closePurchaseModal} role="presentation">
+        <div className="mining-modal-backdrop mining-modal-backdrop--purchase" onClick={closePurchaseModal} role="presentation">
           <article
-            className="max-h-[88dvh] w-full max-w-[760px] overflow-y-auto rounded-[20px] border border-white/10 bg-[#141419] p-4 text-white shadow-[0_25px_80px_rgba(0,0,0,0.55)] md:max-h-[92vh] md:rounded-[24px] md:p-5"
+            className="mining-modal-card mining-modal-card--wide"
             role="dialog"
             aria-modal="true"
             aria-label={`${selectedModel.model} ${t("modules.mining.modal.subscribe")}`}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-2">
+            <div className="mining-modal-head">
               <div className="flex items-center gap-2">
                 <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#ff9900] text-base font-bold text-white">B</span>
                 <h3 className="font-display text-lg font-bold tracking-tight text-white md:text-xl">{selectedModel.modelPicker} {t("modules.mining.modal.subscribe")}</h3>
               </div>
-              <button className="inline-flex h-7 w-7 items-center justify-center rounded-full text-xl leading-none text-white/70 transition hover:bg-white/10 hover:text-white" type="button" onClick={closePurchaseModal} aria-label={t("modules.mining.modal.close")}>
+              <button className="mining-modal-close" type="button" onClick={closePurchaseModal} aria-label={t("modules.mining.modal.close")}>
                 <Icon icon="solar:close-circle-outline" width="1em" height="1em" />
               </button>
             </div>
@@ -1491,15 +1517,15 @@ export default function MiningPage() {
       ), portalRoot) : null}
 
       {repurchaseContext && portalRoot ? createPortal((
-        <div className="fixed inset-0 z-[535] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" onClick={closeRepurchaseModal} role="presentation">
+        <div className="mining-modal-backdrop mining-modal-backdrop--repurchase" onClick={closeRepurchaseModal} role="presentation">
           <article
-            className="max-h-[88dvh] w-full max-w-[520px] overflow-y-auto rounded-[20px] border border-white/10 bg-[#141419] p-4 text-white shadow-[0_25px_80px_rgba(0,0,0,0.55)] md:max-h-[92vh] md:rounded-[24px] md:p-5"
+            className="mining-modal-card"
             role="dialog"
             aria-modal="true"
             aria-label={repurchaseContext.mode === REPURCHASE_MODES.all ? t("modules.mining.modal.repurchaseAllTitle") : t("modules.mining.modal.repurchaseTitle")}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="mining-modal-head">
               <div>
                 <span className="mining-chip mining-chip--status">
                   {repurchaseContext.mode === REPURCHASE_MODES.all ? t("modules.mining.portfolio.repurchaseAll") : t("modules.mining.portfolio.repurchase")}
@@ -1508,7 +1534,7 @@ export default function MiningPage() {
                   {repurchaseContext.mode === REPURCHASE_MODES.all ? t("modules.mining.modal.repurchaseAllTitle") : t("modules.mining.modal.repurchaseTitle")}
                 </h3>
               </div>
-              <button className="inline-flex h-8 w-8 items-center justify-center rounded-full text-2xl leading-none text-white/70 transition hover:bg-white/10 hover:text-white" type="button" onClick={closeRepurchaseModal} aria-label={t("modules.mining.modal.close")}>
+              <button className="mining-modal-close" type="button" onClick={closeRepurchaseModal} aria-label={t("modules.mining.modal.close")}>
                 <Icon icon="solar:close-circle-outline" width="1em" height="1em" />
               </button>
             </div>
@@ -1648,15 +1674,15 @@ export default function MiningPage() {
       ), portalRoot) : null}
 
       {airdropModel && portalRoot ? createPortal((
-        <div className="fixed inset-0 z-[530] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" onClick={closeAirdropModal} role="presentation">
+        <div className="mining-modal-backdrop mining-modal-backdrop--airdrop" onClick={closeAirdropModal} role="presentation">
           <article
-            className="max-h-[88dvh] w-full max-w-[520px] overflow-y-auto rounded-[20px] border border-white/10 bg-[#141419] p-4 text-white shadow-[0_25px_80px_rgba(0,0,0,0.55)] md:max-h-[92vh] md:rounded-[24px] md:p-5"
+            className="mining-modal-card"
             role="dialog"
             aria-modal="true"
             aria-label={t("modules.mining.modal.airdropTitle")}
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3">
+            <div className="mining-modal-head">
               <div>
                 <span className="mining-chip mining-chip--airdrop">
                   {airdropMachineStatus.permanent ? t("modules.mining.buy.airdropPermanentBadge") : t("modules.mining.buy.airdropBadge")}
@@ -1664,7 +1690,7 @@ export default function MiningPage() {
                 <h3 className="mt-3 font-display text-xl font-bold tracking-tight text-white">{airdropModel.model}</h3>
                 <p className="mt-1 text-xs leading-6 text-white/65">{t("modules.mining.modal.airdropDesc")}</p>
               </div>
-              <button className="inline-flex h-8 w-8 items-center justify-center rounded-full text-2xl leading-none text-white/70 transition hover:bg-white/10 hover:text-white" type="button" onClick={closeAirdropModal} aria-label={t("modules.mining.modal.close")}>
+              <button className="mining-modal-close" type="button" onClick={closeAirdropModal} aria-label={t("modules.mining.modal.close")}>
                 <Icon icon="solar:close-circle-outline" width="1em" height="1em" />
               </button>
             </div>
@@ -1720,11 +1746,7 @@ export default function MiningPage() {
               <section className="space-y-4">
                 <h4 className="text-2xl font-bold text-white md:text-2xl"><span className="text-[#caff00]">1.</span> {t("modules.mining.rules.airdropTitle")}</h4>
                 <div className="space-y-1">
-                  <p>{t("modules.mining.rules.synthesized")}：{airdropMachineStatus.synthesized ? t("modules.mining.statuses.synthesized") : t("modules.mining.statuses.notSynthesized")}</p>
-                  <p>{t("modules.mining.rules.permanent")}：{airdropMachineStatus.permanent ? t("modules.mining.statuses.permanent") : t("modules.mining.statuses.notPermanent")}</p>
-                  <p>{t("modules.mining.rules.validityLeft")}：{t("modules.mining.units.days", { count: airdropMachineStatus.validityLeftDays })}</p>
-                  <p>{t("modules.mining.rules.produced")}：{airdropMachineStatus.produced}</p>
-                  <p>{t("modules.mining.rules.giftRule")}：{airdropMachineStatus.triggerGiftRule}</p>
+                  {t("modules.mining.rules.airdropRules", { returnObjects: true }).map((item) => <p key={item}>{item}</p>)}
                 </div>
               </section>
 

@@ -615,13 +615,21 @@
   min-height: 86px;
 }
 
+.my-reward-total-card {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 .my-reward-total-card strong {
-  font-size: 26px;
-  line-height: 1.1;
+  display: block;
+  font-size: 28px !important;
+  line-height: 1.05;
 }
 
 .my-reward-total-card .my-account-label {
-  font-size: 13px;
+  font-size: 15px !important;
+  font-weight: 900;
+  line-height: 1.25;
 }
 
 .my-claim-list {
@@ -2666,6 +2674,114 @@
 
 .mining-modal-submit {
   position: static;
+}
+
+.mining-modal-backdrop {
+  position: fixed;
+  top: var(--nete-visual-top, 0px);
+  right: 0;
+  bottom: auto;
+  left: 0;
+  z-index: 520;
+  height: 100vh;
+  height: 100svh;
+  height: var(--nete-visual-height, 100svh);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  padding: 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  touch-action: pan-y;
+}
+
+.mining-modal-backdrop--purchase,
+.mining-modal-backdrop--airdrop {
+  z-index: 530;
+}
+
+.mining-modal-backdrop--repurchase {
+  z-index: 535;
+}
+
+.mining-modal-card {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 0;
+  max-width: 520px;
+  max-height: calc(100vh - 24px);
+  max-height: calc(100svh - 24px);
+  max-height: calc(var(--nete-visual-height, 100svh) - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px 20px 0 0;
+  background: #141419;
+  color: #fff;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+  touch-action: pan-y;
+}
+
+.mining-modal-card--wide {
+  max-width: 760px;
+}
+
+.mining-modal-head {
+  position: sticky;
+  top: -16px;
+  z-index: 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin: -16px -16px 0;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #141419 0%, rgba(20, 20, 25, 0.96) 100%);
+}
+
+.mining-modal-close {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 24px;
+  line-height: 1;
+  transition: color 160ms ease, background 160ms ease;
+}
+
+.mining-modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+@media (min-width: 768px) {
+  .mining-modal-backdrop {
+    align-items: center;
+    padding: 16px;
+  }
+
+  .mining-modal-card {
+    max-height: calc(100vh - 32px);
+    max-height: calc(100svh - 32px);
+    max-height: calc(var(--nete-visual-height, 100svh) - 32px);
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .mining-modal-head {
+    top: -20px;
+    margin: -20px -20px 0;
+    padding: 20px 20px 12px;
+  }
 }
 
 .mining-progress {

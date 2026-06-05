@@ -194,7 +194,7 @@ export const moduleTranslations = {
         output: "已产出收益（NETE）",
         avgProgress: "平均进度",
         avgRemaining: "平均剩余周期",
-        airdrop: "空投矿机状态",
+        airdrop: "空投矿机规则",
       },
       portfolio: {
         eyebrow: "MY MINERS",
@@ -230,7 +230,7 @@ export const moduleTranslations = {
         noClaimableReward: "暂无收益",
         withdraw: "提现利润",
         withdrawing: "提取中...",
-        withdrawToWallet: "提取收益到钱包",
+        withdrawToWallet: "提取利润到钱包",
       },
       buy: {
         eyebrow: "BUY MINERS",
@@ -309,20 +309,25 @@ export const moduleTranslations = {
         keepVisible: "保留展示",
         titleShort: "规则说明",
         descShort: "保留给产品机制与执行说明，后续可继续扩展合约细则与风控策略。",
-        airdropTitle: "空投矿机状态",
+        airdropTitle: "空投矿机规则",
         synthesized: "是否已合成",
         permanent: "永久矿机状态",
         validityLeft: "有效期剩余",
         produced: "已产出收益",
         giftRule: "买一赠一规则",
         giftRuleValue: "按合约规则达标后可转永久矿机",
+        airdropRules: [
+          "持有BABT用户可以每日签到获取收益",
+          "每次签到间隔24小时",
+          "买一赠一规则：购买100型以上矿机，即可赠送一台100型矿机（赠送矿机后不可继续领取签到收益)",
+        ],
         outputWalletTitle: "产出与钱包规则",
         reductionTitle: "减产与手续费分配",
         outputWalletRules: [
-          "每个地址可同时持有多个矿机(小额度可多台合并)。",
-          "每日产出由本金与利润组成，本金进入复投钱包仅可用于复购矿机。",
-          "利润进入收益钱包，可复购、提取或参与C2C交易流通。",
-          "矿机按约定节奏产生产出，前端按日聚合展示收益。"
+          "每个地址可同时持有多台矿机。",
+          "每日产出由本金与收益组成，本金进入算力钱包仅可用于复购矿机。",
+          "收益进入利润钱包，可复购或提取参与C2C交易流通",
+          "矿机按约定节奏产生产出，前端按日聚合展示收益"
         ],
         reductionRules: [
           "减产与通缩机制：每完成一个周期统一延长5天，最长延长至180天。",
@@ -405,8 +410,8 @@ export const moduleTranslations = {
       priceNote: "每 1 NETE = {{price}} USDT",
       quotaTitle: "预售额度",
       quotaDesc: "只展示本轮预售总量和剩余可参与额度。",
-      totalAmount: "总量",
-      remainingQuota: "剩余额度",
+      totalAmount: "总量(NETE)",
+      remainingQuota: "剩余额度(NETE)",
       buyTitle: "参与预售",
       buyDesc: "输入 NETE 数量后自动计算预计扣除金额。",
       quantity: "参与数量（NETE）",
@@ -814,7 +819,7 @@ export const moduleTranslations = {
         output: "Total Output (NETE)",
         avgProgress: "Avg Progress",
         avgRemaining: "Avg Remaining",
-        airdrop: "Airdrop Miner",
+        airdrop: "Airdrop Miner Rules",
       },
       portfolio: {
         eyebrow: "MY MINERS",
@@ -850,7 +855,7 @@ export const moduleTranslations = {
         noClaimableReward: "No Reward",
         withdraw: "Withdraw Profit",
         withdrawing: "Withdrawing...",
-        withdrawToWallet: "Withdraw Rewards to Wallet",
+        withdrawToWallet: "Withdraw Profit to Wallet",
       },
       buy: {
         eyebrow: "BUY MINERS",
@@ -929,19 +934,24 @@ export const moduleTranslations = {
         keepVisible: "Visible",
         titleShort: "Rules",
         descShort: "Reserved for product mechanics and execution notes. Contract details and risk controls can be expanded later.",
-        airdropTitle: "Airdrop Miner Status",
+        airdropTitle: "Airdrop Miner Rules",
         synthesized: "Synthesized",
         permanent: "Permanent status",
         validityLeft: "Validity left",
         produced: "Produced output",
         giftRule: "Buy-one-get-one rule",
         giftRuleValue: "Can become a permanent miner after meeting the contract rules",
+        airdropRules: [
+          "BABT holders can check in daily to earn rewards.",
+          "Each check-in must be at least 24 hours apart.",
+          "Buy-one-get-one rule: buy a 100-type or higher miner to receive one 100-type miner. After receiving the gifted miner, check-in rewards can no longer be claimed.",
+        ],
         outputWalletTitle: "Output and Wallet Rules",
         reductionTitle: "Reduction and Fee Split",
         outputWalletRules: [
-          "Each address can hold multiple miners at the same time, and smaller miners can be combined.",
-          "Daily output consists of principal and profit. Principal enters the reinvest wallet and can only be used to repurchase miners.",
-          "Profit enters the earnings wallet and can be used for repurchase, withdrawal, or C2C circulation.",
+          "Each address can hold multiple miners at the same time.",
+          "Daily output consists of principal and earnings. Principal enters the hashrate wallet and can only be used to repurchase miners.",
+          "Earnings enter the profit wallet and can be used for repurchase or withdrawn for C2C circulation.",
           "Miners generate output by the agreed cadence; the frontend aggregates rewards by day."
         ],
         reductionRules: [
@@ -1025,8 +1035,8 @@ export const moduleTranslations = {
       priceNote: "1 NETE = {{price}} USDT",
       quotaTitle: "Presale Quota",
       quotaDesc: "Shows the current presale supply and remaining available quota.",
-      totalAmount: "Total",
-      remainingQuota: "Remaining",
+      totalAmount: "Total (NETE)",
+      remainingQuota: "Remaining (NETE)",
       buyTitle: "Join Presale",
       buyDesc: "Enter the NETE amount and the estimated USDT deduction is calculated automatically.",
       quantity: "Participation Amount (NETE)",
@@ -1269,7 +1279,7 @@ moduleTranslations["zh-TW"] = mergeTranslations(moduleTranslations.zh, {
   mining: {
     tabs: { myMiners: "我的礦機", buyMiners: "購買礦機", rules: "規則說明" },
     statuses: { running: "運行中", pendingRepurchase: "待復投", ended: "已結束" },
-    summary: { holdings: "錢包餘額", output: "已產出收益（NETE）" },
+    summary: { holdings: "錢包餘額", output: "已產出收益（NETE）", airdrop: "空投礦機規則" },
     portfolio: {
       title: "我的礦機單獨成頁，先看持倉，再做操作",
       buyButton: "去購買礦機",
@@ -1283,7 +1293,7 @@ moduleTranslations["zh-TW"] = mergeTranslations(moduleTranslations.zh, {
       repurchaseAll: "一鍵復投礦機",
       repurchase: "復投礦機",
       withdrawing: "提取中...",
-      withdrawToWallet: "提取收益到錢包",
+      withdrawToWallet: "提取利潤到錢包",
     },
     buy: {
       title: "多檔礦機・靈活配置",
@@ -1310,6 +1320,21 @@ moduleTranslations["zh-TW"] = mergeTranslations(moduleTranslations.zh, {
       monthSigned: "該月已簽到 {{count}} 天",
       totalAmount: "累計金額",
     },
+    rules: {
+      airdropTitle: "空投礦機規則",
+      airdropRules: [
+        "持有BABT用戶可以每日簽到獲取收益",
+        "每次簽到間隔24小時",
+        "買一贈一規則：購買100型以上礦機，即可贈送一台100型礦機（贈送礦機後不可繼續領取簽到收益)",
+      ],
+      outputWalletTitle: "產出與錢包規則",
+      outputWalletRules: [
+        "每個地址可同時持有多台礦機。",
+        "每日產出由本金與收益組成，本金進入算力錢包僅可用於復購礦機。",
+        "收益進入利潤錢包，可復購或提取參與C2C交易流通",
+        "礦機按約定節奏產生產出，前端按日聚合展示收益",
+      ],
+    },
     modal: {
       principalBalance: "算力(NETE)",
       profitBalance: "利潤(NETE)",
@@ -1322,6 +1347,10 @@ moduleTranslations["zh-TW"] = mergeTranslations(moduleTranslations.zh, {
       repurchaseWalletTopUp: "自動混合將從錢包補足 {{amount}} NETE，請確保授權額度充足。",
       repurchaseInsufficientBalance: "目前復投付款方式餘額不足，請切換為自動混合或選擇其他餘額。",
     },
+  },
+  seed: {
+    totalAmount: "總量(NETE)",
+    remainingQuota: "剩餘額度(NETE)",
   },
   my: {
     accountTitle: "鏈上資產全掌控",
@@ -1427,7 +1456,7 @@ moduleTranslations.ja = mergeTranslations(moduleTranslations.en, {
   mining: {
     tabs: { myMiners: "マイマイナー", buyMiners: "マイナー購入", rules: "ルール" },
     statuses: { running: "稼働中", pendingRepurchase: "再投資待ち", ended: "終了" },
-    summary: { holdings: "ウォレット残高", output: "累計産出（NETE）" },
+    summary: { holdings: "ウォレット残高", output: "累計産出（NETE）", airdrop: "エアドロップマイナールール" },
     portfolio: {
       title: "保有状況を確認してから操作できるマイナーページ",
       buyButton: "マイナーを購入",
@@ -1441,7 +1470,7 @@ moduleTranslations.ja = mergeTranslations(moduleTranslations.en, {
       repurchaseAll: "マイナーを一括再投資",
       repurchase: "再投資",
       withdrawing: "引き出し中...",
-      withdrawToWallet: "収益をウォレットへ引き出す",
+      withdrawToWallet: "利益をウォレットへ引き出す",
     },
     buy: {
       title: "複数ランクのマイナーを柔軟に配置",
@@ -1468,6 +1497,21 @@ moduleTranslations.ja = mergeTranslations(moduleTranslations.en, {
       monthSigned: "この月 {{count}} 日チェックイン",
       totalAmount: "累計金額",
     },
+    rules: {
+      airdropTitle: "エアドロップマイナールール",
+      airdropRules: [
+        "BABT保有ユーザーは毎日チェックインして収益を獲得できます。",
+        "チェックインの間隔は毎回24時間以上です。",
+        "1台購入で1台進呈ルール：100型以上のマイナーを購入すると、100型マイナーが1台進呈されます（進呈マイナー受取後はチェックイン収益を継続して受け取れません）。",
+      ],
+      outputWalletTitle: "産出とウォレットのルール",
+      outputWalletRules: [
+        "各アドレスは複数台のマイナーを同時に保有できます。",
+        "毎日の産出は元本と収益で構成され、元本は算力ウォレットに入り、マイナーの再購入にのみ使用できます。",
+        "収益は利益ウォレットに入り、再購入または引き出してC2C取引流通に参加できます。",
+        "マイナーは約定されたリズムで産出し、フロントエンドは日次で収益を集計表示します。",
+      ],
+    },
     modal: {
       principalBalance: "算力(NETE)",
       profitBalance: "利益(NETE)",
@@ -1480,6 +1524,10 @@ moduleTranslations.ja = mergeTranslations(moduleTranslations.en, {
       repurchaseWalletTopUp: "自動ミックスはウォレットから {{amount}} NETE を補足します。承認残高を確保してください。",
       repurchaseInsufficientBalance: "この支払い方法の残高が不足しています。自動ミックスまたは別の残高を選択してください。",
     },
+  },
+  seed: {
+    totalAmount: "総量(NETE)",
+    remainingQuota: "残り枠(NETE)",
   },
   my: {
     accountTitle: "オンチェーン資産を一括管理",
@@ -1585,7 +1633,7 @@ moduleTranslations.ko = mergeTranslations(moduleTranslations.en, {
   mining: {
     tabs: { myMiners: "내 마이너", buyMiners: "마이너 구매", rules: "규칙" },
     statuses: { running: "운영 중", pendingRepurchase: "재투자 대기", ended: "종료" },
-    summary: { holdings: "지갑 잔액", output: "누적 산출（NETE）" },
+    summary: { holdings: "지갑 잔액", output: "누적 산출（NETE）", airdrop: "에어드롭 마이너 규칙" },
     portfolio: {
       title: "보유 현황을 먼저 확인하고 작업하는 마이너 페이지",
       buyButton: "마이너 구매",
@@ -1599,7 +1647,7 @@ moduleTranslations.ko = mergeTranslations(moduleTranslations.en, {
       repurchaseAll: "마이너 일괄 재투자",
       repurchase: "재투자",
       withdrawing: "인출 중...",
-      withdrawToWallet: "수익을 지갑으로 인출",
+      withdrawToWallet: "이익을 지갑으로 인출",
     },
     buy: {
       title: "다단계 마이너・유연한 배치",
@@ -1626,6 +1674,21 @@ moduleTranslations.ko = mergeTranslations(moduleTranslations.en, {
       monthSigned: "해당 월 {{count}}일 체크인",
       totalAmount: "누적 금액",
     },
+    rules: {
+      airdropTitle: "에어드롭 마이너 규칙",
+      airdropRules: [
+        "BABT 보유 사용자는 매일 체크인하여 수익을 받을 수 있습니다.",
+        "체크인 간격은 매번 24시간입니다.",
+        "1+1 규칙: 100형 이상 마이너를 구매하면 100형 마이너 1대를 증정합니다(증정 마이너 수령 후에는 체크인 수익을 계속 받을 수 없습니다).",
+      ],
+      outputWalletTitle: "산출 및 지갑 규칙",
+      outputWalletRules: [
+        "각 주소는 여러 대의 마이너를 동시에 보유할 수 있습니다.",
+        "일일 산출은 원금과 수익으로 구성되며, 원금은 산력 지갑으로 들어가 마이너 재구매에만 사용할 수 있습니다.",
+        "수익은 이익 지갑으로 들어가며, 재구매하거나 인출하여 C2C 거래 유통에 참여할 수 있습니다.",
+        "마이너는 약정된 주기에 따라 산출을 생성하며, 프런트엔드는 일별로 수익을 집계해 표시합니다.",
+      ],
+    },
     modal: {
       principalBalance: "산력(NETE)",
       profitBalance: "이익(NETE)",
@@ -1638,6 +1701,10 @@ moduleTranslations.ko = mergeTranslations(moduleTranslations.en, {
       repurchaseWalletTopUp: "자동 혼합은 지갑에서 {{amount}} NETE를 보충합니다. 승인 한도를 충분히 확보하세요.",
       repurchaseInsufficientBalance: "현재 재투자 결제 방식의 잔액이 부족합니다. 자동 혼합 또는 다른 잔액을 선택하세요.",
     },
+  },
+  seed: {
+    totalAmount: "총량(NETE)",
+    remainingQuota: "잔여 한도(NETE)",
   },
   my: {
     accountTitle: "온체인 자산 통합 관리",

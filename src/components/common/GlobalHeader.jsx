@@ -40,8 +40,30 @@ function normalizeLanguage(language) {
   return "zh";
 }
 
+function isTokenPocketRuntime() {
+  if (typeof window === "undefined") return false;
+
+  const userAgent = window.navigator?.userAgent?.toLowerCase() || "";
+  const ethereum = window.ethereum;
+  const providers = [
+    ethereum,
+    ...(Array.isArray(ethereum?.providers) ? ethereum.providers : []),
+  ].filter(Boolean);
+
+  return userAgent.includes("tokenpocket")
+    || Boolean(window.tokenpocket || window.tp)
+    || providers.some((provider) => provider.isTokenPocket || provider.isTokenPocketEthereum || provider.isTp);
+}
+
 function getConnectorLabel(connector) {
-  return connector?.name || connector?.id || "Wallet";
+  const label = connector?.name || connector?.id || "Wallet";
+  const key = `${connector?.id || ""} ${connector?.type || ""} ${label}`.toLowerCase();
+
+  if (isTokenPocketRuntime() && (key.includes("injected") || key.includes("browser wallet"))) {
+    return "TokenPocket";
+  }
+
+  return label;
 }
 
 function getWalletOptions(connectors) {
@@ -140,8 +162,9 @@ export default function GlobalHeader() {
   const connectLabel = t("nav.wallet.connect");
   const disconnectLabel = t("nav.wallet.disconnect");
   const switchChainLabel = t("nav.wallet.switchChain");
+  const walletBusy = wallet.isConnecting || wallet.isSwitching;
 
-  const walletLabel = wallet.isConnecting || wallet.isSwitching
+  const walletLabel = walletBusy
     ? t("nav.wallet.processing")
     : wallet.isConnected
       ? wallet.shortAddress
@@ -266,6 +289,7 @@ export default function GlobalHeader() {
                 className="btn btn--ghost btn--wallet btn--sm"
                 id="connect-btn"
                 type="button"
+                disabled={walletBusy}
                 onClick={handleWalletAction}
                 title={wallet.isConnected ? (wallet.isWrongChain ? switchChainLabel : disconnectLabel) : connectLabel}
               >
@@ -363,6 +387,7 @@ export default function GlobalHeader() {
           <button
             className="btn btn--ghost btn--wallet btn--lg"
             type="button"
+            disabled={walletBusy}
             onClick={handleWalletAction}
             title={wallet.isConnected ? (wallet.isWrongChain ? switchChainLabel : disconnectLabel) : connectLabel}
           >

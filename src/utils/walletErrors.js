@@ -47,6 +47,10 @@ export function getWalletErrorMessage(error, t, fallbackKey = "common.walletErro
     return t("common.walletErrors.noProvider");
   }
 
+  if (includesAny(text, ["wallet_timeout", "wallet connection timeout", "wallet switch chain timeout"])) {
+    return t("common.walletErrors.walletTimeout");
+  }
+
   if (includesAny(text, ["network error", "fetch failed", "failed to fetch", "timeout", "rpc", "http request failed", "disconnected"])) {
     return t("common.walletErrors.network");
   }
